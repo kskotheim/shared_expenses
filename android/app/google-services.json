@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "304484222918",
+    "firebase_url": "https://shared-expenses-7005c.firebaseio.com",
+    "project_id": "shared-expenses-7005c",
+    "storage_bucket": "shared-expenses-7005c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:304484222918:android:70d8c5c80feafd7b",
+        "android_client_info": {
+          "package_name": "com.braketrack.shared_expenses"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "304484222918-d605d29bhrs8pje2bhrdd82l31fded0g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9HgXzgbodnbh_WvRlY6dX1GPjnHV5vHI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
