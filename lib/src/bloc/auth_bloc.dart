@@ -1,70 +1,85 @@
 import 'dart:async';
-import 'package:shared_expenses/src/resources/auth.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:rxdart/rxdart.dart';
 import 'bloc_provider.dart';
 
 class AuthBloc implements BlocBase {
   
   //bloc output
-  StreamController<AuthState> _authorizedStream =StreamController<AuthState>();
-  Stream<AuthState> get authStream => _authorizedStream.stream;
-  StreamSink get _authSink => _authorizedStream.sink;
+  BehaviorSubject<AuthState> _authController =BehaviorSubject<AuthState>.seeded(AuthStateLoading());
+  Stream<AuthState> get authStream => _authController.stream;
+  StreamSink get _authStateSink => _authController.sink;
 
   //bloc input
-  StreamController<AuthEvent> _authorizedEventStream =StreamController<AuthEvent>(); 
-  StreamSink get _authEvent =>_authorizedEventStream.sink;
+  StreamController<AuthEvent> _authInputController =StreamController<AuthEvent>(); 
+  StreamSink get _authEventSink =>_authInputController.sink;
 
   //public methods:
-  //add login event to stream
   void login(String username, String password){
-    _authEvent.add(LoginEvent(username: username, password: password));
+    _authEventSink.add(LoginEvent(username: username, password: password));
   }
-  //add logout event to stream
   void logout(){
-    _authEvent.add(LogoutEvent());
+    _authEventSink.add(LogoutEvent());
   }
-  //create new acct
   void createAcct(String username, String password){
-    _authEvent.add(CreateAccountEvent(username: username, password: password));
+    _authEventSink.add(CreateAccountEvent(username: username, password: password));
   }
 
-  //google auth instance
-  Auth _auth = Auth();
+  //firebase auth instance
+  FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   AuthBloc(){
-    _authorizedEventStream.stream.listen(_mapEventToState);
-    _authEvent.add(AppStartEvent());
+    _authEventSink.add(AppStartEvent());
+    _authInputController.stream.listen(_mapEventToState);
   }
 
   void _mapEventToState(AuthEvent event) async { 
     if(event is AppStartEvent){
-      _authSink.add(AuthStateLoading());
-      var user = await _auth.currentUser();
-      if(user == null) _authSink.add(AuthStateNotLoggedIn());
-      else _authSink.add(AuthStateLoggedIn(username: user.email));
+      _start();
     }
     if(event is LoginEvent){
-      _authSink.add(AuthStateLoading());
-      var user = await _auth.signInWithEmailAndPassword(event.username, event.password);
-      if(user == null) _authSink.add(AuthStateNotLoggedIn());
-      else _authSink.add(AuthStateLoggedIn(username: event.username));
+      _login(event);
     }
     if(event is LogoutEvent){
-      _authSink.add(AuthStateNotLoggedIn());
+      _logout();
     }
     if(event is CreateAccountEvent){
-      _authSink.add(AuthStateLoading());
-      var user = await _auth.createUser(event.username, event.password);
-      if(user == null) _authSink.add(AuthStateNotLoggedIn());
-      else _authSink.add(AuthStateLoggedIn(username: event.username));
+      _createAccount(event);
     }
+  }
+
+  void _start() async {
+    FirebaseUser user = await _firebaseAuth.currentUser();
+    _checkUserAndLogIn(user);
+  }
+
+  void _login(LoginEvent event) async {
+    _authStateSink.add(AuthStateLoading());
+    FirebaseUser user = await _firebaseAuth.signInWithEmailAndPassword(email: event.username, password: event.password);
+    _checkUserAndLogIn(user);
+  }
+
+  void _logout() {
+    _firebaseAuth.signOut();
+    _authStateSink.add(AuthStateNotLoggedIn());
+  }
+  
+  void _createAccount(CreateAccountEvent event) async {
+    _authStateSink.add(AuthStateLoading());
+    FirebaseUser user = await _firebaseAuth.createUserWithEmailAndPassword(email: event.username, password: event.password);
+    _checkUserAndLogIn(user);
+  }
+
+  void _checkUserAndLogIn(FirebaseUser user) {
+    if(user == null) _authStateSink.add(AuthStateNotLoggedIn());
+    else _authStateSink.add(AuthStateLoggedIn(username: user.email));
   }
 
   
   @override
   void dispose() {
-    _authorizedStream.close();
-    _authorizedEventStream.close();
+    _authController.close();
+    _authInputController.close();
   }
 
 

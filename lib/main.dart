@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_expenses/src/home_page.dart';
+import 'package:shared_expenses/src/root_widget.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: MyHomePage(title: appTitle),
+      home: RootWidget(title: appTitle),
     );
   }
 }
