@@ -9,6 +9,7 @@ class RootWidget extends StatelessWidget {
 
   final String title;
   final AuthBloc _authBloc = AuthBloc();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +24,10 @@ class RootWidget extends StatelessWidget {
               pageToRender = HomePage();
             }
             if (snapshot.data is AuthStateNotLoggedIn) {
+              AuthStateNotLoggedIn state = snapshot.data;
+              if(state.error != null)
+                WidgetsBinding.instance.addPostFrameCallback((_) => _showErrorMessage(state.error));
+              
               pageToRender = LoginWidget();
             }
             if (snapshot.data is AuthStateLoading) {
@@ -30,20 +35,25 @@ class RootWidget extends StatelessWidget {
             }
 
             return Scaffold(
+                key: _scaffoldKey,
                 appBar: AppBar(
                   title: Text(title),
                   actions: <Widget>[
                     !(snapshot.data is AuthStateNotLoggedIn)
-                    ? FlatButton(
-                      child: Text('logout'),
-                      onPressed: _authBloc.logout,
-                      textColor: Colors.white,
-                    )
-                    : Container(),
+                        ? FlatButton(
+                            child: Text('logout'),
+                            onPressed: _authBloc.logout,
+                            textColor: Colors.white,
+                          )
+                        : Container(),
                   ],
                 ),
                 body: Center(child: pageToRender));
           }),
     );
+  }
+
+  void _showErrorMessage(String error) {
+    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(error),));
   }
 }

@@ -12,7 +12,11 @@ class HomePage extends StatelessWidget {
         stream: _authbloc.authStream,
         builder: (context, snapshot) {
           if (snapshot.data == null) return Text('no data');
-          return Text('hi ${snapshot.data.username}');
+          if(snapshot.data is AuthStateLoggedIn){
+            AuthStateLoggedIn state = snapshot.data;
+            return Text('hi ${state.username}');
+          }
+          return Text('there was an error building the home page');
         });
   }
 }

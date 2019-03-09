@@ -4,13 +4,14 @@ import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
 class LoginWidget extends StatefulWidget {
+
   @override
   _LoginWidgetState createState() => _LoginWidgetState();
 }
 
 class _LoginWidgetState extends State<LoginWidget> {
   AuthBloc _authBloc;
-  final LoginField _nameField = LoginField(hint: 'username');
+  final LoginField _nameField = LoginField(hint: 'email');
   final LoginField _passwordField = LoginField(obscureText: obscurePasswordText, hint: 'password');
   final LoginField _secondPasswordField = LoginField(obscureText: obscurePasswordText, hint: 'verify password');
 
@@ -32,7 +33,11 @@ class _LoginWidgetState extends State<LoginWidget> {
           Container(height: 40),
           RaisedButton(
             onPressed: () {
-              if(creatingNewAccount) _authBloc.createAcct(_nameField.text, _passwordField.text);
+              if(creatingNewAccount) {
+                if(_passwordField.text ==_secondPasswordField.text)
+                  _authBloc.createAcct(_nameField.text, _passwordField.text);
+                else _authBloc.error('Passwords Must Match');
+              }
               else _authBloc.login(_nameField.text, _passwordField.text);
             },
             child: Text(creatingNewAccount ? 'Create Account' : 'Login'),

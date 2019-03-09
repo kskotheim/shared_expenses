@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 import 'bloc_provider.dart';
 
@@ -24,9 +25,12 @@ class AuthBloc implements BlocBase {
   void createAcct(String username, String password){
     _authEventSink.add(CreateAccountEvent(username: username, password: password));
   }
+  void error(String error){
+    _errorLoggingIn(error);
+  }
 
   //firebase auth instance
-  FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  FirebaseAuth _auth = FirebaseAuth.instance;
 
   AuthBloc(){
     _authEventSink.add(AppStartEvent());
@@ -49,48 +53,66 @@ class AuthBloc implements BlocBase {
   }
 
   void _start() async {
-    FirebaseUser user = await _firebaseAuth.currentUser();
-    _checkUserAndLogIn(user);
+    FirebaseUser user = await _auth.currentUser();
+    if(user == null) _errorLoggingIn('Please Create an Account or Log in');
+    else _logInUser(user);
   }
 
   void _login(LoginEvent event) async {
     _authStateSink.add(AuthStateLoading());
-    FirebaseUser user = await _firebaseAuth.signInWithEmailAndPassword(email: event.username, password: event.password);
-    _checkUserAndLogIn(user);
+    String error;
+    FirebaseUser user = await _auth.signInWithEmailAndPassword(email: event.username, password: event.password)
+    .catchError((e) { error = _catchError(e);});
+    
+    if(error != null){
+      _errorLoggingIn(error);
+    } else _logInUser(user);
   }
 
   void _logout() {
-    _firebaseAuth.signOut();
+    _auth.signOut();
     _authStateSink.add(AuthStateNotLoggedIn());
   }
   
   void _createAccount(CreateAccountEvent event) async {
     _authStateSink.add(AuthStateLoading());
-    FirebaseUser user = await _firebaseAuth.createUserWithEmailAndPassword(email: event.username, password: event.password);
-    _checkUserAndLogIn(user);
+    String error;
+    FirebaseUser user = await _auth.createUserWithEmailAndPassword(email: event.username, password: event.password)
+    .catchError((e) { error = _catchError(e);});
+ 
+    if(error != null){
+      _errorLoggingIn(error);
+    } else _logInUser(user);
   }
 
-  void _checkUserAndLogIn(FirebaseUser user) {
-    if(user == null) _authStateSink.add(AuthStateNotLoggedIn());
-    else _authStateSink.add(AuthStateLoggedIn(username: user.email));
+  void _logInUser(FirebaseUser user) {
+    _authStateSink.add(AuthStateLoggedIn(username: user.email));
   }
 
-  
+  void _errorLoggingIn(String error) {
+    _authStateSink.add(AuthStateNotLoggedIn(error: error));
+  }
+
+  String _catchError(e) {
+    if(e is PlatformException){
+      return e.message;
+    } else return e.toString();
+  }
+
   @override
   void dispose() {
     _authController.close();
     _authInputController.close();
   }
-
-
-}
-
-class AuthState{
-  final String username = 'not logged in';
 }
 
 //Authorization State - Bloc output
-class AuthStateNotLoggedIn extends AuthState{}
+class AuthState{}
+
+class AuthStateNotLoggedIn extends AuthState{
+  final String error;
+  AuthStateNotLoggedIn({this.error});
+}
 
 class AuthStateLoading extends AuthState {}
 
