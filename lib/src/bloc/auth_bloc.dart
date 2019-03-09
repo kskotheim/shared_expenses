@@ -132,6 +132,7 @@ class LoginEvent extends AuthEvent{
 
   LoginEvent({this.username, this.password}) : assert(username != null, password != null);
 }
+
 class CreateAccountEvent extends AuthEvent{
   final String username;
   final String password;
