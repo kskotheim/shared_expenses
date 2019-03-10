@@ -1,20 +1,16 @@
 import 'dart:async';
+import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:rxdart/rxdart.dart';
 
 class LoginPageBloc implements BlocBase {
+  final AuthBloc authBloc;
 
   static String _currentUserName = '';
   static bool _currentUserNameOk = false;
   static String _currentPassword = '';
   static bool _currentPasswordOk = false;
   static bool _currentVerifiedPasswordOk = false;
-  
-  String get currentUserName => _currentUserName;
-  bool get currentUserNameOk => _currentUserNameOk;
-  String get currentPassword => _currentPassword;
-  bool get currentPasswordOk => _currentPasswordOk;
-  bool get currentVerifiedPasswordOk => _currentVerifiedPasswordOk;
-  
 
   StreamController<String> _emailStringController = StreamController<String>();
   Stream<String> get email => _emailStringController.stream.transform(_emailValidator);
@@ -24,9 +20,52 @@ class LoginPageBloc implements BlocBase {
   Stream<String> get password => _passwordStringController.stream.transform(_passwordValidator);
   Function(String) get changePassword => _passwordStringController.add;
 
-  StreamController<String> _verifiedPasswordStringController = StreamController<String>();
+  StreamController<String> _verifiedPasswordStringController = StreamController<String>.broadcast();
   Stream<String> get verifiedPassword => _verifiedPasswordStringController.stream.transform(_verifiedPasswordValidator);
   Function(String) get changeverifiedPassword => _verifiedPasswordStringController.add;
+
+  BehaviorSubject<LoginPageState> _loginPageStateStreamController = BehaviorSubject<LoginPageState>();
+  Stream<LoginPageState> get loginPageState => _loginPageStateStreamController.stream;
+  StreamSink get _loginPageStateSink => _loginPageStateStreamController.sink;
+
+  StreamController<LoginPageEvent> _loginPageEventStreamController = StreamController<LoginPageEvent>();
+  StreamSink get loginPageEventSink => _loginPageEventStreamController.sink;
+
+  LoginPageBloc({this.authBloc}){
+    assert(authBloc != null);
+    _loginPageEventStreamController.stream.listen(_mapEventToState);
+    _loginPageStateSink.add(authBloc.creatingNewAccount ? ShowCreateAccountPage() : ShowLoginPage());
+  }
+
+  void _mapEventToState(LoginPageEvent event){
+    if(event is LoginButtonPressed){
+      _handleLoginOrCreateAccount();
+    }
+    if (event is SwitchToCreateAccountButtonPressed){
+      _switchToCreateAccountOrLogin();
+    }
+  }
+
+  void _handleLoginOrCreateAccount() {
+    if(_currentUserNameOk && _currentPasswordOk && (!authBloc.creatingNewAccount || _currentVerifiedPasswordOk))
+      {
+        if(authBloc.creatingNewAccount) authBloc.createAcct(_currentUserName, _currentPassword);
+        else authBloc.login(_currentUserName, _currentPassword);
+      } else {
+        if(!_currentUserNameOk)
+          authBloc.error('invalid email');
+        else if(!_currentPasswordOk)
+          authBloc.error('password must be at least 6 characters');
+        else if(authBloc.creatingNewAccount && !_currentVerifiedPasswordOk)
+          authBloc.error('passwords must match');
+      }
+  }
+
+  void _switchToCreateAccountOrLogin() {
+    authBloc.goToCreateAccount();
+    _loginPageStateSink.add(authBloc.creatingNewAccount ? ShowCreateAccountPage() : ShowLoginPage());
+  }
+
 
   final _emailValidator = StreamTransformer<String, String>.fromHandlers(
     handleData: (email, sink){
@@ -63,7 +102,6 @@ class LoginPageBloc implements BlocBase {
     }
   );
 
-
   final _verifiedPasswordValidator = StreamTransformer<String, String>.fromHandlers(
     handleData: (password, sink){
       if(password ==_currentPassword){
@@ -82,6 +120,20 @@ class LoginPageBloc implements BlocBase {
     _emailStringController.close();
     _verifiedPasswordStringController.close();
     _passwordStringController.close();
+    _loginPageEventStreamController.close();
+    _loginPageStateStreamController.close();
   }
   
 }
+
+class LoginPageEvent{}
+
+class SwitchToCreateAccountButtonPressed extends LoginPageEvent{}
+
+class LoginButtonPressed extends LoginPageEvent{}
+
+class LoginPageState{}
+
+class ShowLoginPage extends LoginPageState{}
+
+class ShowCreateAccountPage extends LoginPageState{}

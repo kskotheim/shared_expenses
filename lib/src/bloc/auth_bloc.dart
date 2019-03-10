@@ -32,6 +32,11 @@ class AuthBloc implements BlocBase {
   //firebase auth instance
   FirebaseAuth _auth = FirebaseAuth.instance;
 
+  //login state
+  bool _creatingNewAccount = false;
+  bool get creatingNewAccount => _creatingNewAccount;
+  void goToCreateAccount() => _creatingNewAccount = !_creatingNewAccount;
+
   AuthBloc(){
     _authEventSink.add(AppStartEvent());
     _authInputController.stream.listen(_mapEventToState);
