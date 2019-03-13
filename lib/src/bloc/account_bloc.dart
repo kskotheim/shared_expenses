@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
-import 'package:shared_expenses/src/models/user.dart';
+import 'package:shared_expenses/src/res/models/user.dart';
 
 class AccountBloc implements BlocBase {
   final AuthBloc authBloc;

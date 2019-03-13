@@ -1,8 +1,8 @@
 import 'package:shared_expenses/src/data/auth_provider.dart';
 import 'package:shared_expenses/src/data/db_provider.dart';
-import 'package:shared_expenses/src/models/account.dart';
-import 'package:shared_expenses/src/models/payment.dart';
-import 'package:shared_expenses/src/models/user.dart';
+import 'package:shared_expenses/src/res/models/account.dart';
+import 'package:shared_expenses/src/res/models/payment.dart';
+import 'package:shared_expenses/src/res/models/user.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
 
 abstract class RepoInterface {

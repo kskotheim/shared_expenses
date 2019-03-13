@@ -1,3 +1,5 @@
+import 'package:shared_expenses/src/res/db_strings.dart';
+
 class Account {
   final String accountId;
   String accountName;
@@ -6,5 +8,5 @@ class Account {
 
   Account.fromJson(Map<String, String> account) :
     accountId = account['accountId'],
-    accountName = account['Name'];
+    accountName = account[NAME];
 }
