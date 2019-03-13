@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
 import 'package:shared_expenses/src/bloc/totals_bloc.dart';
-import 'package:shared_expenses/src/models/payment.dart';
+import 'package:shared_expenses/src/res/models/payment.dart';
 
 class HomePage extends StatelessWidget {
   final EventsBloc _eventsBloc = EventsBloc();

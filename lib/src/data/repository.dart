@@ -3,6 +3,7 @@ import 'package:shared_expenses/src/data/db_provider.dart';
 import 'package:shared_expenses/src/models/account.dart';
 import 'package:shared_expenses/src/models/payment.dart';
 import 'package:shared_expenses/src/models/user.dart';
+import 'package:shared_expenses/src/res/db_strings.dart';
 
 abstract class RepoInterface {
   Future<User> currentUser();
@@ -61,7 +62,7 @@ class Repository implements RepoInterface {
   }
 
   Future<void> updateAccountName(String account, String name) {
-    return db.updateAccount(accountId, 'Name', name);
+    return db.updateAccount(accountId, NAME, name);
   }
 
   Future<void> createUser(String userId) {
@@ -69,7 +70,7 @@ class Repository implements RepoInterface {
   }
 
   Future<User> getUserFromDb(String userId){
-    return db.getUser(userId).then((user) => User(userId: userId, userName: user['Name'], accounts: user['Accounts']));
+    return db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: user[ACCOUNTS]));
   }
 
   Future<List<AnyEvent>> getEvents() {

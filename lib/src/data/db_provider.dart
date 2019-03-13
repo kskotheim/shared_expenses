@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_expenses/src/res/db_strings.dart';
 
 
 abstract class DB {
@@ -17,56 +18,50 @@ abstract class DB {
 
 class DatabaseManager implements DB {
 
-  static const String _ACCOUNTS = 'Accounts';
-  static const String _USERS = 'Users';
-  static const String _PAYMENTS = 'Payments';
-  static const String _NAME = 'Name';
-  static const String _CREATED = 'Created';
-
   Firestore firestore =Firestore.instance;
 
 
   Future<void> createAccount(String actName) async {
-    return firestore.collection(_ACCOUNTS).document().setData({_NAME:actName});
+    return firestore.collection(ACCOUNTS).document().setData({NAME:actName});
   }
 
   Future<Map<String, dynamic>> getAccount(String accountId) async {
-    return firestore.collection(_ACCOUNTS).document(accountId).get().then((snapshot) => snapshot.data);
+    return firestore.collection(ACCOUNTS).document(accountId).get().then((snapshot) => snapshot.data);
   }
 
   Future<void> updateAccount(String accountId, String field, data) async {
-    return firestore.collection(_ACCOUNTS).document(accountId).setData({field:data});
+    return firestore.collection(ACCOUNTS).document(accountId).setData({field:data});
   }
 
 
 
   Future<void> createUser(String userId) async {
-    return firestore.collection(_USERS).document(userId).setData({_CREATED:DateTime.now(), _ACCOUNTS:[]});
+    return firestore.collection(USERS).document(userId).setData({CREATED:DateTime.now(), ACCOUNTS:[]});
   }
 
   Future<Map<String, dynamic>> getUser(String userId) async {
-    return firestore.collection(_USERS).document(userId).get().then((snapshot) => snapshot.data);
+    return firestore.collection(USERS).document(userId).get().then((snapshot) => snapshot.data);
   }
 
   Future<void> updateUser(String userId, String field, data) async {
-    return firestore.collection(_USERS).document(userId).updateData({field:data});
+    return firestore.collection(USERS).document(userId).updateData({field:data});
   }
 
 
 
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment) async {
-    return firestore.collection(_ACCOUNTS).document(accountId).collection(_PAYMENTS).document().setData(payment);
+    return firestore.collection(ACCOUNTS).document(accountId).collection(PAYMENTS).document().setData(payment);
   }
 
   Future<List<Map<String, dynamic>>> getPayments(String accountId) async {
-    return firestore.collection(_ACCOUNTS).document(accountId).collection(_PAYMENTS).getDocuments().then((data){
+    return firestore.collection(ACCOUNTS).document(accountId).collection(PAYMENTS).getDocuments().then((data){
       return data.documents.map((DocumentSnapshot snap) => snap.data).toList();
     });
   }
 
   Future<void> deletePayment(String accountId, String paymentId) async {
-    return firestore.collection(_ACCOUNTS).document(accountId).collection(_PAYMENTS).document(paymentId).delete();
+    return firestore.collection(ACCOUNTS).document(accountId).collection(PAYMENTS).document(paymentId).delete();
   }
 
 
