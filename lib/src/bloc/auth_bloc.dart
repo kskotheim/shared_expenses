@@ -1,11 +1,17 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
-import 'bloc_provider.dart';
+
+import 'package:shared_expenses/src/data/repository.dart';
+import 'package:shared_expenses/src/models/user.dart';
+import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+
 
 class AuthBloc implements BlocBase {
-  
+
+  final Repository repo = Repository();
+  User currentUser;
+
   //bloc output
   BehaviorSubject<AuthState> _authController =BehaviorSubject<AuthState>.seeded(AuthStateLoading());
   Stream<AuthState> get authStream => _authController.stream;
@@ -23,14 +29,11 @@ class AuthBloc implements BlocBase {
     _authEventSink.add(LogoutEvent());
   }
   void createAcct(String username, String password){
-    _authEventSink.add(CreateAccountEvent(username: username, password: password));
+    _authEventSink.add(CreateUserEvent(username: username, password: password));
   }
   void error(String error){
     _errorLoggingIn(error);
   }
-
-  //firebase auth instance
-  FirebaseAuth _auth = FirebaseAuth.instance;
 
   //login state
   bool _creatingNewAccount = false;
@@ -52,21 +55,21 @@ class AuthBloc implements BlocBase {
     if(event is LogoutEvent){
       _logout();
     }
-    if(event is CreateAccountEvent){
-      _createAccount(event);
+    if(event is CreateUserEvent){
+      _createUser(event);
     }
   }
 
   void _start() async {
-    FirebaseUser user = await _auth.currentUser();
-    if(user == null) _errorLoggingIn('Please Create an Account or Log in');
-    else _logInUser(user);
+    currentUser = await repo.currentUser();
+    if(currentUser == null) _errorLoggingIn('Please Create an Account or Log in');
+    else _logInUser(currentUser);
   }
 
   void _login(LoginEvent event) async {
     _authStateSink.add(AuthStateLoading());
     String error;
-    FirebaseUser user = await _auth.signInWithEmailAndPassword(email: event.username, password: event.password)
+    User user = await repo.signInWithEmailAndPassword(event.username, event.password)
     .catchError((e) { error = _catchError(e);});
     
     if(error != null){
@@ -75,23 +78,27 @@ class AuthBloc implements BlocBase {
   }
 
   void _logout() {
-    _auth.signOut();
+    repo.signOut();
     _authStateSink.add(AuthStateNotLoggedIn());
   }
   
-  void _createAccount(CreateAccountEvent event) async {
+  void _createUser(CreateUserEvent event) async {
     _authStateSink.add(AuthStateLoading());
     String error;
-    FirebaseUser user = await _auth.createUserWithEmailAndPassword(email: event.username, password: event.password)
+    User user = await repo.createUserWithEmailAndPassword(event.username, event.password)
     .catchError((e) { error = _catchError(e);});
+    
+    await repo.createUser(user.userId);
  
     if(error != null){
       _errorLoggingIn(error);
-    } else _logInUser(user);
+    } else {
+      _logInUser(user);
+    }
   }
 
-  void _logInUser(FirebaseUser user) {
-    _authStateSink.add(AuthStateLoggedIn(username: user.email));
+  void _logInUser(User user) {
+    _authStateSink.add(AuthStateLoggedIn());
   }
 
   void _errorLoggingIn(String error) {
@@ -121,10 +128,7 @@ class AuthStateNotLoggedIn extends AuthState{
 
 class AuthStateLoading extends AuthState {}
 
-class AuthStateLoggedIn extends AuthState{
-  final String username;
-  AuthStateLoggedIn({this.username}) : assert(username != null);
-}
+class AuthStateLoggedIn extends AuthState{}
 
 //Authorization Event - Bloc Input
 class AuthEvent {}
@@ -138,11 +142,11 @@ class LoginEvent extends AuthEvent{
   LoginEvent({this.username, this.password}) : assert(username != null, password != null);
 }
 
-class CreateAccountEvent extends AuthEvent{
+class CreateUserEvent extends AuthEvent{
   final String username;
   final String password;
 
-  CreateAccountEvent({this.username, this.password}) : assert(username != null, password != null);
+  CreateUserEvent({this.username, this.password}) : assert(username != null, password != null);
 }
 
 class LogoutEvent extends AuthEvent{}
