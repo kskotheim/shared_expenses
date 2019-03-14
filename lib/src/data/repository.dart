@@ -6,14 +6,15 @@ import 'package:shared_expenses/src/res/models/user.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
 
 abstract class RepoInterface {
-  Future<User> currentUser();
-  Future<User> signInWithEmailAndPassword(String email, String password);
-  Future<User> createUserWithEmailAndPassword(String email, String password);
+  Future<String> currentUserId();
+  Future<String> signInWithEmailAndPassword(String email, String password);
+  Future<String> createUserWithEmailAndPassword(String email, String password);
   Future<void> signOut();
 
   Future<void> createAccount(String accountName);
   Future<Account> getAccount(String accountId);
   Future<void> updateAccountName(String account, String name);
+  Future<Map<String, String>> getAccountNames(List<String> accountIds);
 
   Future<void> createUser(String userId);
   Future<User> getUserFromDb(String userId);
@@ -28,23 +29,23 @@ class Repository implements RepoInterface {
   final Auth auth = AuthProvider();
 
   //Authentication
-  Future<User> currentUser() {
+  Future<String> currentUserId() {
     return auth.getCurrentUser().then((user) {
       if(user == null) return null;
-      return User.fromFirebaseUser(user);
+      return user.uid;
     });
   }
 
-  Future<User> signInWithEmailAndPassword(String email, String password) {
+  Future<String> signInWithEmailAndPassword(String email, String password) {
     return auth
         .signInWithEmailAndPassword(email, password)
-        .then((user) => User.fromFirebaseUser(user));
+        .then((user) => user.uid);
   }
 
-  Future<User> createUserWithEmailAndPassword(String email, String password) {
+  Future<String> createUserWithEmailAndPassword(String email, String password) {
     return auth
         .createUserWithEmailAndPassword(email, password)
-        .then((user) => User.fromFirebaseUser(user));
+        .then((user) => user.uid);
   }
 
   Future<void> signOut() {
@@ -61,6 +62,16 @@ class Repository implements RepoInterface {
         .then((account) => Account.fromJson(account));
   }
 
+  Future<Map<String, String>> getAccountNames(List<String> accountIds){
+    return db.getAccountNames(accountIds).then((nameList){
+      Map<String, String> toReturn = {};
+      for(int i=0; i<accountIds.length; i++){
+        toReturn[accountIds[i]] = nameList[i];
+      }
+      return toReturn;
+    });
+  }
+
   Future<void> updateAccountName(String account, String name) {
     return db.updateAccount(accountId, NAME, name);
   }
@@ -70,7 +81,7 @@ class Repository implements RepoInterface {
   }
 
   Future<User> getUserFromDb(String userId){
-    return db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: user[ACCOUNTS]));
+    return db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: List<String>.from(user[ACCOUNTS])));
   }
 
   Future<List<AnyEvent>> getEvents() {

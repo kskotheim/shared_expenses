@@ -3,14 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:shared_expenses/src/data/repository.dart';
-import 'package:shared_expenses/src/models/user.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
 
 class AuthBloc implements BlocBase {
 
   final Repository repo = Repository();
-  User currentUser;
+
+  //Auth state
+  String _currentUserId;
+  String get currentUserId => _currentUserId;
 
   //bloc output
   BehaviorSubject<AuthState> _authController =BehaviorSubject<AuthState>.seeded(AuthStateLoading());
@@ -61,23 +63,24 @@ class AuthBloc implements BlocBase {
   }
 
   void _start() async {
-    currentUser = await repo.currentUser();
-    if(currentUser == null) _errorLoggingIn('Please Create an Account or Log in');
-    else _logInUser(currentUser);
+    _currentUserId = await repo.currentUserId();
+    if(_currentUserId == null) _errorLoggingIn('Please Create an Account or Log in');
+    else _logInUser();
   }
 
   void _login(LoginEvent event) async {
     _authStateSink.add(AuthStateLoading());
     String error;
-    User user = await repo.signInWithEmailAndPassword(event.username, event.password)
+    _currentUserId = await repo.signInWithEmailAndPassword(event.username, event.password)
     .catchError((e) { error = _catchError(e);});
     
     if(error != null){
       _errorLoggingIn(error);
-    } else _logInUser(user);
+    } else _logInUser();
   }
 
   void _logout() {
+    _currentUserId = null;
     repo.signOut();
     _authStateSink.add(AuthStateNotLoggedIn());
   }
@@ -85,19 +88,19 @@ class AuthBloc implements BlocBase {
   void _createUser(CreateUserEvent event) async {
     _authStateSink.add(AuthStateLoading());
     String error;
-    User user = await repo.createUserWithEmailAndPassword(event.username, event.password)
+    _currentUserId = await repo.createUserWithEmailAndPassword(event.username, event.password)
     .catchError((e) { error = _catchError(e);});
     
-    await repo.createUser(user.userId);
+    await repo.createUser(_currentUserId);
  
     if(error != null){
       _errorLoggingIn(error);
     } else {
-      _logInUser(user);
+      _logInUser();
     }
   }
 
-  void _logInUser(User user) {
+  void _logInUser() {
     _authStateSink.add(AuthStateLoggedIn());
   }
 

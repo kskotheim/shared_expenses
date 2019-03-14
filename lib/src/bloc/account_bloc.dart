@@ -8,6 +8,9 @@ class AccountBloc implements BlocBase {
   final AuthBloc authBloc;
   final Repository repo = Repository();
 
+  User currentUser;
+  Map<String, String> accountNames;
+
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
   Stream<AccountState> get accountState => _accountStateController.stream;
   StreamSink get _accountStateSink => _accountStateController.sink;
@@ -37,14 +40,19 @@ class AccountBloc implements BlocBase {
   void _getUserAccount() async {
     _accountStateSink.add(AccountStateLoading());
 
-    User user = await repo.getUserFromDb(authBloc.currentUser.userId);
-    if(user.accounts.length == 1){
+    currentUser = await repo.getUserFromDb(authBloc.currentUserId);
+
+    accountNames = await repo.getAccountNames(currentUser.accounts);
+
+    if(currentUser.accounts.length == 1){
       //Set up account info
-
-
       _accountStateSink.add(AccountStateHome());
     }
-    //else, show select/create accounts page
+    else {
+      //else, show select/create accounts page
+      _accountStateSink.add(AccountStateSelect());
+
+    }
 
   }
 }
@@ -61,7 +69,10 @@ class AccountEvent {}
 
 class AccountEventGoToSelect extends AccountEvent {}
 
-class AccountEventGoHome extends AccountEvent {}
+class AccountEventGoHome extends AccountEvent {
+  final int accountIndex;
+  AccountEventGoHome({this.accountIndex});
+}
 
 class AccountEventCreateAccount extends AccountEvent {}
 
