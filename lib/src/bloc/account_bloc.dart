@@ -6,9 +6,10 @@ import 'package:shared_expenses/src/res/models/user.dart';
 
 class AccountBloc implements BlocBase {
   final AuthBloc authBloc;
-  final Repository repo = Repository();
+  final Repository repo = Repository.getRepo;
 
   User currentUser;
+  String selectedAccount;
   Map<String, String> accountNames;
 
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
@@ -26,15 +27,34 @@ class AccountBloc implements BlocBase {
 
   void _mapEventToState(AccountEvent event) {
     if (event is AccountEventCreateAccount) {}
-    if (event is AccountEventRenameUser) {}
-    if (event is AccountEventGoHome) {}
-    if (event is AccountEventGoToSelect) {}
+    if (event is AccountEventRenameUser) {
+      _renameUser(event.newName);
+    }
+    if (event is AccountEventGoHome) {
+      selectedAccount = currentUser.accounts[event.accountIndex];
+      repo.setAccountId(selectedAccount);
+      _accountStateSink.add(AccountStateHome());
+    }
+    if (event is AccountEventGoToSelect) {
+      _accountStateSink.add(AccountStateSelect());
+    }
   }
 
   @override
   void dispose() {
     _accountStateController.close();
     _accountEventController.close();
+  }
+
+  void _renameUser(String username){
+      _accountStateSink.add(AccountStateLoading());
+      repo.updateUserName(currentUser.userId, username).then(
+        (_) => repo.getUserFromDb(currentUser.userId)
+      ).then(
+        (user) {
+          currentUser = user;
+          _accountStateSink.add(AccountStateSelect());
+        });
   }
 
   void _getUserAccount() async {
@@ -51,9 +71,7 @@ class AccountBloc implements BlocBase {
     else {
       //else, show select/create accounts page
       _accountStateSink.add(AccountStateSelect());
-
     }
-
   }
 }
 
@@ -76,4 +94,7 @@ class AccountEventGoHome extends AccountEvent {
 
 class AccountEventCreateAccount extends AccountEvent {}
 
-class AccountEventRenameUser extends AccountEvent {}
+class AccountEventRenameUser extends AccountEvent {
+  final String newName;
+  AccountEventRenameUser({this.newName}) : assert(newName != null);
+}

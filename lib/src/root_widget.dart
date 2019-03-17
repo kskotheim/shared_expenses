@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/ui/account_page.dart';
-import 'package:shared_expenses/src/ui/home_page.dart';
 import 'package:shared_expenses/src/ui/login_widget.dart';
 
 class RootWidget extends StatelessWidget {
@@ -19,6 +18,7 @@ class RootWidget extends StatelessWidget {
       child: StreamBuilder(
           stream: _authBloc.authStream,
           builder: (BuildContext context, AsyncSnapshot<AuthState> snapshot) {
+            
             if (!snapshot.hasData) return Container(child: Text('no data'));
             Widget pageToRender;
             if (snapshot.data is AuthStateLoggedIn) {
@@ -28,7 +28,6 @@ class RootWidget extends StatelessWidget {
               AuthStateNotLoggedIn state = snapshot.data;
               if(state.error != null)
                 WidgetsBinding.instance.addPostFrameCallback((_) => _showErrorMessage(state.error));
-              
               pageToRender = LoginWidget();
             }
             if (snapshot.data is AuthStateLoading) {

@@ -18,52 +18,58 @@ abstract class RepoInterface {
 
   Future<void> createUser(String userId);
   Future<User> getUserFromDb(String userId);
+  Future<void> updateUserName(String userId, String name);
   Future<List<AnyEvent>> getEvents();
   Future<void> createPayment(Map<String, dynamic> payment);
 }
 
 class Repository implements RepoInterface {
-  String accountId = '-L_hpZnHAJAVkTGmdPZv';
 
-  final DB db = DatabaseManager();
-  final Auth auth = AuthProvider();
+  static Repository _theRepo = Repository();
+  static Repository get getRepo => _theRepo;
+
+  String _accountId;
+  void setAccountId(String id) => _accountId = id;
+
+  final DB _db = DatabaseManager();
+  final Auth _auth = AuthProvider();
 
   //Authentication
   Future<String> currentUserId() {
-    return auth.getCurrentUser().then((user) {
+    return _auth.getCurrentUser().then((user) {
       if(user == null) return null;
       return user.uid;
     });
   }
 
   Future<String> signInWithEmailAndPassword(String email, String password) {
-    return auth
+    return _auth
         .signInWithEmailAndPassword(email, password)
         .then((user) => user.uid);
   }
 
   Future<String> createUserWithEmailAndPassword(String email, String password) {
-    return auth
+    return _auth
         .createUserWithEmailAndPassword(email, password)
         .then((user) => user.uid);
   }
 
   Future<void> signOut() {
-    return auth.signOut();
+    return _auth.signOut();
   }
 
   Future<void> createAccount(String accountName) {
-    return db.createAccount(accountName);
+    return _db.createAccount(accountName);
   }
 
   Future<Account> getAccount(String accountId) {
-    return db
+    return _db
         .getAccount(accountId)
         .then((account) => Account.fromJson(account));
   }
 
   Future<Map<String, String>> getAccountNames(List<String> accountIds){
-    return db.getAccountNames(accountIds).then((nameList){
+    return _db.getAccountNames(accountIds).then((nameList){
       Map<String, String> toReturn = {};
       for(int i=0; i<accountIds.length; i++){
         toReturn[accountIds[i]] = nameList[i];
@@ -73,23 +79,27 @@ class Repository implements RepoInterface {
   }
 
   Future<void> updateAccountName(String account, String name) {
-    return db.updateAccount(accountId, NAME, name);
+    return _db.updateAccount(_accountId, NAME, name);
   }
 
   Future<void> createUser(String userId) {
-    return db.createUser(userId);
+    return _db.createUser(userId);
   }
 
   Future<User> getUserFromDb(String userId){
-    return db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: List<String>.from(user[ACCOUNTS])));
+    return _db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: List<String>.from(user[ACCOUNTS])));
+  }
+
+  Future<void> updateUserName(String userId, String name){
+    return _db.updateUser(userId, NAME, name);
   }
 
   Future<List<AnyEvent>> getEvents() {
-    return db.getPayments(accountId).then(
+    return _db.getPayments(_accountId).then(
         (events) => events.map((event) => Payment.fromJson(event)).toList());
   }
 
   Future<void> createPayment(Map<String, dynamic> payment) {
-    return db.createPayment(accountId, payment);
+    return _db.createPayment(_accountId, payment);
   }
 }

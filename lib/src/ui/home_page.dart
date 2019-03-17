@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
 import 'package:shared_expenses/src/bloc/totals_bloc.dart';
@@ -9,6 +10,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AccountBloc accountBloc =BlocProvider.of<AccountBloc>(context);
     return BlocProvider(
       bloc: _eventsBloc,
       child: Stack(
@@ -26,7 +28,14 @@ class HomePage extends StatelessWidget {
               ),
             ],
           ),
-          new NewEventButton(eventsBloc: _eventsBloc,)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              IconButton(icon: Icon(Icons.account_circle),onPressed: () => accountBloc.accountEvent.add(AccountEventGoToSelect()),),
+              new NewEventButton(eventsBloc: _eventsBloc,),
+            ],
+          )
         ],
       ),
     );

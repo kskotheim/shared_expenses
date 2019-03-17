@@ -39,16 +39,51 @@ class AccountPage extends StatelessWidget {
 }
 
 class SelectAccountPage extends StatelessWidget {
-
-
   @override
   Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Container(
+            height: 50.0,
+          ),
+          SetUsernameWidget(),
+          Container(
+            height: 60.0,
+          ),
+          SelectAccountWidget(),
+          Container(
+            height: 40.0,
+          ),
+          CreateAccountSection()
+        ],
+      ),
+    );
+  }
+}
+
+class SetUsernameWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
+    TextEditingController _theController =
+        TextEditingController(text: accountBloc.currentUser.userName);
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        new SelectAccountWidget(),
-        Container(height: 40.0,),
-        CreateAccountSection()
+        Text("Username:"),
+        Container(
+          width: 200.0,
+          child: TextField(
+            controller: _theController,
+          ),
+        ),
+        FlatButton(
+          child: Text('Submit'),
+          onPressed: () => accountBloc.accountEvent
+              .add(AccountEventRenameUser(newName: _theController.text)),
+        )
       ],
     );
   }
@@ -60,15 +95,39 @@ class SelectAccountWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     _accountBloc = BlocProvider.of<AccountBloc>(context);
-    List<Widget> theTileList = _accountBloc.currentUser.accounts.map((account) => ListTile(title: Text( _accountBloc.accountNames[account] ))).toList();
-    return Column(children: <Widget>[
-      theTileList.isEmpty 
-      ? Text('No Accounts')
-      : Text('Select Account:')
-    ] + theTileList,);
+    List<ListButtonTile> theTileList = _accountBloc.currentUser.accounts
+        .map((account) =>
+            ListButtonTile(title: Text(_accountBloc.accountNames[account])))
+        .toList();
+    for (int i = 0; i < theTileList.length; i++) {
+      theTileList[i].index = i;
+    }
+    return Column(
+      children: <Widget>[
+            theTileList.isEmpty ? Text('No Accounts') : Text('Select Account:')
+          ] +
+          theTileList,
+    );
   }
 }
 
+class ListButtonTile extends StatelessWidget {
+  final Widget title;
+  int index;
+  ListButtonTile({this.title, this.index});
+  AccountBloc _accountBloc;
+
+  @override
+  Widget build(BuildContext context) {
+    _accountBloc = BlocProvider.of<AccountBloc>(context);
+
+    return ListTile(
+      title: title,
+      onTap: () => _accountBloc.accountEvent
+          .add(AccountEventGoHome(accountIndex: index)),
+    );
+  }
+}
 
 class CreateAccountSection extends StatefulWidget {
   @override
@@ -80,16 +139,14 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
 
   @override
   Widget build(BuildContext context) {
-    return !_createAccount 
-            ? _createAccountButton()
-            : _createAccountField();
+    return !_createAccount ? _createAccountButton() : _createAccountField();
   }
 
   Widget _createAccountButton() {
     return InkWell(
       onTap: () {
         setState(() {
-          _createAccount = true;          
+          _createAccount = true;
         });
       },
       child: Container(
@@ -108,18 +165,19 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
     );
   }
 
-  Widget _createAccountField(){
+  Widget _createAccountField() {
     return Column(
       children: <Widget>[
         Text("Ok here we go"),
-
-         FlatButton(child: Text('Cancel'), onPressed: (){
-           setState(() {
-             _createAccount = false;
-           });
-         },)
+        FlatButton(
+          child: Text('Cancel'),
+          onPressed: () {
+            setState(() {
+              _createAccount = false;
+            });
+          },
+        )
       ],
     );
   }
-
 }

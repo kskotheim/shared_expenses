@@ -8,7 +8,7 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
 class AuthBloc implements BlocBase {
 
-  final Repository repo = Repository();
+  final Repository repo = Repository.getRepo;
 
   //Auth state
   String _currentUserId;

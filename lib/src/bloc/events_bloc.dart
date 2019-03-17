@@ -7,7 +7,7 @@ class EventsBloc implements BlocBase {
 
   StreamController<List<AnyEvent>> _eventsListController = StreamController<List<AnyEvent>>();
   Stream<List<AnyEvent>> get eventList => _eventsListController.stream;
-  Repository repo = Repository();
+  Repository repo = Repository.getRepo;
 
   //dummy data
   List<AnyEvent> _data = [];
