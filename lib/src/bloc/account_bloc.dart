@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
+import 'package:shared_expenses/src/res/models/account.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
 class AccountBloc implements BlocBase {
@@ -9,7 +10,7 @@ class AccountBloc implements BlocBase {
   final Repository repo = Repository.getRepo;
 
   User currentUser;
-  String selectedAccount;
+  Account currentAccount;
   Map<String, String> accountNames;
 
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
@@ -19,6 +20,9 @@ class AccountBloc implements BlocBase {
   StreamController<AccountEvent> _accountEventController =StreamController<AccountEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
 
+  StreamController _accountNameErrorController = StreamController.broadcast();
+  Stream get accountNameErrors => _accountNameErrorController.stream;
+
   AccountBloc({this.authBloc}) {
     assert(authBloc != null);
     _accountEventController.stream.listen(_mapEventToState);
@@ -26,13 +30,16 @@ class AccountBloc implements BlocBase {
   }
 
   void _mapEventToState(AccountEvent event) {
-    if (event is AccountEventCreateAccount) {}
+    if (event is AccountEventCreateAccount) {
+      _createAccount(event.accountName);
+    }
     if (event is AccountEventRenameUser) {
       _renameUser(event.newName);
     }
     if (event is AccountEventGoHome) {
-      selectedAccount = currentUser.accounts[event.accountIndex];
-      repo.setAccountId(selectedAccount);
+      String accountId = currentUser.accounts[event.accountIndex];
+      currentAccount = Account(accountId: accountId, accountName: accountNames[accountId]);
+      repo.setAccountId(currentAccount.accountId);
       _accountStateSink.add(AccountStateHome());
     }
     if (event is AccountEventGoToSelect) {
@@ -44,6 +51,22 @@ class AccountBloc implements BlocBase {
   void dispose() {
     _accountStateController.close();
     _accountEventController.close();
+    _accountNameErrorController.close();
+  }
+
+  dynamic _createAccount(String accountName) async {
+    bool nameExists = await repo.doesAccountNameExist(accountName);
+    if(nameExists) {
+      _accountNameErrorController.sink.addError('$accountName already exists');
+      return _accountStateSink.add(AccountStateSelect()); 
+    }
+    
+    String accountId = await repo.createAccount(accountName);
+    await repo.addAccountIdToUser(currentUser.userId, accountId);
+    //make this user the owner of the account
+    _getUserAccount();
+
+
   }
 
   void _renameUser(String username){
@@ -66,7 +89,7 @@ class AccountBloc implements BlocBase {
 
     if(currentUser.accounts.length == 1){
       //Set up account info
-      _accountStateSink.add(AccountStateHome());
+      accountEvent.add(AccountEventGoHome(accountIndex: 0));
     }
     else {
       //else, show select/create accounts page
@@ -92,7 +115,10 @@ class AccountEventGoHome extends AccountEvent {
   AccountEventGoHome({this.accountIndex});
 }
 
-class AccountEventCreateAccount extends AccountEvent {}
+class AccountEventCreateAccount extends AccountEvent {
+  final String accountName;
+  AccountEventCreateAccount({this.accountName});
+}
 
 class AccountEventRenameUser extends AccountEvent {
   final String newName;

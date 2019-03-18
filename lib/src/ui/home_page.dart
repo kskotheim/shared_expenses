@@ -6,11 +6,12 @@ import 'package:shared_expenses/src/bloc/totals_bloc.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
 
 class HomePage extends StatelessWidget {
-  final EventsBloc _eventsBloc = EventsBloc();
+  EventsBloc _eventsBloc;
 
   @override
   Widget build(BuildContext context) {
     AccountBloc accountBloc =BlocProvider.of<AccountBloc>(context);
+    _eventsBloc = EventsBloc(accountBloc: accountBloc);
     return BlocProvider(
       bloc: _eventsBloc,
       child: Stack(
@@ -65,10 +66,12 @@ class NewEventButton extends StatelessWidget {
 }
 
 class TotalsWidget extends StatelessWidget {
-  final TotalsBloc _totalsBloc = TotalsBloc();
+  TotalsBloc _totalsBloc;
 
   @override
   Widget build(BuildContext context) {
+    AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
+     _totalsBloc = TotalsBloc(accountBloc: accountBloc);
     return BlocProvider(
       bloc: _totalsBloc,
       child: StreamBuilder<List<Total>>(

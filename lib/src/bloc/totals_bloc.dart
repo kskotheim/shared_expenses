@@ -1,16 +1,17 @@
 import 'dart:async';
+import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
 class TotalsBloc implements BlocBase {
 
+  final AccountBloc accountBloc;
+
   StreamController<List<Total>> _totalsListController = StreamController<List<Total>>();
   Stream<List<Total>> get totalsList => _totalsListController.stream;
 
-  TotalsBloc(){
+  TotalsBloc({this.accountBloc}){
     List<Total> list = [
-      Total(name: 'Kris: \$5'),
-      Total(name: 'Dre: \$10'),
-      Total(name: 'Bob: -\$15'),
+      Total(name: 'This is the totals from the account ${accountBloc.currentAccount.accountName}'),
     ];
     _totalsListController.sink.add(list);
   }

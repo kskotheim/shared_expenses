@@ -13,12 +13,14 @@ abstract class RepoInterface {
 
   Future<void> createAccount(String accountName);
   Future<Account> getAccount(String accountId);
-  Future<void> updateAccountName(String account, String name);
+  Future<void> updateAccountName(String name);
   Future<Map<String, String>> getAccountNames(List<String> accountIds);
+  Future<bool> doesAccountNameExist(String name);
 
   Future<void> createUser(String userId);
   Future<User> getUserFromDb(String userId);
   Future<void> updateUserName(String userId, String name);
+  Future<void> addAccountIdToUser(String userId, String accountId);
   Future<List<AnyEvent>> getEvents();
   Future<void> createPayment(Map<String, dynamic> payment);
 }
@@ -28,6 +30,8 @@ class Repository implements RepoInterface {
   static Repository _theRepo = Repository();
   static Repository get getRepo => _theRepo;
 
+
+  //this is here so we don't have to pass this information to the event bloc and totals bloc - it is set in accountBloc
   String _accountId;
   void setAccountId(String id) => _accountId = id;
 
@@ -58,7 +62,7 @@ class Repository implements RepoInterface {
     return _auth.signOut();
   }
 
-  Future<void> createAccount(String accountName) {
+  Future<String> createAccount(String accountName) {
     return _db.createAccount(accountName);
   }
 
@@ -78,7 +82,11 @@ class Repository implements RepoInterface {
     });
   }
 
-  Future<void> updateAccountName(String account, String name) {
+  Future<bool> doesAccountNameExist(String name){
+    return _db.getAccountsWhere(NAME, name).then((documents) => documents.length != 0);
+  }
+
+  Future<void> updateAccountName(String name) {
     return _db.updateAccount(_accountId, NAME, name);
   }
 
@@ -92,6 +100,12 @@ class Repository implements RepoInterface {
 
   Future<void> updateUserName(String userId, String name){
     return _db.updateUser(userId, NAME, name);
+  }
+
+  Future<void> addAccountIdToUser(String userId, String accountId){
+    return _db.getUser(userId).then((userMap){
+      return _db.updateUser(userId, ACCOUNTS, userMap[ACCOUNTS] + [accountId]);
+    });
   }
 
   Future<List<AnyEvent>> getEvents() {

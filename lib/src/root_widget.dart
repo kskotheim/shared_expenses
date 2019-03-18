@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
-import 'package:shared_expenses/src/ui/account_page.dart';
+import 'package:shared_expenses/src/ui/account_root.dart';
 import 'package:shared_expenses/src/ui/login_widget.dart';
 
 class RootWidget extends StatelessWidget {
@@ -22,7 +22,7 @@ class RootWidget extends StatelessWidget {
             if (!snapshot.hasData) return Container(child: Text('no data'));
             Widget pageToRender;
             if (snapshot.data is AuthStateLoggedIn) {
-              pageToRender = AccountPage();
+              pageToRender = AccountRoot();
             }
             if (snapshot.data is AuthStateNotLoggedIn) {
               AuthStateNotLoggedIn state = snapshot.data;

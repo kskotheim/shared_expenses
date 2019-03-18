@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
 
 class EventsBloc implements BlocBase {
+
+  AccountBloc accountBloc;
 
   StreamController<List<AnyEvent>> _eventsListController = StreamController<List<AnyEvent>>();
   Stream<List<AnyEvent>> get eventList => _eventsListController.stream;
@@ -12,7 +15,8 @@ class EventsBloc implements BlocBase {
   //dummy data
   List<AnyEvent> _data = [];
 
-  EventsBloc(){
+  EventsBloc({this.accountBloc}){
+    assert(accountBloc != null);
     _getData();
   }
 

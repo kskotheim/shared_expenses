@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
 
 abstract class DB {
-  Future<void> createAccount(String accountName);
+  Future<String> createAccount(String accountName);
   Future<Map<String, dynamic>> getAccount(String accountId);
   Future<void> updateAccount(String accountId, String field, data);
   Future<List<String>> getAccountNames(List<String> accountIds);
+  Future<List<DocumentSnapshot>> getAccountsWhere(String field, val);
 
   Future<void> createUser(String userId);
   Future<Map<String, dynamic>> getUser(String userId);
@@ -19,8 +20,12 @@ abstract class DB {
 class DatabaseManager implements DB {
   Firestore firestore = Firestore.instance;
 
-  Future<void> createAccount(String actName) async {
-    return firestore.collection(ACCOUNTS).document().setData({NAME: actName});
+  Future<String> createAccount(String actName) async {
+    return firestore.collection(ACCOUNTS).document().get().then((document){
+      return firestore.collection(ACCOUNTS).document(document.documentID).setData({NAME: actName}).then((_){
+        return document.documentID;
+      });
+    });
   }
 
   Future<Map<String, dynamic>> getAccount(String accountId) async {
@@ -46,6 +51,10 @@ class DatabaseManager implements DB {
         .then((snapshot) => snapshot.data[NAME])));
   }
 
+   Future<List<DocumentSnapshot>> getAccountsWhere(String field, val){
+    return firestore.collection(ACCOUNTS).where(field, isEqualTo: val).getDocuments().then((query) => query.documents);
+  }
+
   Future<void> createUser(String userId) async {
     return firestore
         .collection(USERS)
@@ -54,6 +63,7 @@ class DatabaseManager implements DB {
   }
 
   Future<Map<String, dynamic>> getUser(String userId) async {
+    assert(userId != null);
     return firestore
         .collection(USERS)
         .document(userId)
