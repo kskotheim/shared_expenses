@@ -21,7 +21,7 @@ class EventsBloc implements BlocBase {
   }
 
   void _getData() async {
-    _data = await repo.getEvents();
+    _data = await repo.getEvents(accountBloc.currentAccount.accountId);
     _eventsListController.sink.add(_data);
   }
 
@@ -33,7 +33,7 @@ class EventsBloc implements BlocBase {
       'amount':5.0,
     };
 
-    repo.createPayment(newEvent).then((_) => _getData());
+    repo.createPayment(accountBloc.currentAccount.accountId, newEvent).then((_) => _getData());
   }
 
   @override

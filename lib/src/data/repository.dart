@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/data/auth_provider.dart';
 import 'package:shared_expenses/src/data/db_provider.dart';
 import 'package:shared_expenses/src/res/models/account.dart';
@@ -11,9 +12,10 @@ abstract class RepoInterface {
   Future<String> createUserWithEmailAndPassword(String email, String password);
   Future<void> signOut();
 
-  Future<void> createAccount(String accountName);
+  Future<void> createAccount(String accountName, String userId);
   Future<Account> getAccount(String accountId);
-  Future<void> updateAccountName(String name);
+  Future<dynamic> getAccountByName(String name);
+  Future<void> updateAccountName(String accountId, String name);
   Future<Map<String, String>> getAccountNames(List<String> accountIds);
   Future<bool> doesAccountNameExist(String name);
 
@@ -21,19 +23,19 @@ abstract class RepoInterface {
   Future<User> getUserFromDb(String userId);
   Future<void> updateUserName(String userId, String name);
   Future<void> addAccountIdToUser(String userId, String accountId);
-  Future<List<AnyEvent>> getEvents();
-  Future<void> createPayment(Map<String, dynamic> payment);
+  Future<List<AnyEvent>> getEvents(String accountId);
+  Future<void> createPayment(String accountId, Map<String, dynamic> payment);
+
+  Future<void> createAccountConnectionRequest(String accountId, String userId);
+  Stream<QuerySnapshot> connectionRequests(String accountId);
+  Future<void> deleteConnectionRequest(String accountId, String request);
+
 }
 
 class Repository implements RepoInterface {
 
   static Repository _theRepo = Repository();
   static Repository get getRepo => _theRepo;
-
-
-  //this is here so we don't have to pass this information to the event bloc and totals bloc - it is set in accountBloc
-  String _accountId;
-  void setAccountId(String id) => _accountId = id;
 
   final DB _db = DatabaseManager();
   final Auth _auth = AuthProvider();
@@ -62,14 +64,34 @@ class Repository implements RepoInterface {
     return _auth.signOut();
   }
 
-  Future<String> createAccount(String accountName) {
-    return _db.createAccount(accountName);
+  Future<String> createAccount(String accountName, String userId) async {
+    return _db.createAccount(accountName).then((accountId){
+      return _db.getUser(userId).then((user){
+        //add account Id to user document's 'accounts' list
+        return _db.updateUser(userId, ACCOUNTS, user[ACCOUNTS] + [accountId]).then((_){
+          //add account info entry on user document designting user as owner of account
+          Map thisAccount = {PERMISSIONS:['owner']};
+          Map userAccountsInfo = user[ACCOUNT_INFO];
+          userAccountsInfo[accountId] = thisAccount;
+          return _db.updateUser(userId, ACCOUNT_INFO, userAccountsInfo).then((_){
+            return accountId;
+          });
+        });
+      });
+    });
   }
 
   Future<Account> getAccount(String accountId) {
     return _db
         .getAccount(accountId)
         .then((account) => Account.fromJson(account));
+  }
+
+  Future<dynamic> getAccountByName(String name){
+    return _db.getAccountsWhere(NAME, name).then((documents) {
+      if(documents.length > 0) return documents[0].documentID;
+      else return null;
+    });
   }
 
   Future<Map<String, String>> getAccountNames(List<String> accountIds){
@@ -86,8 +108,8 @@ class Repository implements RepoInterface {
     return _db.getAccountsWhere(NAME, name).then((documents) => documents.length != 0);
   }
 
-  Future<void> updateAccountName(String name) {
-    return _db.updateAccount(_accountId, NAME, name);
+  Future<void> updateAccountName(String accountId, String name) {
+    return _db.updateAccount(accountId, NAME, name);
   }
 
   Future<void> createUser(String userId) {
@@ -108,12 +130,27 @@ class Repository implements RepoInterface {
     });
   }
 
-  Future<List<AnyEvent>> getEvents() {
-    return _db.getPayments(_accountId).then(
+  Future<List<AnyEvent>> getEvents(String accountId) {
+    return _db.getPayments(accountId).then(
         (events) => events.map((event) => Payment.fromJson(event)).toList());
   }
 
-  Future<void> createPayment(Map<String, dynamic> payment) {
-    return _db.createPayment(_accountId, payment);
+  Future<void> createPayment(String accountId, Map<String, dynamic> payment) {
+    return _db.createPayment(accountId, payment);
   }
+
+  Future<void> createAccountConnectionRequest(String accountId, String userId) {
+    return _db.createAccountConnectionRequest(accountId, userId);
+  }
+
+  Stream<QuerySnapshot> connectionRequests(String accountId){
+    return _db.connectionRequests(accountId);
+  }
+
+  Future<void> deleteConnectionRequest(String accountId, String requestId){
+    return _db.deleteAccountConnectionRequest(accountId, requestId);
+  }
+
+
+
 }

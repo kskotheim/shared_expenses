@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_expenses/src/ui/account_page/connect_account.dart';
 import 'package:shared_expenses/src/ui/account_page/create_account.dart';
 import 'package:shared_expenses/src/ui/account_page/select_account.dart';
 import 'package:shared_expenses/src/ui/account_page/set_username.dart';
@@ -21,10 +22,13 @@ class SelectAccountPage extends StatelessWidget {
           Container(
             height: 40.0,
           ),
-          CreateAccountSection()
+          CreateAccountSection(),
+          Container(
+            height: 10.0,
+          ),
+          ConnectAccountSection(),
         ],
       ),
     );
   }
 }
-

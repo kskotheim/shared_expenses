@@ -2,38 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
-class CreateAccountSection extends StatefulWidget {
+class ConnectAccountSection extends StatefulWidget {
   @override
-  _CreateAccountSectionState createState() => _CreateAccountSectionState();
+  _ConnectAccountSectionState createState() => _ConnectAccountSectionState();
 }
 
-class _CreateAccountSectionState extends State<CreateAccountSection> {
-  bool _createAccount = false;
+class _ConnectAccountSectionState extends State<ConnectAccountSection> {
+  bool _connectAccount = false;
   AccountBloc _accountBloc;
 
   @override
   Widget build(BuildContext context) {
     _accountBloc = BlocProvider.of<AccountBloc>(context);
-    return !_createAccount ? _createAccountButton() : _createAccountField();
+    return !_connectAccount ? _createAccountButton() : _createAccountField();
   }
 
   Widget _createAccountButton() {
     return InkWell(
       onTap: () {
         setState(() {
-          _createAccount = true;
+          _connectAccount = true;
         });
       },
       child: Container(
         padding: EdgeInsets.all(10.0),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.blueGrey, style: BorderStyle.solid),
+          border: Border.all(color: Colors.green, style: BorderStyle.solid),
           borderRadius: BorderRadius.all(Radius.circular(10.0)),
         ),
         child: Column(
           children: <Widget>[
-            Icon(Icons.add),
-            Text('Create Account'),
+            Icon(Icons.transit_enterexit),
+            Text('Connect To Account'),
           ],
         ),
       ),
@@ -44,12 +44,13 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
 
     TextEditingController _nameController =TextEditingController();
 
+
     return StreamBuilder<Object>(
       stream: _accountBloc.accountNameErrors,
       builder: (context, snapshot) {
         return Column(
           children: <Widget>[
-            Text("New Account Name:"),
+            Text("Request Connection To:"),
               Container(
                 width: 200.0,
                 child: TextField(
@@ -60,18 +61,20 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
                 ),
               ),
 
+
             Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 FlatButton(
                   child: Text('Submit'),
-                  onPressed: () => _accountBloc.accountEvent.add(AccountEventCreateAccount(accountName: _nameController.text)),
+                  //Send connect to account event to account bloc
+                  onPressed: () => _accountBloc.accountEvent.add(AccountEventSendConnectionRequest(accountName: _nameController.text)),
                 ),
                 FlatButton(
                   child: Text('Cancel'),
                   onPressed: () {
                     setState(() {
-                      _createAccount = false;
+                      _connectAccount = false;
                     });
                   },
                 ),

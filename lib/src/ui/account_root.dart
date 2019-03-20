@@ -3,7 +3,7 @@ import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/ui/account_page/account_page.dart';
-import 'package:shared_expenses/src/ui/home_page.dart';
+import 'package:shared_expenses/src/ui/home_page/home_page.dart';
 
 class AccountRoot extends StatelessWidget {
   AccountBloc _accountBloc;

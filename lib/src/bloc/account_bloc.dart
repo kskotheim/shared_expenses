@@ -26,7 +26,7 @@ class AccountBloc implements BlocBase {
   AccountBloc({this.authBloc}) {
     assert(authBloc != null);
     _accountEventController.stream.listen(_mapEventToState);
-    _getUserAccount();
+    _getUserAccounts();
   }
 
   void _mapEventToState(AccountEvent event) {
@@ -39,11 +39,13 @@ class AccountBloc implements BlocBase {
     if (event is AccountEventGoHome) {
       String accountId = currentUser.accounts[event.accountIndex];
       currentAccount = Account(accountId: accountId, accountName: accountNames[accountId]);
-      repo.setAccountId(currentAccount.accountId);
       _accountStateSink.add(AccountStateHome());
     }
     if (event is AccountEventGoToSelect) {
       _accountStateSink.add(AccountStateSelect());
+    }
+    if(event is AccountEventSendConnectionRequest){
+      _requestConnection(event.accountName);
     }
   }
 
@@ -54,19 +56,29 @@ class AccountBloc implements BlocBase {
     _accountNameErrorController.close();
   }
 
+  void _requestConnection(String accountName) async {
+    _accountStateSink.add(AccountStateLoading());
+    dynamic accountIdOrNull = await repo.getAccountByName(accountName);
+    
+    if(accountIdOrNull == null){ 
+      return _accountStateSink.add(AccountStateSelect());
+    }
+
+    repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
+    _accountStateSink.add(AccountStateSelect());
+  }
+
   dynamic _createAccount(String accountName) async {
+    _accountStateSink.add(AccountStateLoading());
     bool nameExists = await repo.doesAccountNameExist(accountName);
     if(nameExists) {
       _accountNameErrorController.sink.addError('$accountName already exists');
       return _accountStateSink.add(AccountStateSelect()); 
     }
     
-    String accountId = await repo.createAccount(accountName);
-    await repo.addAccountIdToUser(currentUser.userId, accountId);
-    //make this user the owner of the account
-    _getUserAccount();
+    String accountId = await repo.createAccount(accountName, currentUser.userId);
 
-
+    _getUserAccounts();
   }
 
   void _renameUser(String username){
@@ -80,10 +92,11 @@ class AccountBloc implements BlocBase {
         });
   }
 
-  void _getUserAccount() async {
+  void _getUserAccounts() async {
     _accountStateSink.add(AccountStateLoading());
 
     currentUser = await repo.getUserFromDb(authBloc.currentUserId);
+    if(currentUser == null) authBloc.logout();
 
     accountNames = await repo.getAccountNames(currentUser.accounts);
 
@@ -123,4 +136,9 @@ class AccountEventCreateAccount extends AccountEvent {
 class AccountEventRenameUser extends AccountEvent {
   final String newName;
   AccountEventRenameUser({this.newName}) : assert(newName != null);
+}
+
+class AccountEventSendConnectionRequest extends AccountEvent {
+  final String accountName;
+  AccountEventSendConnectionRequest({this.accountName}) : assert(accountName != null);
 }

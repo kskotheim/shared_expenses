@@ -34,10 +34,13 @@ class ListButtonTile extends StatelessWidget {
   Widget build(BuildContext context) {
     _accountBloc = BlocProvider.of<AccountBloc>(context);
 
-    return ListTile(
-      title: title,
-      onTap: () => _accountBloc.accountEvent
-          .add(AccountEventGoHome(accountIndex: index)),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 0.0),
+      child: ListTile(
+        title: title,
+        onTap: () => _accountBloc.accountEvent
+            .add(AccountEventGoHome(accountIndex: index)),
+      ),
     );
   }
 }
