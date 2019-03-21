@@ -21,8 +21,9 @@ abstract class RepoInterface {
 
   Future<void> createUser(String userId);
   Future<User> getUserFromDb(String userId);
+  Stream<QuerySnapshot> userStream(String accountId);
   Future<void> updateUserName(String userId, String name);
-  Future<void> addAccountIdToUser(String userId, String accountId);
+  Future<void> addUserToAccount(String userId, String accountId);
   Future<List<AnyEvent>> getEvents(String accountId);
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
 
@@ -120,13 +121,23 @@ class Repository implements RepoInterface {
     return _db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: List<String>.from(user[ACCOUNTS])));
   }
 
+  Stream<QuerySnapshot> userStream(String accountId){
+    return _db.userStream(accountId);
+  }
+
   Future<void> updateUserName(String userId, String name){
     return _db.updateUser(userId, NAME, name);
   }
 
-  Future<void> addAccountIdToUser(String userId, String accountId){
-    return _db.getUser(userId).then((userMap){
-      return _db.updateUser(userId, ACCOUNTS, userMap[ACCOUNTS] + [accountId]);
+  Future<void> addUserToAccount(String userId, String accountId){
+    print('userId: $userId, accountId: $accountId');
+    return _db.getUser(userId).then((user){
+      return _db.updateUser(userId, ACCOUNTS, user[ACCOUNTS] + [accountId]).then((_){
+          Map thisAccount = {PERMISSIONS:['user']};
+          Map userAccountsInfo = user[ACCOUNT_INFO];
+          userAccountsInfo[accountId] = thisAccount;
+        return _db.updateUser(userId, ACCOUNT_INFO, userAccountsInfo);
+      });
     });
   }
 

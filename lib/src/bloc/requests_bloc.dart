@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
@@ -10,28 +9,38 @@ import 'package:shared_expenses/src/res/db_strings.dart';
 class RequestsBloc implements BlocBase {
   
   final Repository _repo = Repository();
-  final AccountBloc accountBloc;
+  final String accountId;
+  StreamSubscription subscription;
 
-  StreamController<List<String>> _requestsStream = StreamController<List<String>>();
-  Stream<List<String>> get requests => _requestsStream.stream;
+  //returns a Stream of 2-item lists. The first item in each list is the username, the second is the userId
+  StreamController<List<List<String>>> _requestsController = StreamController<List<List<String>>>();
+  Stream<List<List<String>>> get requests => _requestsController.stream;
 
-  RequestsBloc({this.accountBloc}){
-    assert(accountBloc != null);
-    _repo.connectionRequests(accountBloc.currentAccount.accountId).listen(_mapSnapshotToStream);
+  RequestsBloc({this.accountId}){
+    assert(accountId != null);
+    subscription = _repo.connectionRequests(accountId).listen(_mapSnapshotToStream);
+  }
+
+  void approveConnectionRequest(String userId) async {
+    await _repo.deleteConnectionRequest(accountId, userId);
+    await _repo.addUserToAccount(userId, accountId);
+  }
+  
+  void deleteConnectionRequest(String userId) async {
+    _repo.deleteConnectionRequest(accountId, userId);
   }
   
   void _mapSnapshotToStream(QuerySnapshot snapshot) async {
-    List<String> names = await Future.wait(snapshot.documents.map((document){
-      return _repo.getUserFromDb(document.data[USER]).then((user){
-        return user.userName;
-      });
-    }));
-    _requestsStream.sink.add(names);
+    List<List<String>> names = snapshot.documents.map((document){
+        return List<String>.from([document.data[NAME], document.documentID]);
+    }).toList();
+    _requestsController.sink.add(names);
   }
   
   
   @override
   void dispose() {
-    _requestsStream.close();
+    _requestsController.close();
+    subscription.cancel();
   }
 }

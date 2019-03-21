@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
 
 class EventsBloc implements BlocBase {
 
-  AccountBloc accountBloc;
+  String accountId;
 
   StreamController<List<AnyEvent>> _eventsListController = StreamController<List<AnyEvent>>();
   Stream<List<AnyEvent>> get eventList => _eventsListController.stream;
@@ -15,13 +14,13 @@ class EventsBloc implements BlocBase {
   //dummy data
   List<AnyEvent> _data = [];
 
-  EventsBloc({this.accountBloc}){
-    assert(accountBloc != null);
+  EventsBloc({this.accountId}){
+    assert(accountId != null);
     _getData();
   }
 
   void _getData() async {
-    _data = await repo.getEvents(accountBloc.currentAccount.accountId);
+    _data = await repo.getEvents(accountId);
     _eventsListController.sink.add(_data);
   }
 
@@ -33,7 +32,7 @@ class EventsBloc implements BlocBase {
       'amount':5.0,
     };
 
-    repo.createPayment(accountBloc.currentAccount.accountId, newEvent).then((_) => _getData());
+    repo.createPayment(accountId, newEvent).then((_) => _getData());
   }
 
   @override

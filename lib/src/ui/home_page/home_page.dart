@@ -13,7 +13,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
-    _eventsBloc = EventsBloc(accountBloc: accountBloc);
+    _eventsBloc = EventsBloc(accountId: accountBloc.currentAccount.accountId);
 
     var goToSelectAccountButton = IconButton(
       icon: Icon(Icons.account_circle),

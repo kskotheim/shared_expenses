@@ -10,6 +10,7 @@ abstract class DB {
 
   Future<void> createUser(String userId);
   Future<Map<String, dynamic>> getUser(String userId);
+  Stream<QuerySnapshot> userStream(String accountId);
   Future<void> updateUser(String userId, String field, data);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
@@ -67,21 +68,33 @@ class DatabaseManager implements DB {
         .then((snapshot) => snapshot.data);
   }
 
+  Stream<QuerySnapshot> userStream(String accountId){
+    return _usersCollection.where(ACCOUNTS, arrayContains:accountId).snapshots();
+  }
+
   Future<void> updateUser(String userId, String field, data) async {
     return _user(userId)
         .updateData({field: data});
   }
 
   Future<void> createAccountConnectionRequest(String accountId, String userId) async {
-    return _account(accountId).collection(CONNECTION_REQUESTS).document().setData({USER: userId});
+    print('creating account connection request');
+    return _user(userId).get().then((user){
+      return _user(userId).updateData({CONNECTION_REQUESTS: (user.data[CONNECTION_REQUESTS] ?? []) + [accountId]});
+
+    });
   }
 
   Stream<QuerySnapshot> connectionRequests(String accountId){
-    return _account(accountId).collection(CONNECTION_REQUESTS).snapshots();
+    return _usersCollection.where(CONNECTION_REQUESTS, arrayContains: accountId).snapshots();
   }
 
-  Future<void> deleteAccountConnectionRequest(String accountId, String request) async {
-    return _account(accountId).collection(CONNECTION_REQUESTS).document(request).delete();
+  Future<void> deleteAccountConnectionRequest(String accountId, String userId) async {
+    return _user(userId).get().then((user){
+      List<String> connectionRequests = List<String>.from(user.data[CONNECTION_REQUESTS] ?? []);
+      while(connectionRequests.contains(accountId)) connectionRequests.remove(accountId);
+      return _user(userId).updateData({CONNECTION_REQUESTS: connectionRequests});
+    });
   }
 
   Future<void> createPayment(

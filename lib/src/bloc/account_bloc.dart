@@ -57,10 +57,12 @@ class AccountBloc implements BlocBase {
   }
 
   void _requestConnection(String accountName) async {
+    print('requesting connection');
     _accountStateSink.add(AccountStateLoading());
     dynamic accountIdOrNull = await repo.getAccountByName(accountName);
     
     if(accountIdOrNull == null){ 
+      print('no account by that name');
       return _accountStateSink.add(AccountStateSelect());
     }
 
@@ -95,6 +97,7 @@ class AccountBloc implements BlocBase {
   void _getUserAccounts() async {
     _accountStateSink.add(AccountStateLoading());
 
+    print('authBloc.currentUserId: ${authBloc.currentUserId}');
     currentUser = await repo.getUserFromDb(authBloc.currentUserId);
     if(currentUser == null) authBloc.logout();
 
