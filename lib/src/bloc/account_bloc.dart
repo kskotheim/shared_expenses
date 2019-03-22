@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
@@ -20,11 +22,15 @@ class AccountBloc implements BlocBase {
   StreamController<AccountEvent> _accountEventController =StreamController<AccountEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
 
-  StreamController _accountNameErrorController = StreamController.broadcast();
-  Stream get accountNameErrors => _accountNameErrorController.stream;
+  StreamSubscription _userSubscription;
+  BehaviorSubject<User> _currentUserController = BehaviorSubject<User>();
+  Stream<User> get currentUserStream => _currentUserController.stream;
+  
 
   AccountBloc({this.authBloc}) {
+    print('created a new accountBloc');
     assert(authBloc != null);
+    _userSubscription = repo.currentUserStream(authBloc.currentUserId).listen(_updateUserInfo);
     _accountEventController.stream.listen(_mapEventToState);
     _getUserAccounts();
   }
@@ -49,11 +55,20 @@ class AccountBloc implements BlocBase {
     }
   }
 
+  void _updateUserInfo(DocumentSnapshot snapshot) async{
+    if(snapshot.data == null) return print('no data in user snapshot');
+    User newUser = User.fromDocumentSnapshot(snapshot);
+    currentUser = newUser;
+    accountNames = await repo.getAccountNames(currentUser.accounts);
+    _currentUserController.sink.add(currentUser);
+  }
+
   @override
   void dispose() {
     _accountStateController.close();
     _accountEventController.close();
-    _accountNameErrorController.close();
+    _currentUserController.close();
+    _userSubscription.cancel();
   }
 
   void _requestConnection(String accountName) async {
@@ -62,8 +77,7 @@ class AccountBloc implements BlocBase {
     dynamic accountIdOrNull = await repo.getAccountByName(accountName);
     
     if(accountIdOrNull == null){ 
-      print('no account by that name');
-      return _accountStateSink.add(AccountStateSelect());
+      return _accountStateSink.add(AccountStateSelect(error: '$accountName does not exist'));
     }
 
     repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
@@ -74,10 +88,10 @@ class AccountBloc implements BlocBase {
     _accountStateSink.add(AccountStateLoading());
     bool nameExists = await repo.doesAccountNameExist(accountName);
     if(nameExists) {
-      _accountNameErrorController.sink.addError('$accountName already exists');
-      return _accountStateSink.add(AccountStateSelect()); 
+      return _accountStateSink.add(AccountStateSelect(error: '$accountName already exists')); 
     }
     
+    //do we actually need this id here?
     String accountId = await repo.createAccount(accountName, currentUser.userId);
 
     _getUserAccounts();
@@ -118,7 +132,10 @@ class AccountState {}
 
 class AccountStateLoading extends AccountState {}
 
-class AccountStateSelect extends AccountState {}
+class AccountStateSelect extends AccountState {
+  final String error;
+  AccountStateSelect({this.error});
+}
 
 class AccountStateHome extends AccountState {}
 

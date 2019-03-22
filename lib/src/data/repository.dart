@@ -21,6 +21,7 @@ abstract class RepoInterface {
 
   Future<void> createUser(String userId);
   Future<User> getUserFromDb(String userId);
+  Stream<DocumentSnapshot> currentUserStream(String userId);
   Stream<QuerySnapshot> userStream(String accountId);
   Future<void> updateUserName(String userId, String name);
   Future<void> addUserToAccount(String userId, String accountId);
@@ -121,6 +122,10 @@ class Repository implements RepoInterface {
     return _db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: List<String>.from(user[ACCOUNTS])));
   }
 
+  Stream<DocumentSnapshot> currentUserStream(String userId){
+    return _db.currentUserStream(userId);
+  }
+
   Stream<QuerySnapshot> userStream(String accountId){
     return _db.userStream(accountId);
   }
@@ -130,8 +135,9 @@ class Repository implements RepoInterface {
   }
 
   Future<void> addUserToAccount(String userId, String accountId){
-    print('userId: $userId, accountId: $accountId');
     return _db.getUser(userId).then((user){
+      List<String> userAccounts = List<String>.from(user[ACCOUNTS]);
+      if(userAccounts.contains(accountId)) return null;
       return _db.updateUser(userId, ACCOUNTS, user[ACCOUNTS] + [accountId]).then((_){
           Map thisAccount = {PERMISSIONS:['user']};
           Map userAccountsInfo = user[ACCOUNT_INFO];
@@ -155,7 +161,7 @@ class Repository implements RepoInterface {
   }
 
   Stream<QuerySnapshot> connectionRequests(String accountId){
-    return _db.connectionRequests(accountId);
+    return _db.accountConnectionRequests(accountId);
   }
 
   Future<void> deleteConnectionRequest(String accountId, String requestId){

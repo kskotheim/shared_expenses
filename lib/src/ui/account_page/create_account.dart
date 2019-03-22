@@ -41,45 +41,36 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
   }
 
   Widget _createAccountField() {
+    TextEditingController _nameController = TextEditingController();
 
-    TextEditingController _nameController =TextEditingController();
-
-    return StreamBuilder<Object>(
-      stream: _accountBloc.accountNameErrors,
-      builder: (context, snapshot) {
-        return Column(
+    return Column(
+      children: <Widget>[
+        Text("New Account Name:"),
+        Container(
+          width: 200.0,
+          child: TextField(
+            controller: _nameController,
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text("New Account Name:"),
-              Container(
-                width: 200.0,
-                child: TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    errorText: snapshot.error,
-                  ),
-                ),
-              ),
-
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                FlatButton(
-                  child: Text('Submit'),
-                  onPressed: () => _accountBloc.accountEvent.add(AccountEventCreateAccount(accountName: _nameController.text)),
-                ),
-                FlatButton(
-                  child: Text('Cancel'),
-                  onPressed: () {
-                    setState(() {
-                      _createAccount = false;
-                    });
-                  },
-                ),
-              ],
-            )
+            FlatButton(
+              child: Text('Submit'),
+              onPressed: () => _accountBloc.accountEvent.add(
+                  AccountEventCreateAccount(accountName: _nameController.text)),
+            ),
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                setState(() {
+                  _createAccount = false;
+                });
+              },
+            ),
           ],
-        );
-      }
+        )
+      ],
     );
   }
 }

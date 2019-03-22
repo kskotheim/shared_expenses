@@ -26,14 +26,12 @@ class ConnectionRequestsList extends StatelessWidget {
                   icon: Icon(Icons.check),
                   onPressed: (){
                     _requestsBloc.approveConnectionRequest(request[1]);
-
                   },
                 ),
                 trailing: IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: (){
                     _requestsBloc.deleteConnectionRequest(request[1]);
-
                   },
                 ),
               )).toList(),

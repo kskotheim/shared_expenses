@@ -41,48 +41,38 @@ class _ConnectAccountSectionState extends State<ConnectAccountSection> {
   }
 
   Widget _createAccountField() {
+    TextEditingController _nameController = TextEditingController();
 
-    TextEditingController _nameController =TextEditingController();
-
-
-    return StreamBuilder<Object>(
-      stream: _accountBloc.accountNameErrors,
-      builder: (context, snapshot) {
-        return Column(
+    return Column(
+      children: <Widget>[
+        Text("Request Connection To:"),
+        Container(
+          width: 200.0,
+          child: TextField(
+            controller: _nameController,
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text("Request Connection To:"),
-              Container(
-                width: 200.0,
-                child: TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    errorText: snapshot.error,
-                  ),
-                ),
-              ),
-
-
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                FlatButton(
-                  child: Text('Submit'),
-                  //Send connect to account event to account bloc
-                  onPressed: () => _accountBloc.accountEvent.add(AccountEventSendConnectionRequest(accountName: _nameController.text)),
-                ),
-                FlatButton(
-                  child: Text('Cancel'),
-                  onPressed: () {
-                    setState(() {
-                      _connectAccount = false;
-                    });
-                  },
-                ),
-              ],
-            )
+            FlatButton(
+              child: Text('Submit'),
+              //Send connect to account event to account bloc
+              onPressed: () => _accountBloc.accountEvent.add(
+                  AccountEventSendConnectionRequest(
+                      accountName: _nameController.text)),
+            ),
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                setState(() {
+                  _connectAccount = false;
+                });
+              },
+            ),
           ],
-        );
-      }
+        )
+      ],
     );
   }
 }

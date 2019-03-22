@@ -10,11 +10,12 @@ abstract class DB {
 
   Future<void> createUser(String userId);
   Future<Map<String, dynamic>> getUser(String userId);
+  Stream<DocumentSnapshot> currentUserStream(String userId);
   Stream<QuerySnapshot> userStream(String accountId);
   Future<void> updateUser(String userId, String field, data);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
-  Stream<QuerySnapshot> connectionRequests(String accountId);
+  Stream<QuerySnapshot> accountConnectionRequests(String accountId);
   Future<void> deleteAccountConnectionRequest(String accountId, String requestId);
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
@@ -68,7 +69,11 @@ class DatabaseManager implements DB {
         .then((snapshot) => snapshot.data);
   }
 
-  Stream<QuerySnapshot> userStream(String accountId){
+  Stream<DocumentSnapshot> currentUserStream(String userId){
+    return _user(userId).snapshots();
+  }
+
+  Stream<QuerySnapshot> userStream(String accountId) {
     return _usersCollection.where(ACCOUNTS, arrayContains:accountId).snapshots();
   }
 
@@ -85,7 +90,7 @@ class DatabaseManager implements DB {
     });
   }
 
-  Stream<QuerySnapshot> connectionRequests(String accountId){
+  Stream<QuerySnapshot> accountConnectionRequests(String accountId){
     return _usersCollection.where(CONNECTION_REQUESTS, arrayContains: accountId).snapshots();
   }
 

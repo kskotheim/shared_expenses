@@ -9,6 +9,9 @@ class AccountRoot extends StatelessWidget {
   AccountBloc _accountBloc;
   AuthBloc _authBloc;
 
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  AccountRoot({this.scaffoldKey});
+
   @override
   Widget build(BuildContext context) {
     _authBloc = BlocProvider.of<AuthBloc>(context);
@@ -32,10 +35,18 @@ class AccountRoot extends StatelessWidget {
             }
 
             if (state is AccountStateSelect) {
+              AccountStateSelect selectState = state;
+              if(selectState.error != null)
+                WidgetsBinding.instance.addPostFrameCallback((_) => _showErrorMessage(selectState.error));
+
               return SelectAccountPage();
             }
           }),
     );
+  }
+
+  void _showErrorMessage(String error) {
+    scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(error),));
   }
 }
 

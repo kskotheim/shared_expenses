@@ -22,7 +22,7 @@ class RootWidget extends StatelessWidget {
             if (!snapshot.hasData) return Container(child: Text('no data'));
             Widget pageToRender;
             if (snapshot.data is AuthStateLoggedIn) {
-              pageToRender = AccountRoot();
+              pageToRender = AccountRoot(scaffoldKey: _scaffoldKey,);
             }
             if (snapshot.data is AuthStateNotLoggedIn) {
               AuthStateNotLoggedIn state = snapshot.data;
