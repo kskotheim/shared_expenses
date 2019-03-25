@@ -9,3 +9,4 @@ const String NAMES = 'Names';
 const String PERMISSIONS = 'Permissions';
 const String ACCOUNT_INFO = 'Account_Info';
 const String CONNECTION_REQUESTS = 'Connection_Requests';
+const String EMAIL = 'Email';

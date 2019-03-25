@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
+import 'package:shared_expenses/src/res/db_strings.dart';
 import 'package:shared_expenses/src/ui/home_page/connection_requests.dart';
 import 'package:shared_expenses/src/ui/home_page/events.dart';
 import 'package:shared_expenses/src/ui/home_page/new_event.dart';
@@ -19,6 +20,7 @@ class HomePage extends StatelessWidget {
       icon: Icon(Icons.account_circle),
       onPressed: () => accountBloc.accountEvent.add(AccountEventGoToSelect()),
     );
+    List<String> permissions = List<String>.from(accountBloc.currentUser.accountInfo[accountBloc.currentAccount.accountId][PERMISSIONS]);
 
     return BlocProvider(
       bloc: _eventsBloc,
@@ -38,10 +40,12 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               Divider(),
-              Expanded(
+              permissions.contains('owner')
+              ? Expanded(
                 child: ConnectionRequestsList(),
                 flex: 1,
               )
+              : Container()
             ],
           ),
           Row(

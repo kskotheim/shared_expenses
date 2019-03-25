@@ -72,12 +72,17 @@ class AccountBloc implements BlocBase {
   }
 
   void _requestConnection(String accountName) async {
-    print('requesting connection');
     _accountStateSink.add(AccountStateLoading());
     dynamic accountIdOrNull = await repo.getAccountByName(accountName);
     
     if(accountIdOrNull == null){ 
       return _accountStateSink.add(AccountStateSelect(error: '$accountName does not exist'));
+    }
+
+    bool alreadyConnectedToAccount =currentUser.accounts.contains(accountIdOrNull);
+    
+    if(alreadyConnectedToAccount){
+      return _accountStateSink.add(AccountStateSelect(error: 'You are already connected to $accountName'));
     }
 
     repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
@@ -86,15 +91,15 @@ class AccountBloc implements BlocBase {
 
   dynamic _createAccount(String accountName) async {
     _accountStateSink.add(AccountStateLoading());
-    bool nameExists = await repo.doesAccountNameExist(accountName);
-    if(nameExists) {
+    dynamic accountIdOrNull = await repo.getAccountByName(accountName);
+
+    if(accountIdOrNull != null) {
       return _accountStateSink.add(AccountStateSelect(error: '$accountName already exists')); 
     }
     
-    //do we actually need this id here?
-    String accountId = await repo.createAccount(accountName, currentUser.userId);
+    repo.createAccount(accountName, currentUser.userId);
 
-    _getUserAccounts();
+    // _getUserAccounts();
   }
 
   void _renameUser(String username){
@@ -111,7 +116,6 @@ class AccountBloc implements BlocBase {
   void _getUserAccounts() async {
     _accountStateSink.add(AccountStateLoading());
 
-    print('authBloc.currentUserId: ${authBloc.currentUserId}');
     currentUser = await repo.getUserFromDb(authBloc.currentUserId);
     if(currentUser == null) authBloc.logout();
 

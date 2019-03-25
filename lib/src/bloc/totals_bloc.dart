@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
@@ -11,8 +12,8 @@ class TotalsBloc implements BlocBase {
   final Repository repo =Repository();
   StreamSubscription _subscription;
 
-  StreamController<List<Total>> _totalsListController = StreamController<List<Total>>();
-  Stream<List<Total>> get totalsList => _totalsListController.stream;
+  StreamController<List<ListTile>> _totalsListController = StreamController<List<ListTile>>();
+  Stream<List<ListTile>> get totalsList => _totalsListController.stream;
 
   TotalsBloc({this.accountBloc}){
 
@@ -22,8 +23,8 @@ class TotalsBloc implements BlocBase {
   }
 
   void _addUsersToTotalsList(QuerySnapshot snapshot){
-    List<Total> totalsToShow = [];
-    snapshot.documents.forEach((doc) => totalsToShow.add(Total(name: doc.data[NAME])));
+    List<ListTile> totalsToShow = [];
+    snapshot.documents.forEach((doc) => totalsToShow.add(ListTile(title: Text(doc.data[NAME]), subtitle: Text(doc.data[EMAIL]))));
     _totalsListController.sink.add(totalsToShow);
   }
 
@@ -32,9 +33,4 @@ class TotalsBloc implements BlocBase {
     _totalsListController.close();
     _subscription.cancel();
   }
-}
-
-class Total {
-  final String name;
-  Total({this.name});
 }

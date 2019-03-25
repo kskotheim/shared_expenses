@@ -54,7 +54,7 @@ class ConnectionRequestsSection extends StatelessWidget {
       child: StreamBuilder<List<String>>(
         stream: _userRequestsBloc.requests,
         builder: (context, snapshot) {
-          if(snapshot.data == null) return Text('no cxn rqsts');
+          if(snapshot.data == null) return Container();
           return Column(
             children: <Widget>[
               snapshot.data.length != 0 ? Text('Connection Requests: ') : Container(),

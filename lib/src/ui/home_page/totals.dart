@@ -13,16 +13,12 @@ class TotalsWidget extends StatelessWidget {
      _totalsBloc = TotalsBloc(accountBloc: accountBloc);
     return BlocProvider(
       bloc: _totalsBloc,
-      child: StreamBuilder<List<Total>>(
+      child: StreamBuilder<List<ListTile>>(
           stream: _totalsBloc.totalsList,
           builder: (context, snapshot) {
             if (snapshot.data == null) return Text('no totals data');
             return ListView(
-              children: snapshot.data
-                .map((t) => ListTile(
-                      title: Text(t.name),
-                    ))
-                .toList(),
+              children: snapshot.data,
             );
           }),
     );

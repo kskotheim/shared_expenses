@@ -6,16 +6,20 @@ class User{
   final String userId;
   String userName;
   List<dynamic> accounts;
+  String email;
+  Map<String, dynamic> accountInfo;
 
-  User({this.userId, this.userName, this.accounts}): assert(userId != null);
+  User({this.userId, this.userName, this.accounts, this.email, this.accountInfo}): assert(userId != null);
 
   User.fromFirebaseUser(FirebaseUser user) :
     userId = user.uid;
 
   User.fromDocumentSnapshot(DocumentSnapshot user) :
     userId = user.documentID,
-    userName = user[NAME],
-    accounts = List<String>.from(user[ACCOUNTS] ?? []);
+    userName = user.data[NAME],
+    accounts = List<String>.from(user.data[ACCOUNTS] ?? []),
+    email = user.data[EMAIL],
+    accountInfo = Map<String, dynamic>.from(user.data[ACCOUNT_INFO]);
 
 
 }

@@ -17,9 +17,9 @@ abstract class RepoInterface {
   Future<dynamic> getAccountByName(String name);
   Future<void> updateAccountName(String accountId, String name);
   Future<Map<String, String>> getAccountNames(List<String> accountIds);
-  Future<bool> doesAccountNameExist(String name);
+  Future<List<String>> getAccountNamesList(List<String> accountIds);
 
-  Future<void> createUser(String userId);
+  Future<void> createUser(String userId, String email);
   Future<User> getUserFromDb(String userId);
   Stream<DocumentSnapshot> currentUserStream(String userId);
   Stream<QuerySnapshot> userStream(String accountId);
@@ -106,20 +106,20 @@ class Repository implements RepoInterface {
     });
   }
 
-  Future<bool> doesAccountNameExist(String name){
-    return _db.getAccountsWhere(NAME, name).then((documents) => documents.length != 0);
+  Future<List<String>> getAccountNamesList(List<String> accountIds){
+    return _db.getAccountNames(accountIds);
   }
 
   Future<void> updateAccountName(String accountId, String name) {
     return _db.updateAccount(accountId, NAME, name);
   }
 
-  Future<void> createUser(String userId) {
-    return _db.createUser(userId);
+  Future<void> createUser(String userId, String email) {
+    return _db.createUser(userId, email);
   }
 
   Future<User> getUserFromDb(String userId){
-    return _db.getUser(userId).then((user) => User(userId: userId, userName: user[NAME], accounts: List<String>.from(user[ACCOUNTS])));
+    return _db.getUser(userId).then((user) => User.fromDocumentSnapshot(user));
   }
 
   Stream<DocumentSnapshot> currentUserStream(String userId){

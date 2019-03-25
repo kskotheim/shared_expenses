@@ -14,17 +14,17 @@ class UserRequestsBloc implements BlocBase {
   StreamController<List<String>> _requestsController = StreamController<List<String>>();
   Stream<List<String>> get requests => _requestsController.stream;
 
-
   UserRequestsBloc({this.userId}){
     assert(userId != null);
-
     _subscription = repo.currentUserStream(userId).listen(_mapDocumentToUserRequestList);
-    
   }
 
-  void _mapDocumentToUserRequestList(DocumentSnapshot doc){
-    if(doc.data == null) return;
-    _requestsController.sink.add(List<String>.from(doc.data[CONNECTION_REQUESTS] ?? []));
+  void _mapDocumentToUserRequestList(DocumentSnapshot doc) async {
+    if(doc.data == null || doc.data[CONNECTION_REQUESTS] == null || doc.data[CONNECTION_REQUESTS].length == 0) return;
+
+    List<String> requestedAccountNames = await repo.getAccountNamesList(List<String>.from(doc.data[CONNECTION_REQUESTS]));
+
+    _requestsController.sink.add(requestedAccountNames);
   }
 
   @override
@@ -32,5 +32,4 @@ class UserRequestsBloc implements BlocBase {
     _requestsController.close();
     _subscription.cancel();
   }
-  
 }

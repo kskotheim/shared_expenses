@@ -91,11 +91,10 @@ class AuthBloc implements BlocBase {
     _currentUserId = await repo.createUserWithEmailAndPassword(event.username, event.password)
     .catchError((e) { error = _catchError(e);});
     
-    await repo.createUser(_currentUserId);
- 
     if(error != null){
       _errorLoggingIn(error);
     } else {
+      await repo.createUser(_currentUserId, event.username);
       _logInUser();
     }
   }

@@ -8,8 +8,8 @@ abstract class DB {
   Future<List<String>> getAccountNames(List<String> accountIds);
   Future<List<DocumentSnapshot>> getAccountsWhere(String field, val);
 
-  Future<void> createUser(String userId);
-  Future<Map<String, dynamic>> getUser(String userId);
+  Future<void> createUser(String userId, String email);
+  Future<DocumentSnapshot> getUser(String userId);
   Stream<DocumentSnapshot> currentUserStream(String userId);
   Stream<QuerySnapshot> userStream(String accountId);
   Future<void> updateUser(String userId, String field, data);
@@ -57,16 +57,16 @@ class DatabaseManager implements DB {
     return _accountCollection.where(field, isEqualTo: val).getDocuments().then((query) => query.documents);
   }
 
-  Future<void> createUser(String userId) async {
+  Future<void> createUser(String userId, String email) async {
+    assert(userId != null, email != null);
     return _user(userId)
-        .setData({CREATED: DateTime.now(), ACCOUNTS: [], ACCOUNT_INFO: {},});
+        .setData({CREATED: DateTime.now(), ACCOUNTS: [], ACCOUNT_INFO: {}, EMAIL: email});
   }
 
-  Future<Map<String, dynamic>> getUser(String userId) async {
+  Future<DocumentSnapshot> getUser(String userId) async {
     assert(userId != null);
     return _user(userId)
-        .get()
-        .then((snapshot) => snapshot.data);
+        .get();
   }
 
   Stream<DocumentSnapshot> currentUserStream(String userId){
