@@ -20,6 +20,7 @@ abstract class DB {
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
   Future<List<Map<String, dynamic>>> getPayments(String accountId);
+  Stream<QuerySnapshot> paymentStream(String accountId);
   Future<void> deletePayment(String accountId, String paymentId);
 }
 
@@ -117,6 +118,10 @@ class DatabaseManager implements DB {
         .then((data) {
       return data.documents.map((DocumentSnapshot snap) => snap.data).toList();
     });
+  }
+
+  Stream<QuerySnapshot> paymentStream(String accountId) {
+    return _account(accountId).collection(PAYMENTS).limit(10).snapshots();
   }
 
   Future<void> deletePayment(String accountId, String paymentId) async {

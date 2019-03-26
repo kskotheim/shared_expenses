@@ -4,6 +4,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
+import 'package:shared_expenses/src/res/db_strings.dart';
 import 'package:shared_expenses/src/res/models/account.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
@@ -14,6 +15,7 @@ class AccountBloc implements BlocBase {
   User currentUser;
   Account currentAccount;
   Map<String, String> accountNames;
+  List<String> permissions;
 
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
   Stream<AccountState> get accountState => _accountStateController.stream;
@@ -28,11 +30,10 @@ class AccountBloc implements BlocBase {
   
 
   AccountBloc({this.authBloc}) {
-    print('created a new accountBloc');
     assert(authBloc != null);
-    _userSubscription = repo.currentUserStream(authBloc.currentUserId).listen(_updateUserInfo);
     _accountEventController.stream.listen(_mapEventToState);
-    _getUserAccounts();
+    _initUserInfo();
+    _userSubscription = repo.currentUserStream(authBloc.currentUserId).listen(_updateUserInfo);
   }
 
   void _mapEventToState(AccountEvent event) {
@@ -45,9 +46,13 @@ class AccountBloc implements BlocBase {
     if (event is AccountEventGoHome) {
       String accountId = currentUser.accounts[event.accountIndex];
       currentAccount = Account(accountId: accountId, accountName: accountNames[accountId]);
+      permissions =  List<String>.from(currentUser.accountInfo[currentAccount.accountId][PERMISSIONS]);
+
       _accountStateSink.add(AccountStateHome());
     }
     if (event is AccountEventGoToSelect) {
+      currentAccount = null;
+      permissions = null;
       _accountStateSink.add(AccountStateSelect());
     }
     if(event is AccountEventSendConnectionRequest){
@@ -57,9 +62,12 @@ class AccountBloc implements BlocBase {
 
   void _updateUserInfo(DocumentSnapshot snapshot) async{
     if(snapshot.data == null) return print('no data in user snapshot');
-    User newUser = User.fromDocumentSnapshot(snapshot);
-    currentUser = newUser;
-    accountNames = await repo.getAccountNames(currentUser.accounts);
+    User userFromSink = User.fromDocumentSnapshot(snapshot);
+    if(currentUser != null && currentUser.accounts !=userFromSink.accounts) {
+      accountNames = await repo.getAccountNames(currentUser.accounts);
+    }
+    currentUser = userFromSink;
+    if(currentAccount!= null) permissions =  List<String>.from(currentUser.accountInfo[currentAccount.accountId][PERMISSIONS]);
     _currentUserController.sink.add(currentUser);
   }
 
@@ -113,7 +121,7 @@ class AccountBloc implements BlocBase {
         });
   }
 
-  void _getUserAccounts() async {
+  void _initUserInfo() async {
     _accountStateSink.add(AccountStateLoading());
 
     currentUser = await repo.getUserFromDb(authBloc.currentUserId);

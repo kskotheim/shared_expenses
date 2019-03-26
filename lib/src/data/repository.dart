@@ -26,6 +26,7 @@ abstract class RepoInterface {
   Future<void> updateUserName(String userId, String name);
   Future<void> addUserToAccount(String userId, String accountId);
   Future<List<AnyEvent>> getEvents(String accountId);
+  Stream<QuerySnapshot> paymentStream(String accountId);
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
@@ -150,6 +151,10 @@ class Repository implements RepoInterface {
   Future<List<AnyEvent>> getEvents(String accountId) {
     return _db.getPayments(accountId).then(
         (events) => events.map((event) => Payment.fromJson(event)).toList());
+  }
+
+  Stream<QuerySnapshot> paymentStream(String accountId){
+    return _db.paymentStream(accountId);
   }
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment) {

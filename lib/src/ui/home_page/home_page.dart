@@ -20,7 +20,6 @@ class HomePage extends StatelessWidget {
       icon: Icon(Icons.account_circle),
       onPressed: () => accountBloc.accountEvent.add(AccountEventGoToSelect()),
     );
-    List<String> permissions = List<String>.from(accountBloc.currentUser.accountInfo[accountBloc.currentAccount.accountId][PERMISSIONS]);
 
     return BlocProvider(
       bloc: _eventsBloc,
@@ -40,7 +39,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               Divider(),
-              permissions.contains('owner')
+              accountBloc.permissions.contains('owner')
               ? Expanded(
                 child: ConnectionRequestsList(),
                 flex: 1,
