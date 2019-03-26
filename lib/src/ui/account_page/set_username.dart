@@ -35,8 +35,12 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
             children: <Widget>[
               FlatButton(
                 child: Text('Submit'),
-                onPressed: () => accountBloc.accountEvent
-                    .add(AccountEventRenameUser(newName: _nameController.text)),
+                onPressed: () {
+                  accountBloc.accountEvent.add(AccountEventRenameUser(newName: _nameController.text));
+                  setState((){
+                    _editUsername = false;
+                  });
+                },
               ),
               FlatButton(child: Text('Cancel'),onPressed: (){
                 setState(() {

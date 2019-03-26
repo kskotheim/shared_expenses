@@ -13,6 +13,7 @@ abstract class DB {
   Stream<DocumentSnapshot> currentUserStream(String userId);
   Stream<QuerySnapshot> userStream(String accountId);
   Future<void> updateUser(String userId, String field, data);
+  Future<void> addAccountToUser(String userId, String accountId, String permission);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
   Stream<QuerySnapshot> accountConnectionRequests(String accountId);
@@ -82,6 +83,23 @@ class DatabaseManager implements DB {
     return _user(userId)
         .updateData({field: data});
   }
+
+  Future<void> addAccountToUser(String userId, String accountId, String permission) async {
+    WriteBatch batch =_firestore.batch();
+    DocumentReference user =_user(userId);
+    DocumentSnapshot userSnapshot = await user.get();
+
+    batch.updateData(user, {ACCOUNTS: userSnapshot[ACCOUNTS] + [accountId]});
+
+    Map thisAccount = {PERMISSIONS:[permission]};
+    Map userAccountsInfo = userSnapshot.data[ACCOUNT_INFO];
+    userAccountsInfo[accountId] = thisAccount;
+
+    batch.updateData(user, {ACCOUNT_INFO:userAccountsInfo});
+
+    return batch.commit();
+  }
+
 
   Future<void> createAccountConnectionRequest(String accountId, String userId) async {
     print('creating account connection request');

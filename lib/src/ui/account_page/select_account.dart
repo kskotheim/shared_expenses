@@ -10,22 +10,18 @@ class SelectAccountWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     _accountBloc = BlocProvider.of<AccountBloc>(context);
 
-    return StreamBuilder<User>(
-      stream: _accountBloc.currentUserStream,
-      builder: (context, snapshot) {
-        if(snapshot.data == null) return Text('no user data');
-        List<ListButtonTile> selectAccountTile = snapshot.data.accounts.map((account) => ListButtonTile(title: Text(_accountBloc.accountNames[account]),)).toList();
-        for (int i = 0; i < selectAccountTile.length; i++) {
-          selectAccountTile[i].index = i;
-        }
+    if( _accountBloc.accountNames == null) return Text('no user data');
+    print('account names: ${_accountBloc.accountNames}');
+    List<ListButtonTile> selectAccountTile = _accountBloc.currentUser.accounts.map((accountId) => ListButtonTile(title: Text(_accountBloc.accountNames[accountId]),)).toList();
+    for (int i = 0; i < selectAccountTile.length; i++) {
+      selectAccountTile[i].index = i;
+    }
 
-        return Column(
-          children: <Widget>[
-                selectAccountTile.isEmpty ? Text('No Accounts') : Text('Select Account:')
-              ] +
-              selectAccountTile,
-        );
-      }
+    return Column(
+      children: <Widget>[
+            selectAccountTile.isEmpty ? Text('No Accounts') : Text('Select Account:')
+          ] +
+          selectAccountTile,
     );
   }
 }

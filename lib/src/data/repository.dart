@@ -12,7 +12,7 @@ abstract class RepoInterface {
   Future<String> createUserWithEmailAndPassword(String email, String password);
   Future<void> signOut();
 
-  Future<void> createAccount(String accountName, String userId);
+  Future<void> createAccount(String accountName, User user);
   Future<Account> getAccount(String accountId);
   Future<dynamic> getAccountByName(String name);
   Future<void> updateAccountName(String accountId, String name);
@@ -67,20 +67,9 @@ class Repository implements RepoInterface {
     return _auth.signOut();
   }
 
-  Future<String> createAccount(String accountName, String userId) async {
+  Future<String> createAccount(String accountName, User user) async {
     return _db.createAccount(accountName).then((accountId){
-      return _db.getUser(userId).then((user){
-        //add account Id to user document's 'accounts' list
-        return _db.updateUser(userId, ACCOUNTS, user[ACCOUNTS] + [accountId]).then((_){
-          //add account info entry on user document designting user as owner of account
-          Map thisAccount = {PERMISSIONS:['owner']};
-          Map userAccountsInfo = user[ACCOUNT_INFO];
-          userAccountsInfo[accountId] = thisAccount;
-          return _db.updateUser(userId, ACCOUNT_INFO, userAccountsInfo).then((_){
-            return accountId;
-          });
-        });
-      });
+      return _db.addAccountToUser(user.userId, accountId, 'owner').then((_) => accountId);
     });
   }
 
@@ -137,14 +126,7 @@ class Repository implements RepoInterface {
 
   Future<void> addUserToAccount(String userId, String accountId){
     return _db.getUser(userId).then((user){
-      List<String> userAccounts = List<String>.from(user[ACCOUNTS]);
-      if(userAccounts.contains(accountId)) return null;
-      return _db.updateUser(userId, ACCOUNTS, user[ACCOUNTS] + [accountId]).then((_){
-          Map thisAccount = {PERMISSIONS:['user']};
-          Map userAccountsInfo = user[ACCOUNT_INFO];
-          userAccountsInfo[accountId] = thisAccount;
-        return _db.updateUser(userId, ACCOUNT_INFO, userAccountsInfo);
-      });
+      return _db.addAccountToUser(userId, accountId, 'user');
     });
   }
 
