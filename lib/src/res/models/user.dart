@@ -6,6 +6,7 @@ class User{
   final String userId;
   String userName;
   List<dynamic> accounts;
+  List<String> connectionRequests;
   String email;
   Map<String, dynamic> accountInfo;
 
@@ -19,7 +20,7 @@ class User{
     userName = user.data[NAME],
     accounts = List<String>.from(user.data[ACCOUNTS] ?? []),
     email = user.data[EMAIL],
-    accountInfo = Map<String, dynamic>.from(user.data[ACCOUNT_INFO]);
-
+    accountInfo = Map<String, dynamic>.from(user.data[ACCOUNT_INFO] ?? {}),
+    connectionRequests = List<String>.from(user.data[CONNECTION_REQUESTS] ?? []);
 
 }

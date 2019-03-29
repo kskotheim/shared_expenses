@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
-import 'package:shared_expenses/src/res/db_strings.dart';
+import 'package:shared_expenses/src/res/models/user.dart';
 
 class TotalsBloc implements BlocBase {
 
@@ -22,9 +21,10 @@ class TotalsBloc implements BlocBase {
 
   }
 
-  void _addUsersToTotalsList(QuerySnapshot snapshot){
+  void _addUsersToTotalsList(List<User> users){
     List<ListTile> totalsToShow = [];
-    snapshot.documents.forEach((doc) => totalsToShow.add(ListTile(title: Text(doc.data[NAME]), subtitle: Text(doc.data[EMAIL]))));
+    accountBloc.usersInAccount = users;
+    users.forEach((user) => totalsToShow.add(ListTile(title: Text(user.userName), subtitle: Text(user.email))));
     _totalsListController.sink.add(totalsToShow);
   }
 

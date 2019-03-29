@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/data/auth_provider.dart';
 import 'package:shared_expenses/src/data/db_provider.dart';
+
 import 'package:shared_expenses/src/res/models/account.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
@@ -21,16 +21,16 @@ abstract class RepoInterface {
 
   Future<void> createUser(String userId, String email);
   Future<User> getUserFromDb(String userId);
-  Stream<DocumentSnapshot> currentUserStream(String userId);
-  Stream<QuerySnapshot> userStream(String accountId);
+  Stream<User> currentUserStream(String userId);
+  Stream<List<User>> userStream(String accountId);
   Future<void> updateUserName(String userId, String name);
   Future<void> addUserToAccount(String userId, String accountId);
   Future<List<AnyEvent>> getEvents(String accountId);
-  Stream<QuerySnapshot> paymentStream(String accountId);
+  Stream<List<Map<String, dynamic>>> paymentStream(String accountId);
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
-  Stream<QuerySnapshot> connectionRequests(String accountId);
+  Stream<List<Map<String, dynamic>>> connectionRequests(String accountId);
   Future<void> deleteConnectionRequest(String accountId, String request);
 
 }
@@ -112,12 +112,15 @@ class Repository implements RepoInterface {
     return _db.getUser(userId).then((user) => User.fromDocumentSnapshot(user));
   }
 
-  Stream<DocumentSnapshot> currentUserStream(String userId){
-    return _db.currentUserStream(userId);
+  Stream<User> currentUserStream(String userId){
+    return _db.currentUserStream(userId).map((document) {
+      document.data[ID] =document.documentID;
+      return User.fromDocumentSnapshot(document);
+    });
   }
 
-  Stream<QuerySnapshot> userStream(String accountId){
-    return _db.userStream(accountId);
+  Stream<List<User>> userStream(String accountId){
+    return _db.userStream(accountId).map((snapshot) => snapshot.documents.map((document) => User.fromDocumentSnapshot(document)).toList());
   }
 
   Future<void> updateUserName(String userId, String name){
@@ -135,8 +138,8 @@ class Repository implements RepoInterface {
         (events) => events.map((event) => Payment.fromJson(event)).toList());
   }
 
-  Stream<QuerySnapshot> paymentStream(String accountId){
-    return _db.paymentStream(accountId);
+  Stream<List<Map<String, dynamic>>> paymentStream(String accountId){
+    return _db.paymentStream(accountId).map((snapshot) => snapshot.documents.map((document) => document.data).toList());
   }
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment) {
@@ -147,14 +150,14 @@ class Repository implements RepoInterface {
     return _db.createAccountConnectionRequest(accountId, userId);
   }
 
-  Stream<QuerySnapshot> connectionRequests(String accountId){
-    return _db.accountConnectionRequests(accountId);
+  Stream<List<Map<String, dynamic>>> connectionRequests(String accountId){
+    return _db.accountConnectionRequests(accountId).map((snapshot) => snapshot.documents.map((document) {
+      document.data[ID] =document.documentID;
+      return document.data;
+    }).toList());
   }
 
   Future<void> deleteConnectionRequest(String accountId, String requestId){
     return _db.deleteAccountConnectionRequest(accountId, requestId);
   }
-
-
-
 }

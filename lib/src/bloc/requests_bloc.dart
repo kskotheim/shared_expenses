@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
@@ -18,7 +17,7 @@ class RequestsBloc implements BlocBase {
 
   RequestsBloc({this.accountId}){
     assert(accountId != null);
-    subscription = _repo.connectionRequests(accountId).listen(_mapSnapshotToStream);
+    subscription = _repo.connectionRequests(accountId).listen(_mapRequestsToNames);
   }
 
   void approveConnectionRequest(String userId) async {
@@ -30,9 +29,9 @@ class RequestsBloc implements BlocBase {
     _repo.deleteConnectionRequest(accountId, userId);
   }
   
-  void _mapSnapshotToStream(QuerySnapshot snapshot) async {
-    List<List<String>> names = snapshot.documents.map((document){
-        return List<String>.from([document.data[NAME], document.documentID]);
+  void _mapRequestsToNames(List<Map<String, dynamic>> users) async {
+    List<List<String>> names = users.map((user){
+        return List<String>.from([user[NAME], user[ID]]);
     }).toList();
     _requestsController.sink.add(names);
   }

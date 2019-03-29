@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
-import 'package:shared_expenses/src/res/models/user.dart';
 
 class SelectAccountWidget extends StatelessWidget {
   AccountBloc _accountBloc;
@@ -11,7 +10,6 @@ class SelectAccountWidget extends StatelessWidget {
     _accountBloc = BlocProvider.of<AccountBloc>(context);
 
     if( _accountBloc.accountNames == null) return Text('no user data');
-    print('account names: ${_accountBloc.accountNames}');
     List<ListButtonTile> selectAccountTile = _accountBloc.currentUser.accounts.map((accountId) => ListButtonTile(title: Text(_accountBloc.accountNames[accountId]),)).toList();
     for (int i = 0; i < selectAccountTile.length; i++) {
       selectAccountTile[i].index = i;

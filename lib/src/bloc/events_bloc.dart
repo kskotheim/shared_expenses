@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
@@ -19,8 +18,8 @@ class EventsBloc implements BlocBase {
     _eventsSubscription = repo.paymentStream(accountId).listen(_mapPaymentsToEvents);
   }
 
-  void _mapPaymentsToEvents(QuerySnapshot snapshot){
-    _eventsListController.sink.add(snapshot.documents.map((doc) => Payment.fromJson(doc.data)).toList());
+  void _mapPaymentsToEvents(List<Map<String, dynamic>> payments){
+    _eventsListController.sink.add(payments.map((doc) => Payment.fromJson(doc)).toList());
   }
 
   void addEvent(String name){

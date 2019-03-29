@@ -4,7 +4,6 @@ import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
 import 'package:shared_expenses/src/data/repository.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:shared_expenses/src/res/db_strings.dart';
 import 'package:shared_expenses/src/res/models/account.dart';
@@ -14,9 +13,13 @@ class AccountBloc implements BlocBase {
   final AuthBloc authBloc;
   final Repository repo = Repository.getRepo;
 
+  //User info
   User currentUser;
-  Account currentAccount;
   Map<String, String> accountNames;
+
+  //Account info
+  Account currentAccount;
+  List<User> usersInAccount;
   List<String> permissions;
 
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
@@ -64,6 +67,7 @@ class AccountBloc implements BlocBase {
 
   void _goToSelect() {
     currentAccount = null;
+    usersInAccount = null;
     permissions = null;
     _accountStateSink.add(AccountStateSelect());
   }
@@ -96,8 +100,6 @@ class AccountBloc implements BlocBase {
     
       if(newAccount){
         repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
-        _accountStateSink.add(AccountStateSelect());
-
       } else {
         _accountStateSink.add(AccountStateSelect(error: 'You are already connected to $accountName'));
       }
@@ -110,22 +112,20 @@ class AccountBloc implements BlocBase {
     if(currentUser.accounts.length == 1){
       accountEvent.add(AccountEventGoHome(accountIndex: 0));
     } else {
-      _accountStateSink.add(AccountStateSelect());
+      accountEvent.add(AccountEventGoToSelect());
     }
   }
 
-  void _updateCurrentUserAndAccountNames(DocumentSnapshot snapshot) async{
-    if(snapshot.data == null) return print('no data in user snapshot');
-    User userFromSink = User.fromDocumentSnapshot(snapshot);
+  void _updateCurrentUserAndAccountNames(User user) async{
     //check to see if we need to update accountNames
     if(currentUser != null){
-      if(currentUser.accounts !=userFromSink.accounts){
-        accountNames = await repo.getAccountNames(userFromSink.accounts);
+      if(currentUser.accounts != user.accounts){
+        accountNames = await repo.getAccountNames(user.accounts);
       } //otherwise they are still accurate
     } else { //no current user, so we need names from this one
-      accountNames = await repo.getAccountNames(userFromSink.accounts);
+      accountNames = await repo.getAccountNames(user.accounts);
     }
-    currentUser = userFromSink;
+    currentUser = user;
 
     _goToAccountsOrSelect();
   }
