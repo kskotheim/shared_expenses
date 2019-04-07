@@ -25,9 +25,11 @@ abstract class RepoInterface {
   Stream<List<User>> userStream(String accountId);
   Future<void> updateUserName(String userId, String name);
   Future<void> addUserToAccount(String userId, String accountId);
-  Future<List<AnyEvent>> getEvents(String accountId);
-  Stream<List<Map<String, dynamic>>> paymentStream(String accountId);
-  Future<void> createPayment(String accountId, Map<String, dynamic> payment);
+
+  Stream<List<Payment>> paymentStream(String accountId);
+  Future<void> createPayment(String accountId, Payment payment);
+  Stream<List<Bill>> billStream(String accountId);
+  Future<void> createBill(String accountId, Bill bill);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
   Stream<List<Map<String, dynamic>>> connectionRequests(String accountId);
@@ -133,17 +135,20 @@ class Repository implements RepoInterface {
     });
   }
 
-  Future<List<AnyEvent>> getEvents(String accountId) {
-    return _db.getPayments(accountId).then(
-        (events) => events.map((event) => Payment.fromJson(event)).toList());
+  Stream<List<Payment>> paymentStream(String accountId){
+    return _db.paymentStream(accountId).map((snapshot) => snapshot.documents.map((document) => Payment.fromJson(document.data)).toList());
   }
 
-  Stream<List<Map<String, dynamic>>> paymentStream(String accountId){
-    return _db.paymentStream(accountId).map((snapshot) => snapshot.documents.map((document) => document.data).toList());
+  Future<void> createPayment(String accountId, Payment payment) {
+    return _db.createPayment(accountId, payment.toJson());
   }
 
-  Future<void> createPayment(String accountId, Map<String, dynamic> payment) {
-    return _db.createPayment(accountId, payment);
+  Stream<List<Bill>> billStream(String accountId){
+    return _db.billStream(accountId).map((snapshot) => snapshot.documents.map((document) => Bill.fromJson(document.data)).toList());
+  }
+
+  Future<void> createBill(String accountId, Bill bill) {
+    return _db.createBill(accountId, bill.toJson());
   }
 
   Future<void> createAccountConnectionRequest(String accountId, String userId) {

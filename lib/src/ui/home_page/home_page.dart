@@ -4,7 +4,7 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
 import 'package:shared_expenses/src/ui/home_page/connection_requests.dart';
 import 'package:shared_expenses/src/ui/home_page/events.dart';
-import 'package:shared_expenses/src/ui/home_page/new_event.dart';
+import 'package:shared_expenses/src/ui/home_page/new_event/new_event.dart';
 import 'package:shared_expenses/src/ui/home_page/totals.dart';
 
 class HomePage extends StatelessWidget {

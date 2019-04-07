@@ -7,35 +7,53 @@ class EventsBloc implements BlocBase {
 
   String accountId;
 
+  List<Payment> _thePayments;
+  List<Bill> _theBills;
+  List<AnyEvent> _theEvents;
+
   StreamController<List<AnyEvent>> _eventsListController = StreamController<List<AnyEvent>>();
   Stream<List<AnyEvent>> get eventList => _eventsListController.stream;
   Repository repo = Repository.getRepo;
 
-  StreamSubscription _eventsSubscription;
+  StreamSubscription _paymentsSubscription;
+  StreamSubscription _billsSubscription;
 
   EventsBloc({this.accountId}){
     assert(accountId != null);
-    _eventsSubscription = repo.paymentStream(accountId).listen(_mapPaymentsToEvents);
+    _paymentsSubscription = repo.paymentStream(accountId).listen(_mapPaymentsToEvents);
+    _billsSubscription = repo.billStream(accountId).listen(_mapBillsToEvents);
   }
 
-  void _mapPaymentsToEvents(List<Map<String, dynamic>> payments){
-    _eventsListController.sink.add(payments.map((doc) => Payment.fromJson(doc)).toList());
+  void _mapPaymentsToEvents(List<Payment> payments){
+    _thePayments =payments;
+    _setEvents();
+    _eventsListController.sink.add(_theEvents);
+  }
+  
+  void _mapBillsToEvents(List<Bill> bills){
+    _theBills = bills;
+    _setEvents();
+    _eventsListController.sink.add(_theEvents);
   }
 
-  void addEvent(String name){
+  void addEvent(AnyEvent event){
+    if(event is Bill){
+      repo.createBill(accountId, event);
+    }
+    if(event is Payment){
+      repo.createPayment(accountId, event);
+    }
+  }
 
-    Map<String, dynamic> newEvent = {
-      'fromUserId':'Kris',
-      'toUserId':'Dre',
-      'amount':5.0,
-    };
-
-    repo.createPayment(accountId, newEvent);
+  void _setEvents(){
+    _theEvents = List<AnyEvent>.from((_theBills ?? [])) + List<AnyEvent>.from((_thePayments ?? []));
+    _theEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   @override
   void dispose() {
     _eventsListController.close();
-    _eventsSubscription.cancel();
+    _paymentsSubscription.cancel();
+    _billsSubscription.cancel();
   }
 }

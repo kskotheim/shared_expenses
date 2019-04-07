@@ -20,9 +20,12 @@ abstract class DB {
   Future<void> deleteAccountConnectionRequest(String accountId, String requestId);
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
-  Future<List<Map<String, dynamic>>> getPayments(String accountId);
   Stream<QuerySnapshot> paymentStream(String accountId);
   Future<void> deletePayment(String accountId, String paymentId);
+
+  Future<void> createBill(String accountId, Map<String, dynamic> bill);
+  Stream<QuerySnapshot> billStream(String accountId);
+  Future<void> deleteBill(String accountId, String billId);
 }
 
 class DatabaseManager implements DB {
@@ -102,7 +105,6 @@ class DatabaseManager implements DB {
 
 
   Future<void> createAccountConnectionRequest(String accountId, String userId) async {
-    print('creating account connection request');
     return _user(userId).get().then((user){
       return _user(userId).updateData({CONNECTION_REQUESTS: (user.data[CONNECTION_REQUESTS] ?? []) + [accountId]});
 
@@ -129,15 +131,6 @@ class DatabaseManager implements DB {
         .setData(payment);
   }
 
-  Future<List<Map<String, dynamic>>> getPayments(String accountId) async {
-    return _account(accountId)
-        .collection(PAYMENTS)
-        .getDocuments()
-        .then((data) {
-      return data.documents.map((DocumentSnapshot snap) => snap.data).toList();
-    });
-  }
-
   Stream<QuerySnapshot> paymentStream(String accountId) {
     return _account(accountId).collection(PAYMENTS).limit(10).snapshots();
   }
@@ -148,4 +141,17 @@ class DatabaseManager implements DB {
         .document(paymentId)
         .delete();
   }
+
+  Future<void> createBill(String accountId, Map<String, dynamic> bill) async {
+    return _account(accountId).collection(BILLS).document().setData(bill);
+  }
+
+  Stream<QuerySnapshot> billStream(String accountId) {
+    return _account(accountId).collection(BILLS).limit(10).snapshots();
+  }
+
+  Future<void> deleteBill(String accountId, String billId) async {
+    return _account(accountId).collection(BILLS).document(billId).delete();
+  }
+
 }
