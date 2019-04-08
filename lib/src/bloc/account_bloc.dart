@@ -22,6 +22,14 @@ class AccountBloc implements BlocBase {
   List<User> usersInAccount;
   List<String> permissions;
 
+  String userName(String userId){
+    if(usersInAccount != null){
+    User user = usersInAccount.where((user) => user.userId == userId).toList().removeLast();
+    if(user != null) return user.userName;
+    else return 'no user by that id';
+    } else return 'loading ...';
+  }
+
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
   Stream<AccountState> get accountState => _accountStateController.stream;
   StreamSink get _accountStateSink => _accountStateController.sink;
@@ -29,6 +37,11 @@ class AccountBloc implements BlocBase {
   StreamController<AccountEvent> _accountEventController =StreamController<AccountEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
 
+  StreamController<List<User>> _usersInAccountController = StreamController<List<User>>.broadcast();
+  Stream<List<User>> get usersInAccountStream => _usersInAccountController.stream;
+  StreamSink get _usersInAccountSink => _usersInAccountController.sink;
+
+  StreamSubscription _usersInAccountSubscription;
   StreamSubscription _userSubscription;
   StreamSubscription _accountSubscription;
 
@@ -36,6 +49,7 @@ class AccountBloc implements BlocBase {
     assert(authBloc != null);
     _accountSubscription =  _accountEventController.stream.listen(_mapEventToState);
     _userSubscription = repo.currentUserStream(authBloc.currentUserId).listen(_updateCurrentUserAndAccountNames);
+    usersInAccountStream.listen((List<User> users) => usersInAccount = users);
   }
 
   void _mapEventToState(AccountEvent event) {
@@ -61,13 +75,18 @@ class AccountBloc implements BlocBase {
     String accountId = currentUser.accounts[accountIndex];
     currentAccount = Account(accountId: accountId, accountName: accountNames[accountId]);
     permissions =  List<String>.from(currentUser.accountInfo[currentAccount.accountId][PERMISSIONS]);
+    _usersInAccountSubscription = repo.userStream(accountId).listen(_setAccountUsers);
     
     _accountStateSink.add(AccountStateHome());
   }
 
+  void _setAccountUsers(List<User> users){
+    _usersInAccountSink.add(users);
+  }
+
   void _goToSelect() {
     currentAccount = null;
-    usersInAccount = null;
+    _usersInAccountSink.add(<User>[]);
     permissions = null;
     _accountStateSink.add(AccountStateSelect());
   }
@@ -81,7 +100,6 @@ class AccountBloc implements BlocBase {
     } else {
       _accountStateSink.add(AccountStateSelect(error: '$accountName already exists')); 
     }
-    
   }
 
   void _renameUser(String username){
@@ -135,8 +153,10 @@ class AccountBloc implements BlocBase {
   void dispose() {
     _accountStateController.close();
     _accountEventController.close();
+    _usersInAccountController.close();
     _userSubscription.cancel();
     _accountSubscription.cancel();
+    _usersInAccountSubscription.cancel();
   }
 }
 

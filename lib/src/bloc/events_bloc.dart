@@ -1,53 +1,66 @@
 import 'dart:async';
+import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
 
 class EventsBloc implements BlocBase {
 
-  String accountId;
+  AccountBloc accountBloc;
+  String _accountId;
 
   List<Payment> _thePayments;
   List<Bill> _theBills;
   List<AnyEvent> _theEvents;
+  List<String> _theEventNames;
 
-  StreamController<List<AnyEvent>> _eventsListController = StreamController<List<AnyEvent>>();
-  Stream<List<AnyEvent>> get eventList => _eventsListController.stream;
+  StreamController<List<String>> _eventsListController = StreamController<List<String>>();
+  Stream<List<String>> get eventList => _eventsListController.stream;
   Repository repo = Repository.getRepo;
 
   StreamSubscription _paymentsSubscription;
   StreamSubscription _billsSubscription;
 
-  EventsBloc({this.accountId}){
-    assert(accountId != null);
-    _paymentsSubscription = repo.paymentStream(accountId).listen(_mapPaymentsToEvents);
-    _billsSubscription = repo.billStream(accountId).listen(_mapBillsToEvents);
+  EventsBloc({this.accountBloc}){
+    assert(accountBloc != null);
+    _accountId = accountBloc.currentAccount.accountId;
+    _paymentsSubscription = repo.paymentStream(_accountId).listen(_mapPaymentsToEvents);
+    _billsSubscription = repo.billStream(_accountId).listen(_mapBillsToEvents);
   }
 
   void _mapPaymentsToEvents(List<Payment> payments){
     _thePayments =payments;
     _setEvents();
-    _eventsListController.sink.add(_theEvents);
+    _eventsListController.sink.add(_theEventNames);
   }
   
   void _mapBillsToEvents(List<Bill> bills){
     _theBills = bills;
     _setEvents();
-    _eventsListController.sink.add(_theEvents);
+    _eventsListController.sink.add(_theEventNames);
   }
 
   void addEvent(AnyEvent event){
     if(event is Bill){
-      repo.createBill(accountId, event);
+      repo.createBill(_accountId, event);
     }
     if(event is Payment){
-      repo.createPayment(accountId, event);
+      repo.createPayment(_accountId, event);
     }
   }
 
   void _setEvents(){
     _theEvents = List<AnyEvent>.from((_theBills ?? [])) + List<AnyEvent>.from((_thePayments ?? []));
     _theEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    _theEventNames = _theEvents.map((event){
+      if(event is Payment){
+        return '${accountBloc.userName(event.fromUserId)} paid ${accountBloc.userName(event.toUserId)} ${event.amount}';
+      }
+      if(event is Bill){
+        return '${accountBloc.userName(event.paidByUserId)} paid ${event.amount} ${event.type} bill';
+      }
+      return 'error';
+    }).toList();
   }
 
   @override

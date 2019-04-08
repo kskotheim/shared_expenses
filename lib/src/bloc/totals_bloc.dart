@@ -16,14 +16,15 @@ class TotalsBloc implements BlocBase {
 
   TotalsBloc({this.accountBloc}){
 
-    _subscription = repo.userStream(accountBloc.currentAccount.accountId).listen(_addUsersToTotalsList);
+    _subscription = 
+    accountBloc.usersInAccountStream
+    .listen(_addUsersToTotalsList);
 
 
   }
 
   void _addUsersToTotalsList(List<User> users){
     List<ListTile> totalsToShow = [];
-    accountBloc.usersInAccount = users;
     users.forEach((user) => totalsToShow.add(ListTile(title: Text(user.userName), subtitle: Text(user.email))));
     _totalsListController.sink.add(totalsToShow);
   }

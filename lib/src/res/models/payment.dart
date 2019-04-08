@@ -26,8 +26,6 @@ class Payment implements AnyEvent{
       'createdAt':createdAt
     };
   }
-
-  String get name => '$fromUserId paid $toUserId \$${amount.round()}';
 }
 
 class Bill implements AnyEvent {
@@ -56,14 +54,10 @@ class Bill implements AnyEvent {
       'createdAt':createdAt
     };
   }
-
-  String get name => '$paidByUserId paid \$$amount $type bill';
-
 }
 
 abstract class AnyEvent {
   DateTime createdAt;
-  String get name;
   Map<String, dynamic> toJson();
 
 }
