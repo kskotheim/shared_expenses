@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
@@ -37,7 +38,7 @@ class AccountBloc implements BlocBase {
   StreamController<AccountEvent> _accountEventController =StreamController<AccountEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
 
-  StreamController<List<User>> _usersInAccountController = StreamController<List<User>>.broadcast();
+  BehaviorSubject<List<User>> _usersInAccountController = BehaviorSubject<List<User>>();
   Stream<List<User>> get usersInAccountStream => _usersInAccountController.stream;
   StreamSink get _usersInAccountSink => _usersInAccountController.sink;
 
@@ -87,6 +88,7 @@ class AccountBloc implements BlocBase {
   void _goToSelect() {
     currentAccount = null;
     _usersInAccountSink.add(<User>[]);
+    if(_usersInAccountSubscription != null) _usersInAccountSubscription.cancel();
     permissions = null;
     _accountStateSink.add(AccountStateSelect());
   }
@@ -156,7 +158,8 @@ class AccountBloc implements BlocBase {
     _usersInAccountController.close();
     _userSubscription.cancel();
     _accountSubscription.cancel();
-    _usersInAccountSubscription.cancel();
+    if(_usersInAccountSubscription != null) _usersInAccountSubscription.cancel();
+
   }
 }
 

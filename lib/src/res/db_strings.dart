@@ -12,6 +12,8 @@ const String ACCOUNT_INFO = 'Account_Info';
 const String CONNECTION_REQUESTS = 'Connection_Requests';
 const String EMAIL = 'Email';
 const String ID = 'Id';
+const String TOTALS = 'Totals';
+
 
 const String FROM = 'From';
 const String TO = 'To';

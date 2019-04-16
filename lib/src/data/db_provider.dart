@@ -3,15 +3,17 @@ import 'package:shared_expenses/src/res/db_strings.dart';
 
 abstract class DB {
   Future<String> createAccount(String accountName);
-  Future<Map<String, dynamic>> getAccount(String accountId);
   Future<void> updateAccount(String accountId, String field, data);
   Future<List<String>> getAccountNames(List<String> accountIds);
   Future<List<DocumentSnapshot>> getAccountsWhere(String field, val);
 
+  Stream<Map<String, double>> totalsStream(String accountId);
+  Future<void> setTotals(String accountId, Map<String, double> totals);
+
   Future<void> createUser(String userId, String email);
   Future<DocumentSnapshot> getUser(String userId);
   Stream<DocumentSnapshot> currentUserStream(String userId);
-  Stream<QuerySnapshot> userStream(String accountId);
+  Stream<QuerySnapshot> usersStream(String accountId);
   Future<void> updateUser(String userId, String field, data);
   Future<void> addAccountToUser(String userId, String accountId, String permission);
 
@@ -43,10 +45,6 @@ class DatabaseManager implements DB {
     });
   }
 
-  Future<Map<String, dynamic>> getAccount(String accountId) async {
-    return _account(accountId).get().then((snapshot) => snapshot.data);
-  }
-
   Future<void> updateAccount(String accountId, String field, data) async {
     return _account(accountId)
         .setData({field: data});
@@ -61,6 +59,16 @@ class DatabaseManager implements DB {
   Future<List<DocumentSnapshot>> getAccountsWhere(String field, val){
     return _accountCollection.where(field, isEqualTo: val).getDocuments().then((query) => query.documents);
   }
+
+
+  Stream<Map<String, double>> totalsStream(String accountId) {
+    return _account(accountId).snapshots().map((document) => document.data[TOTALS] ?? {});
+  }
+
+  Future<void> setTotals(String accountId, Map<String, double> totals) async {
+    return _account(accountId).setData({TOTALS:totals});
+  }
+
 
   Future<void> createUser(String userId, String email) async {
     assert(userId != null, email != null);
@@ -78,7 +86,7 @@ class DatabaseManager implements DB {
     return _user(userId).snapshots();
   }
 
-  Stream<QuerySnapshot> userStream(String accountId) {
+  Stream<QuerySnapshot> usersStream(String accountId) {
     return _usersCollection.where(ACCOUNTS, arrayContains:accountId).snapshots();
   }
 

@@ -5,13 +5,14 @@ import 'package:shared_expenses/src/bloc/requests_bloc.dart';
 
 class ConnectionRequestsList extends StatelessWidget {
 
-  AccountBloc _accountBloc;
+  AccountBloc accountBloc;
   RequestsBloc _requestsBloc;
+
+  ConnectionRequestsList({this.accountBloc}) : assert(accountBloc != null);
 
   @override
   Widget build(BuildContext context) {
-    _accountBloc = BlocProvider.of<AccountBloc>(context);
-    _requestsBloc = RequestsBloc(accountId: _accountBloc.currentAccount.accountId);
+    _requestsBloc = RequestsBloc(accountId: accountBloc.currentAccount.accountId);
 
     return BlocProvider(
       bloc: _requestsBloc,

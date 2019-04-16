@@ -15,10 +15,24 @@ class HomePage extends StatelessWidget {
     AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
     _eventsBloc = EventsBloc(accountBloc: accountBloc);
 
-    var goToSelectAccountButton = IconButton(
-      icon: Icon(Icons.account_circle),
-      onPressed: () => accountBloc.accountEvent.add(AccountEventGoToSelect()),
-    );
+    final Widget goToSelectAccountButton = Padding(
+        padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
+        child: FloatingActionButton(
+          
+          backgroundColor: Colors.grey,
+          child: Icon(Icons.account_circle),
+          onPressed: () =>
+              accountBloc.accountEvent.add(AccountEventGoToSelect()),
+        ));
+
+    final Widget accountAdminButton = accountBloc.permissions.contains('owner')
+    ? Padding(
+      padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
+      child: FloatingActionButton(
+      child: Icon(Icons.supervisor_account),
+      onPressed: () => showDialog(context: context, builder: (newContext) => Dialog(child: ConnectionRequestsList(accountBloc: accountBloc,),)),
+    ))
+    : Container();
 
     return BlocProvider(
       bloc: _eventsBloc,
@@ -26,8 +40,11 @@ class HomePage extends StatelessWidget {
         children: <Widget>[
           Column(
             children: <Widget>[
-              Container(height: 10.0,),
-              Text(accountBloc.currentAccount.accountName, style: TextStyle(fontSize: 25.0)),
+              Container(
+                height: 10.0,
+              ),
+              Text(accountBloc.currentAccount.accountName,
+                  style: TextStyle(fontSize: 25.0)),
               Expanded(
                 flex: 1,
                 child: TotalsWidget(),
@@ -39,27 +56,24 @@ class HomePage extends StatelessWidget {
                   eventsBloc: _eventsBloc,
                 ),
               ),
-              Divider(),
-              accountBloc.permissions.contains('owner')
-              ? Expanded(
-                child: ConnectionRequestsList(),
-                flex: 1,
-              )
-              : Container()
             ],
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              goToSelectAccountButton,
-              NewEventButton(
-                eventsBloc: _eventsBloc,
-              ),
-            ],
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                goToSelectAccountButton,
+                accountAdminButton,
+                NewEventButton(
+                  eventsBloc: _eventsBloc,
+                ),
+              ],
+            ),
           )
         ],
       ),
     );
   }
+  
 }

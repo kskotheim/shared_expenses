@@ -54,10 +54,10 @@ class EventsBloc implements BlocBase {
     _theEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     _theEventNames = _theEvents.map((event){
       if(event is Payment){
-        return '${accountBloc.userName(event.fromUserId)} paid ${accountBloc.userName(event.toUserId)} ${event.amount}';
+        return '${accountBloc.userName(event.fromUserId)} paid ${accountBloc.userName(event.toUserId)} \$${event.amount.floor()}';
       }
       if(event is Bill){
-        return '${accountBloc.userName(event.paidByUserId)} paid ${event.amount} ${event.type} bill';
+        return '${accountBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type} bill';
       }
       return 'error';
     }).toList();

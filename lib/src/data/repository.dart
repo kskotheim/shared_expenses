@@ -1,7 +1,6 @@
 import 'package:shared_expenses/src/data/auth_provider.dart';
 import 'package:shared_expenses/src/data/db_provider.dart';
 
-import 'package:shared_expenses/src/res/models/account.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
@@ -13,11 +12,13 @@ abstract class RepoInterface {
   Future<void> signOut();
 
   Future<void> createAccount(String accountName, User user);
-  Future<Account> getAccount(String accountId);
   Future<dynamic> getAccountByName(String name);
   Future<void> updateAccountName(String accountId, String name);
   Future<Map<String, String>> getAccountNames(List<String> accountIds);
   Future<List<String>> getAccountNamesList(List<String> accountIds);
+
+  Future<void> setTotals(String accountId, Map<String, double> totals);
+  Stream<Map<String, double>> totalsStream(String accountId);
 
   Future<void> createUser(String userId, String email);
   Future<User> getUserFromDb(String userId);
@@ -75,12 +76,6 @@ class Repository implements RepoInterface {
     });
   }
 
-  Future<Account> getAccount(String accountId) {
-    return _db
-        .getAccount(accountId)
-        .then((account) => Account.fromJson(account));
-  }
-
   Future<dynamic> getAccountByName(String name){
     return _db.getAccountsWhere(NAME, name).then((documents) {
       if(documents.length > 0) return documents[0].documentID;
@@ -106,6 +101,14 @@ class Repository implements RepoInterface {
     return _db.updateAccount(accountId, NAME, name);
   }
 
+  Future<void> setTotals(String accountId, Map<String, double> totals){
+    return _db.setTotals(accountId, totals);
+  }
+
+  Stream<Map<String, double>> totalsStream(String accountId){
+    return _db.totalsStream(accountId);
+  }
+
   Future<void> createUser(String userId, String email) {
     return _db.createUser(userId, email);
   }
@@ -122,7 +125,7 @@ class Repository implements RepoInterface {
   }
 
   Stream<List<User>> userStream(String accountId){
-    return _db.userStream(accountId).map((snapshot) => snapshot.documents.map((document) => User.fromDocumentSnapshot(document)).toList());
+    return _db.usersStream(accountId).map((snapshot) => snapshot.documents.map((document) => User.fromDocumentSnapshot(document)).toList());
   }
 
   Future<void> updateUserName(String userId, String name){

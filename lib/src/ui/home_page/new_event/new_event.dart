@@ -13,10 +13,9 @@ class NewEventButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: Padding(
-        padding: const EdgeInsets.all(18.0),
+    return 
+      Padding(
+        padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
         child: FloatingActionButton(
           onPressed: () => showDialog(
             context: context,
@@ -26,7 +25,6 @@ class NewEventButton extends StatelessWidget {
           ),
           child: Icon(Icons.add),
         ),
-      ),
-    );
+      );
   }
 }
