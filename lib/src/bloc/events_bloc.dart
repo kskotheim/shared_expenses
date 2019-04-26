@@ -40,15 +40,6 @@ class EventsBloc implements BlocBase {
     _eventsListController.sink.add(_theEventNames);
   }
 
-  void addEvent(AnyEvent event){
-    if(event is Bill){
-      repo.createBill(_accountId, event);
-    }
-    if(event is Payment){
-      repo.createPayment(_accountId, event);
-    }
-  }
-
   void _setEvents(){
     _theEvents = List<AnyEvent>.from((_theBills ?? [])) + List<AnyEvent>.from((_thePayments ?? []));
     _theEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));

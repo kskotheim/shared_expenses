@@ -1,9 +1,10 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Payment implements AnyEvent{
   String fromUserId;
   String toUserId;
-  double amount;
+  num amount;
   DateTime createdAt;
 
   Payment({this.fromUserId, this.toUserId, this.amount, this.createdAt}) :
@@ -15,7 +16,7 @@ class Payment implements AnyEvent{
     fromUserId = paymentRecord['fromUserId']; 
     toUserId =paymentRecord['toUserId']; 
     amount = paymentRecord['amount'];
-    createdAt =paymentRecord['createdAt'].toDate();
+    createdAt = parseTime(paymentRecord['createdAt'].toDate());
   }
 
   Map<String, dynamic> toJson(){
@@ -43,7 +44,7 @@ class Bill implements AnyEvent {
     paidByUserId =billRecord['paidByUserId'];
     type =billRecord['type'];
     amount =billRecord['amount'];
-    createdAt =billRecord['createdAt'].toDate();
+    createdAt = parseTime(billRecord['createdAt']);
   }
 
   Map<String, dynamic> toJson(){
@@ -54,6 +55,7 @@ class Bill implements AnyEvent {
       'createdAt':createdAt
     };
   }
+
 }
 
 abstract class AnyEvent {
@@ -62,3 +64,8 @@ abstract class AnyEvent {
 
 }
 
+
+DateTime parseTime(dynamic date) {
+  assert(date is Timestamp || date is DateTime);  
+  return (date is Timestamp) ? date.toDate() : (date as DateTime);
+}

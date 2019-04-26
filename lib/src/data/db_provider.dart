@@ -2,13 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
 
 abstract class DB {
-  Future<String> createAccount(String accountName);
+  Future<String> createAccount(String accountName, String userId);
   Future<void> updateAccount(String accountId, String field, data);
   Future<List<String>> getAccountNames(List<String> accountIds);
   Future<List<DocumentSnapshot>> getAccountsWhere(String field, val);
 
-  Stream<Map<String, double>> totalsStream(String accountId);
-  Future<void> setTotals(String accountId, Map<String, double> totals);
+  Stream<Map<String, num>> totalsStream(String accountId);
+  Future<void> updateTotals(String accountId, Map<String, num> totals);
 
   Future<void> createUser(String userId, String email);
   Future<DocumentSnapshot> getUser(String userId);
@@ -23,10 +23,12 @@ abstract class DB {
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
   Stream<QuerySnapshot> paymentStream(String accountId);
+  Future<List<DocumentSnapshot>> allPayments(String accountId);
   Future<void> deletePayment(String accountId, String paymentId);
 
   Future<void> createBill(String accountId, Map<String, dynamic> bill);
   Stream<QuerySnapshot> billStream(String accountId);
+  Future<List<DocumentSnapshot>> allBills(String accountId);
   Future<void> deleteBill(String accountId, String billId);
 }
 
@@ -37,23 +39,21 @@ class DatabaseManager implements DB {
   DocumentReference _account(String id) => _accountCollection.document(id);
   DocumentReference _user(String id) => _usersCollection.document(id);
 
-  Future<String> createAccount(String actName) async {
+  Future<String> createAccount(String actName, String userId) async {
     return _accountCollection.document().get().then((document){
-      return _account(document.documentID).setData({NAME: actName}).then((_){
-        return document.documentID;
-      });
+      return _account(document.documentID).setData({NAME: actName, TOTALS: {userId:0.0}}).then((_) => document.documentID);
     });
   }
 
   Future<void> updateAccount(String accountId, String field, data) async {
     return _account(accountId)
-        .setData({field: data});
+        .updateData({field: data});
   }
 
   Future<List<String>> getAccountNames(List<String> accountIds) async {
     return Future.wait(accountIds.map((accountId) => _account(accountId)
         .get()
-        .then((snapshot) => snapshot.data[NAME])));
+        .then((snapshot) => snapshot.data != null ? snapshot.data.containsKey(NAME) ? snapshot.data[NAME] : 'no name' : 'no data')));
   } 
 
   Future<List<DocumentSnapshot>> getAccountsWhere(String field, val){
@@ -61,12 +61,12 @@ class DatabaseManager implements DB {
   }
 
 
-  Stream<Map<String, double>> totalsStream(String accountId) {
-    return _account(accountId).snapshots().map((document) => document.data[TOTALS] ?? {});
+  Stream<Map<String, num>> totalsStream(String accountId) {
+    return _account(accountId).snapshots().map((document) => Map<String, num>.from(document.data[TOTALS]) ?? <String, num>{});
   }
 
-  Future<void> setTotals(String accountId, Map<String, double> totals) async {
-    return _account(accountId).setData({TOTALS:totals});
+  Future<void> updateTotals(String accountId, Map<String, num> totals) async {
+    return _account(accountId).updateData({TOTALS:totals});
   }
 
 
@@ -106,6 +106,12 @@ class DatabaseManager implements DB {
     Map userAccountsInfo = userSnapshot.data[ACCOUNT_INFO];
     userAccountsInfo[accountId] = thisAccount;
 
+    DocumentReference account = _account(accountId);
+    DocumentSnapshot accountSnapshot = await account.get();
+    Map<String, num> totals = Map<String, num>.from(accountSnapshot.data[TOTALS]);
+    totals[userId] = 0;
+    batch.updateData(account, {TOTALS:totals});
+
     batch.updateData(user, {ACCOUNT_INFO:userAccountsInfo});
 
     return batch.commit();
@@ -143,6 +149,12 @@ class DatabaseManager implements DB {
     return _account(accountId).collection(PAYMENTS).limit(10).snapshots();
   }
 
+
+  Future<List<DocumentSnapshot>> allPayments(String accountId) async{
+    return _account(accountId).collection(PAYMENTS).getDocuments().then((snapshot) => snapshot.documents);
+  }
+
+
   Future<void> deletePayment(String accountId, String paymentId) async {
     return _account(accountId)
         .collection(PAYMENTS)
@@ -156,6 +168,10 @@ class DatabaseManager implements DB {
 
   Stream<QuerySnapshot> billStream(String accountId) {
     return _account(accountId).collection(BILLS).limit(10).snapshots();
+  }
+
+  Future<List<DocumentSnapshot>> allBills(String accountId) async{
+    return _account(accountId).collection(BILLS).getDocuments().then((snapshot) => snapshot.documents);
   }
 
   Future<void> deleteBill(String accountId, String billId) async {

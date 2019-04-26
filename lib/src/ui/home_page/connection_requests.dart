@@ -21,6 +21,7 @@ class ConnectionRequestsList extends StatelessWidget {
           builder: (context, snapshot) {
             if (snapshot.data == null) return Text('no connection requests');
             return ListView(
+              shrinkWrap: true,
               children: snapshot.data.map((request) => ListTile(
                 title: Text(request[0]),
                 leading: IconButton(

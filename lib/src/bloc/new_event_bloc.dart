@@ -40,7 +40,8 @@ class NewEventBloc implements BlocBase {
   BehaviorSubject<double> _billAmountController = BehaviorSubject<double>();
   Stream<double> get billAmount =>
       _billAmountController.stream.transform(_billAmountTransformer);
-  void newBillAmount(String amt) => _billAmountController.sink.add(double.parse(amt));
+  void newBillAmount(String amt) =>
+      _billAmountController.sink.add(double.parse(amt));
 
   //Bill options:
   //Bill type
@@ -101,7 +102,7 @@ class NewEventBloc implements BlocBase {
       StreamTransformer<double, double>.fromHandlers(
           handleData: (billAmount, sink) {
     _billAmount = billAmount;
-            print('$_billAmount');
+    print('$_billAmount');
 
     sink.add(billAmount);
   });
@@ -122,26 +123,30 @@ class NewEventBloc implements BlocBase {
   Future<void> submitInfo() {
     if (_optionSelected == BILL) {
       if (_billAmount != null && _selectedType != null) {
-        print('creating bill');
-        return repo.createBill(
-            accountBloc.currentAccount.accountId,
-            Bill(
-                amount: _billAmount,
-                paidByUserId: accountBloc.currentUser.userId,
-                type: _selectedType,
-                createdAt: DateTime.now()));
+        return repo
+            .createBill(
+                accountBloc.currentAccount.accountId,
+                Bill(
+                    amount: _billAmount,
+                    paidByUserId: accountBloc.currentUser.userId,
+                    type: _selectedType,
+                    createdAt: DateTime.now()))
+            .then((_) =>
+                repo.tabulateTotals(accountBloc.currentAccount.accountId));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else if (_optionSelected == PAYMENT) {
       if (_selectedUser != null && _billAmount != null) {
-        print('creating payment');
-        return repo.createPayment(
-            accountBloc.currentAccount.accountId,
-            Payment(
-                fromUserId: accountBloc.currentUser.userId,
-                toUserId: _selectedUser,
-                amount: _billAmount,
-                createdAt: DateTime.now()));
+        return repo
+            .createPayment(
+                accountBloc.currentAccount.accountId,
+                Payment(
+                    fromUserId: accountBloc.currentUser.userId,
+                    toUserId: _selectedUser,
+                    amount: _billAmount,
+                    createdAt: DateTime.now()))
+            .then((_) =>
+                repo.tabulateTotals(accountBloc.currentAccount.accountId));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else

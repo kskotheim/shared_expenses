@@ -11,7 +11,7 @@ class SetUsernameWidget extends StatefulWidget {
 
 class _SetUsernameWidgetState extends State<SetUsernameWidget> {
 
-  bool _editUsername = false;
+  bool _editUsername;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +19,8 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
     TextEditingController _nameController =
         TextEditingController(text: accountBloc.currentUser.userName);
     
+    if(_editUsername == null) _editUsername = accountBloc.currentUser.userName == null;
+
     if(_editUsername)
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,

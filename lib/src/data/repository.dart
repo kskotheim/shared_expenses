@@ -18,7 +18,7 @@ abstract class RepoInterface {
   Future<List<String>> getAccountNamesList(List<String> accountIds);
 
   Future<void> setTotals(String accountId, Map<String, double> totals);
-  Stream<Map<String, double>> totalsStream(String accountId);
+  Stream<Map<String, num>> totalsStream(String accountId);
 
   Future<void> createUser(String userId, String email);
   Future<User> getUserFromDb(String userId);
@@ -31,6 +31,7 @@ abstract class RepoInterface {
   Future<void> createPayment(String accountId, Payment payment);
   Stream<List<Bill>> billStream(String accountId);
   Future<void> createBill(String accountId, Bill bill);
+  Future<void> tabulateTotals(String accountId);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
   Stream<List<Map<String, dynamic>>> connectionRequests(String accountId);
@@ -71,7 +72,7 @@ class Repository implements RepoInterface {
   }
 
   Future<String> createAccount(String accountName, User user) async {
-    return _db.createAccount(accountName).then((accountId){
+    return _db.createAccount(accountName, user.userId).then((accountId){
       return _db.addAccountToUser(user.userId, accountId, 'owner').then((_) => accountId);
     });
   }
@@ -102,10 +103,10 @@ class Repository implements RepoInterface {
   }
 
   Future<void> setTotals(String accountId, Map<String, double> totals){
-    return _db.setTotals(accountId, totals);
+    return _db.updateTotals(accountId, totals);
   }
 
-  Stream<Map<String, double>> totalsStream(String accountId){
+  Stream<Map<String, num>> totalsStream(String accountId){
     return _db.totalsStream(accountId);
   }
 
@@ -153,6 +154,48 @@ class Repository implements RepoInterface {
   Future<void> createBill(String accountId, Bill bill) {
     return _db.createBill(accountId, bill.toJson());
   }
+
+  Future<void> tabulateTotals(String accountId){
+    return _db.allBills(accountId).then((bills){
+      return _db.allPayments(accountId).then((payments){
+        Map<String, num> totals = {};
+        
+        List<Bill> billObjs = bills.map((bill) => Bill.fromJson(bill.data)).toList();
+        List<Payment> paymentObjs = payments.map((payment) => Payment.fromJson(payment.data)).toList();
+
+        //tabulate payments
+        paymentObjs.forEach((payment){
+          if(!totals.containsKey(payment.fromUserId)) totals[payment.fromUserId] = 0;
+          if(!totals.containsKey(payment.toUserId)) totals[payment.toUserId] = 0;
+
+          totals[payment.fromUserId] = totals[payment.fromUserId] - payment.amount;
+
+          totals[payment.toUserId] = totals[payment.toUserId] + payment.amount;
+        });
+
+        //tabulate bills
+        num totalBillAmount = 0;
+
+        billObjs.forEach((bill){
+          if(!totals.containsKey(bill.paidByUserId)) totals[bill.paidByUserId] = 0;
+
+          totals[bill.paidByUserId] = totals[bill.paidByUserId] - bill.amount;
+          totalBillAmount += bill.amount;
+        });
+
+        int numUsers = totals.keys.length;
+        num userObligation = 0;
+
+        if(numUsers != 0) userObligation = totalBillAmount / numUsers;
+
+        totals.forEach((user, total) => totals[user] = total + userObligation);
+
+        return _db.updateTotals(accountId, totals);
+
+      });
+    });
+  }
+
 
   Future<void> createAccountConnectionRequest(String accountId, String userId) {
     return _db.createAccountConnectionRequest(accountId, userId);
