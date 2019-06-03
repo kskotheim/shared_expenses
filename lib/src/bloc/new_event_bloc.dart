@@ -132,7 +132,7 @@ class NewEventBloc implements BlocBase {
                     type: _selectedType,
                     createdAt: DateTime.now()))
             .then((_) =>
-                repo.tabulateTotals(accountBloc.currentAccount.accountId));
+                repo.tabulateTotals(accountBloc.currentAccount.accountId, accountBloc.usersInAccount));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else if (_optionSelected == PAYMENT) {
@@ -146,7 +146,7 @@ class NewEventBloc implements BlocBase {
                     amount: _billAmount,
                     createdAt: DateTime.now()))
             .then((_) =>
-                repo.tabulateTotals(accountBloc.currentAccount.accountId));
+                repo.tabulateTotals(accountBloc.currentAccount.accountId, accountBloc.usersInAccount));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else

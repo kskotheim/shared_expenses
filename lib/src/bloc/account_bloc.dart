@@ -55,7 +55,7 @@ class AccountBloc implements BlocBase {
 
   void _mapEventToState(AccountEvent event) {
     if (event is AccountEventGoHome) {
-      _goHome(event.accountIndex);
+      _goHome(event.accountId);
     }
     if (event is AccountEventGoToSelect) {
       _goToSelect();
@@ -72,8 +72,7 @@ class AccountBloc implements BlocBase {
     }
   }
 
-  void _goHome(int accountIndex) {
-    String accountId = currentUser.accounts[accountIndex];
+  void _goHome(String accountId) {
     currentAccount = Account(accountId: accountId, accountName: accountNames[accountId]);
     permissions =  List<String>.from(currentUser.accountInfo[currentAccount.accountId][PERMISSIONS]);
     _usersInAccountSubscription = repo.userStream(accountId).listen(_setAccountUsers);
@@ -130,7 +129,7 @@ class AccountBloc implements BlocBase {
 
   void _goToAccountsOrSelect() {
     if(currentUser.accounts.length == 1){
-      accountEvent.add(AccountEventGoHome(accountIndex: 0));
+      accountEvent.add(AccountEventGoHome(accountId: currentUser.accounts[0]));
     } else {
       accountEvent.add(AccountEventGoToSelect());
     }
@@ -179,8 +178,8 @@ class AccountEvent {}
 class AccountEventGoToSelect extends AccountEvent {}
 
 class AccountEventGoHome extends AccountEvent {
-  final int accountIndex;
-  AccountEventGoHome({this.accountIndex});
+  final String accountId;
+  AccountEventGoHome({this.accountId});
 }
 
 class AccountEventCreateAccount extends AccountEvent {

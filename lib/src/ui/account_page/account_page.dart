@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
+import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/user_requests_bloc.dart';
 import 'package:shared_expenses/src/ui/account_page/connect_account.dart';
@@ -18,6 +19,10 @@ class SelectAccountPage extends StatelessWidget {
             height: 10.0,
           ),
           SetUsernameWidget(),
+          Container(
+            height: 10.0,
+          ),
+          EmailAddressWidget(),
           Container(
             height: 60.0,
           ),
@@ -40,6 +45,52 @@ class SelectAccountPage extends StatelessWidget {
   }
 }
 
+class EmailAddressWidget extends StatelessWidget {
+  AccountBloc _accountBloc;
+  AuthBloc _authBloc;
+
+  @override
+  Widget build(BuildContext context) {
+    _accountBloc = BlocProvider.of<AccountBloc>(context);
+    _authBloc = BlocProvider.of<AuthBloc>(context);
+
+    String email = _accountBloc.currentUser.email;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text('Email: $email'),
+        Container(width: 30.0),
+        InkWell(
+          child: Container(
+            padding: EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 5.0),
+            decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5.0)), border: Border.all(color: Colors.brown), gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [Colors.redAccent, Colors.orangeAccent])),
+            child: Text('Logout'),
+          ),
+          onTap: () => showDialog(
+              context: context,
+              builder: (context) => SimpleDialog(
+                    title: Text('Logout?'),
+                    children: <Widget>[
+                      FlatButton(
+                        child: Text('Logout'),
+                        onPressed: (){
+                          _authBloc.logout();
+                          return Navigator.pop(context);
+                        },
+                      ),
+                      FlatButton(
+                        child: Text('Cancel'),
+                        onPressed: () => Navigator.pop(context),
+                      )
+                    ],
+                  )),
+        )
+      ],
+    );
+  }
+}
+
 class ConnectionRequestsSection extends StatelessWidget {
   AccountBloc _accountBloc;
   UserRequestsBloc _userRequestsBloc;
@@ -54,12 +105,15 @@ class ConnectionRequestsSection extends StatelessWidget {
       child: StreamBuilder<List<String>>(
         stream: _userRequestsBloc.requests,
         builder: (context, snapshot) {
-          if(snapshot.data == null) return Container();
+          if (snapshot.data == null) return Container();
           return Column(
             children: <Widget>[
-              snapshot.data.length != 0 ? Text('Connection Requests: ') : Container(),
+              snapshot.data.length != 0
+                  ? Text('Connection Requests: ')
+                  : Container(),
               Column(
-                children: snapshot.data.map((request) => Text(request)).toList(),
+                children:
+                    snapshot.data.map((request) => Text(request)).toList(),
               ),
             ],
           );

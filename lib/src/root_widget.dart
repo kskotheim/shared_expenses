@@ -5,9 +5,8 @@ import 'package:shared_expenses/src/ui/account_root.dart';
 import 'package:shared_expenses/src/ui/login_widget.dart';
 
 class RootWidget extends StatelessWidget {
-  RootWidget({Key key, this.title}) : super(key: key);
+  RootWidget({Key key}) : super(key: key);
 
-  final String title;
   final AuthBloc _authBloc = AuthBloc();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -36,18 +35,18 @@ class RootWidget extends StatelessWidget {
 
             return Scaffold(
                 key: _scaffoldKey,
-                appBar: AppBar(
-                  title: Text(title),
-                  actions: <Widget>[
-                    !(snapshot.data is AuthStateNotLoggedIn)
-                        ? FlatButton(
-                            child: Text('logout'),
-                            onPressed: _authBloc.logout,
-                            textColor: Colors.white,
-                          )
-                        : Container(),
-                  ],
-                ),
+                // appBar: AppBar(
+                //   title: Text(title),
+                //   actions: <Widget>[
+                //     !(snapshot.data is AuthStateNotLoggedIn)
+                //         ? FlatButton(
+                //             child: Text('logout'),
+                //             onPressed: _authBloc.logout,
+                //             textColor: Colors.white,
+                //           )
+                //         : Container(),
+                //   ],
+                // ),
                 body: Center(child: pageToRender));
           }),
     );

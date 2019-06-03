@@ -6,13 +6,12 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appTitle = 'Shared Expenses';
     return MaterialApp(
-      title: appTitle,
+      title: 'Shared Expenses',
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: RootWidget(title: appTitle),
+      home: RootWidget(),
     );
   }
 }

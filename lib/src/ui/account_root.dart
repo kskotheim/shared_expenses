@@ -36,9 +36,9 @@ class AccountRoot extends StatelessWidget {
 
             if (state is AccountStateSelect) {
               AccountStateSelect selectState = state;
-              if(selectState.error != null)
+              if(selectState.error != null){
                 WidgetsBinding.instance.addPostFrameCallback((_) => _showErrorMessage(selectState.error));
-
+              }
               return SelectAccountPage();
             }
           }),

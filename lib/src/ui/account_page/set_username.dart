@@ -53,18 +53,25 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
           )
         ],
       );
-    else return InkWell(
-      onTap: (){
-        setState(() {
-          _editUsername = true;
-        });
-      },
-      child: Column(
+    else return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Text('Username: ${accountBloc.currentUser.userName ?? 'No Username'}', style: TextStyle(fontSize: 18.0)),
-          Text('Tap to edit', style: TextStyle(color: Colors.grey),)
+          Container(width: 30.0),
+          InkWell(
+            onTap: (){
+              setState(() {
+                _editUsername = true;
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 5.0),
+              child: Text('Edit'),
+              decoration: BoxDecoration(border: Border.all(color: Colors.brown), borderRadius: BorderRadius.all(Radius.circular(5.0)), gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors:[Colors.orange, Colors.red])),
+            ),
+          )
         ],
-      ),
+    
     );
   }
 }

@@ -31,7 +31,7 @@ abstract class RepoInterface {
   Future<void> createPayment(String accountId, Payment payment);
   Stream<List<Bill>> billStream(String accountId);
   Future<void> createBill(String accountId, Bill bill);
-  Future<void> tabulateTotals(String accountId);
+  Future<void> tabulateTotals(String accountId, List<User> users);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
   Stream<List<Map<String, dynamic>>> connectionRequests(String accountId);
@@ -155,10 +155,12 @@ class Repository implements RepoInterface {
     return _db.createBill(accountId, bill.toJson());
   }
 
-  Future<void> tabulateTotals(String accountId){
+  Future<void> tabulateTotals(String accountId, List<User> users){
     return _db.allBills(accountId).then((bills){
       return _db.allPayments(accountId).then((payments){
         Map<String, num> totals = {};
+
+        users.forEach((user) => totals[user.userId] = 0);
         
         List<Bill> billObjs = bills.map((bill) => Bill.fromJson(bill.data)).toList();
         List<Payment> paymentObjs = payments.map((payment) => Payment.fromJson(payment.data)).toList();
