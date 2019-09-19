@@ -15,8 +15,8 @@ class TotalsBloc implements BlocBase {
   Stream<List<ListTile>> get totalsList => _totalsListController.stream;
 
   List<User> _users;
-  Map<String, num> _idTotals;
-  Totals _totals;
+  Map<String, num> _totals;
+  TotalsExporter _totalsExporter;
 
   TotalsBloc({this.groupBloc}) {
     _usersSubscription = groupBloc.usersInAccountStream.listen(_addUsers);
@@ -33,29 +33,29 @@ class TotalsBloc implements BlocBase {
   }
 
   void _addTotals(Map<String, num> totals) {
-    _idTotals = totals;
+    _totals = totals;
 
     _checkAndPropagateTotals();
   }
 
   void _checkAndPropagateTotals() {
     //check if we have users and totals
-    if (_users != null && _idTotals != null) {
+    if (_users != null && _totals != null) {
       //make totals
-      _totals = Totals();
+      _totalsExporter = TotalsExporter();
 
-      _idTotals.forEach((id, total) {
+      _totals.forEach((id, total) {
         List<User> theUser = _users.where((user) => user.userId == id).toList();
         if (theUser.length == 1) {
           String username = theUser[0].userName ?? 'unnamed user';
-          _totals.addTotal(username, total);
+          _totalsExporter.addTotal(username, total);
         } else {
           print('couldnt find user $id in account ${groupBloc.accountId}');
         }
       });
 
       //add totals to sink
-      _totalsListController.sink.add(_totals.getTotals);
+      _totalsListController.sink.add(_totalsExporter.getTotals);
     }
     //if not, wait ...
   }
@@ -68,7 +68,7 @@ class TotalsBloc implements BlocBase {
   }
 }
 
-class Totals {
+class TotalsExporter {
   Map<String, num> _totals = {};
 
   void addTotal(String name, num amount) {

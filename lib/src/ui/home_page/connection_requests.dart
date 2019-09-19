@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/requests_bloc.dart';
 
 class ConnectionRequestsList extends StatelessWidget {
 
-  GroupBloc groupBloc;
+  String acctId;
   RequestsBloc requestsBloc;
 
-  ConnectionRequestsList({this.groupBloc, this.requestsBloc}) : assert(groupBloc != null);
+  ConnectionRequestsList({this.acctId, this.requestsBloc}) : assert(acctId != null || requestsBloc != null);
 
   @override
   Widget build(BuildContext context) {
-    if(requestsBloc == null) requestsBloc = RequestsBloc(accountId: groupBloc.accountId);
+    if(requestsBloc == null) requestsBloc = RequestsBloc(accountId: acctId);
 
     return BlocProvider(
       bloc: requestsBloc,

@@ -30,6 +30,9 @@ abstract class DB {
   Stream<QuerySnapshot> billStream(String accountId);
   Future<List<DocumentSnapshot>> allBills(String accountId);
   Future<void> deleteBill(String accountId, String billId);
+
+  Future<void> setBillTypes(String accountId, List<String> billTypes);
+  Future<List<String>> getBillTypes(String accountId);
 }
 
 class DatabaseManager implements DB {
@@ -176,6 +179,14 @@ class DatabaseManager implements DB {
 
   Future<void> deleteBill(String accountId, String billId) async {
     return _account(accountId).collection(BILLS).document(billId).delete();
+  }
+
+  Future<void> setBillTypes(String accountId, List<String> billTypes){
+    return _account(accountId).updateData({BILL_TYPES: billTypes});
+  }
+
+  Future<List<String>> getBillTypes(String accountId) async {
+    return _account(accountId).get().then((DocumentSnapshot account) => account.data[BILL_TYPES] ?? []);
   }
 
 }

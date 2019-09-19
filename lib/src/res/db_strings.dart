@@ -13,6 +13,7 @@ const String CONNECTION_REQUESTS = 'Connection_Requests';
 const String EMAIL = 'Email';
 const String ID = 'Id';
 const String TOTALS = 'Totals';
+const String BILL_TYPES = 'Bill_Types';
 
 
 const String FROM = 'From';

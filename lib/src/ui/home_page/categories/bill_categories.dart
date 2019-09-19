@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
+import 'package:shared_expenses/src/ui/home_page/categories/new_category_button.dart';
 
 class BillCategoryList extends StatelessWidget {
   final GroupBloc groupBloc;
@@ -26,6 +27,7 @@ class BillCategoryList extends StatelessWidget {
                 .toList() 
               : [ListTile(title: Text('(no categories)'),)],
           ),
+          NewCategoryButton(),
         ],
       ),
     );

@@ -37,6 +37,9 @@ abstract class RepoInterface {
   Stream<List<Map<String, dynamic>>> connectionRequests(String accountId);
   Future<void> deleteConnectionRequest(String accountId, String request);
 
+  Future<List<String>> getBillTypes(String accountId);
+  Future<void> setBillTypes(String accountId, List<String> billTypes);
+
 }
 
 class Repository implements RepoInterface {
@@ -216,5 +219,14 @@ class Repository implements RepoInterface {
 
   Future<void> deleteConnectionRequest(String accountId, String requestId){
     return _db.deleteAccountConnectionRequest(accountId, requestId);
+  }
+
+
+  Future<List<String>> getBillTypes(String accountId) {
+    return _db.getBillTypes(accountId);
+  }
+
+  Future<void> setBillTypes(String accountId, List<String> billTypes){
+    return _db.setBillTypes(accountId, billTypes);
   }
 }

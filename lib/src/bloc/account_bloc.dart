@@ -1,8 +1,6 @@
 import 'dart:async';
-
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
-
 
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
@@ -14,10 +12,6 @@ class AccountBloc implements BlocBase {
   //User info
   User currentUser;
   Map<String, String> accountNames;
-
-  //Account info
-  // GroupBloc _groupBloc;
-  // GroupBloc get groupBloc => _groupBloc;
 
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
   Stream<AccountState> get accountState => _accountStateController.stream;
@@ -61,7 +55,6 @@ class AccountBloc implements BlocBase {
 
   
   void _goToSelect() {
-    // _groupBloc = null;
     _accountStateSink.add(AccountStateSelect());
   }
 
