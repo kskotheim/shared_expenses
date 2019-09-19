@@ -2,19 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
+import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/requests_bloc.dart';
+import 'package:shared_expenses/src/ui/home_page/bill_categories.dart';
 import 'package:shared_expenses/src/ui/home_page/connection_requests.dart';
 import 'package:shared_expenses/src/ui/home_page/events.dart';
 import 'package:shared_expenses/src/ui/home_page/new_event/new_event.dart';
 import 'package:shared_expenses/src/ui/home_page/totals.dart';
 
 class HomePage extends StatelessWidget {
+  final String accountId;
   EventsBloc _eventsBloc;
+
+  HomePage({this.accountId}) : assert(accountId != null);
 
   @override
   Widget build(BuildContext context) {
     AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
-    _eventsBloc = EventsBloc(accountBloc: accountBloc);
+    GroupBloc groupBloc = GroupBloc(
+        accountBloc: accountBloc,
+        userId: accountBloc.currentUser.userId,
+        accountId: accountId);
+
+    _eventsBloc = EventsBloc(groupBloc: groupBloc);
 
     final Widget goToSelectAccountButton = Padding(
         padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
@@ -26,57 +36,65 @@ class HomePage extends StatelessWidget {
         ));
 
     return BlocProvider(
-      bloc: _eventsBloc,
-      child: Stack(
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              Container(
-                height: 10.0,
-              ),
-              Text(accountBloc.currentAccount.accountName,
-                  style: TextStyle(fontSize: 25.0)),
-              Expanded(
-                flex: 1,
-                child: TotalsWidget(),
-              ),
-              Divider(),
-              Expanded(
-                flex: 2,
-                child: EventsWidget(
-                  eventsBloc: _eventsBloc,
-                ),
-              ),
-            ],
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+      bloc: groupBloc,
+      child: BlocProvider(
+        bloc: _eventsBloc,
+        child: Stack(
+          children: <Widget>[
+            Column(
               children: <Widget>[
-                goToSelectAccountButton,
-                AdminButton(),
-                NewEventButton(
-                  eventsBloc: _eventsBloc,
+                Expanded(
+                  flex: 1,
+                  child: Center(
+                    child: Text(groupBloc.currentAccount.accountName,
+                        style: TextStyle(fontSize: 25.0)),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    child: TotalsWidget(),
+                    color: Colors.grey.shade200,
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: EventsWidget(
+                    eventsBloc: _eventsBloc,
+                  ),
                 ),
               ],
             ),
-          )
-        ],
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  goToSelectAccountButton,
+                  BillCategoryButton(),
+                  ConnectionRequestsButton(),
+                  NewEventButton(),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
 }
 
-class AdminButton extends StatelessWidget {
-  final Widget _zeroContainer = Container(height: 0, width: 0,);
+class ConnectionRequestsButton extends StatelessWidget {
+  final Widget _zeroContainer = Container(
+    height: 0,
+    width: 0,
+  );
 
   @override
   Widget build(BuildContext context) {
-    AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
-    if (accountBloc.permissions.contains('owner')) {
-      RequestsBloc requestsBloc =
-          RequestsBloc(accountId: accountBloc.currentAccount.accountId);
+    GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
+    if (groupBloc.permissions.contains('owner')) {
+      RequestsBloc requestsBloc = RequestsBloc(accountId: groupBloc.accountId);
 
       return StreamBuilder(
         stream: requestsBloc.requests,
@@ -95,7 +113,7 @@ class AdminButton extends StatelessWidget {
                           context: context,
                           builder: (newContext) => Dialog(
                                 child: ConnectionRequestsList(
-                                  accountBloc: accountBloc,
+                                  requestsBloc: requestsBloc,
                                 ),
                               )),
                     ),
@@ -121,5 +139,33 @@ class AdminButton extends StatelessWidget {
     } else {
       return _zeroContainer;
     }
+  }
+}
+
+class BillCategoryButton extends StatelessWidget {
+  final Widget _zeroContainer = Container(
+    height: 0,
+    width: 0,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
+    if (groupBloc.permissions.contains('owner')) {
+      return Padding(
+          padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
+          child: FloatingActionButton(
+            backgroundColor: Colors.orange,
+            child: Icon(Icons.apps),
+            onPressed: () => showDialog(
+                context: context,
+                builder: (newContext) => Dialog(
+                      child: BillCategoryList(
+                        groupBloc: groupBloc,
+                      ),
+                    )),
+          ));
+    } else
+      return _zeroContainer;
   }
 }

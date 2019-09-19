@@ -1,5 +1,5 @@
 
-const String ACCOUNTS = 'Accounts';
+const String GROUPS = 'Accounts';
 const String USERS = 'Users';
 const String USER = 'User';
 const String PAYMENTS = 'Payments';

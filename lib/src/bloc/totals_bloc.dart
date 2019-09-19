@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:shared_expenses/src/bloc/account_bloc.dart';
+import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
 class TotalsBloc implements BlocBase {
-  final AccountBloc accountBloc;
+  final GroupBloc groupBloc;
   final Repository repo = Repository();
   StreamSubscription _usersSubscription;
   StreamSubscription _totalsSubscription;
@@ -18,11 +18,11 @@ class TotalsBloc implements BlocBase {
   Map<String, num> _idTotals;
   Totals _totals;
 
-  TotalsBloc({this.accountBloc}) {
-    _usersSubscription = accountBloc.usersInAccountStream.listen(_addUsers);
+  TotalsBloc({this.groupBloc}) {
+    _usersSubscription = groupBloc.usersInAccountStream.listen(_addUsers);
 
     _totalsSubscription = repo
-        .totalsStream(accountBloc.currentAccount.accountId)
+        .totalsStream(groupBloc.accountId)
         .listen(_addTotals);
   }
 
@@ -49,8 +49,8 @@ class TotalsBloc implements BlocBase {
         if (theUser.length == 1) {
           String username = theUser[0].userName ?? 'unnamed user';
           _totals.addTotal(username, total);
-        } else if (accountBloc.currentAccount != null) {
-          print('couldnt find user $id in account ${accountBloc.currentAccount?.accountName}');
+        } else {
+          print('couldnt find user $id in account ${groupBloc.accountId}');
         }
       });
 
@@ -78,7 +78,8 @@ class Totals {
   List<ListTile> get getTotals => _totals.entries
       .map((entry) => ListTile(
               title: Text(
-            '${entry.key}: \$${(entry.value * 100).round() * .01}',
+            '${entry.key}: \$${entry.value}',
+            style: TextStyle(color: entry.value < -1 ? Colors.green : entry.value > 1 ? Colors.red : Colors.black),
           )))
       .toList();
 

@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:shared_expenses/src/bloc/account_bloc.dart';
+import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/requests_bloc.dart';
 
 class ConnectionRequestsList extends StatelessWidget {
 
-  AccountBloc accountBloc;
-  RequestsBloc _requestsBloc;
+  GroupBloc groupBloc;
+  RequestsBloc requestsBloc;
 
-  ConnectionRequestsList({this.accountBloc}) : assert(accountBloc != null);
+  ConnectionRequestsList({this.groupBloc, this.requestsBloc}) : assert(groupBloc != null);
 
   @override
   Widget build(BuildContext context) {
-    _requestsBloc = RequestsBloc(accountId: accountBloc.currentAccount.accountId);
+    if(requestsBloc == null) requestsBloc = RequestsBloc(accountId: groupBloc.accountId);
 
     return BlocProvider(
-      bloc: _requestsBloc,
+      bloc: requestsBloc,
           child: StreamBuilder<List<List<String>>>(
-          stream: _requestsBloc.requests,
+          stream: requestsBloc.requests,
           builder: (context, snapshot) {
             if (snapshot.data == null) return Text('no connection requests');
             return ListView(
@@ -27,13 +27,13 @@ class ConnectionRequestsList extends StatelessWidget {
                 leading: IconButton(
                   icon: Icon(Icons.check),
                   onPressed: (){
-                    _requestsBloc.approveConnectionRequest(request[1]);
+                    requestsBloc.approveConnectionRequest(request[1]);
                   },
                 ),
                 trailing: IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: (){
-                    _requestsBloc.deleteConnectionRequest(request[1]);
+                    requestsBloc.deleteConnectionRequest(request[1]);
                   },
                 ),
               )).toList(),

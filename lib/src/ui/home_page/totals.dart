@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/totals_bloc.dart';
 
 class TotalsWidget extends StatelessWidget {
@@ -9,8 +9,8 @@ class TotalsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
-     _totalsBloc = TotalsBloc(accountBloc: accountBloc);
+    GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
+     _totalsBloc = TotalsBloc(groupBloc: groupBloc);
     return BlocProvider(
       bloc: _totalsBloc,
       child: StreamBuilder<List<ListTile>>(

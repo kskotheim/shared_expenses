@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
-import 'package:shared_expenses/src/data/repository.dart';
 
-import 'package:shared_expenses/src/res/db_strings.dart';
-import 'package:shared_expenses/src/res/models/account.dart';
+import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
 class AccountBloc implements BlocBase {
@@ -19,17 +16,8 @@ class AccountBloc implements BlocBase {
   Map<String, String> accountNames;
 
   //Account info
-  Account currentAccount;
-  List<User> usersInAccount;
-  List<String> permissions;
-
-  String userName(String userId){
-    if(usersInAccount != null){
-    User user = usersInAccount.where((user) => user.userId == userId).toList().removeLast();
-    if(user != null) return user.userName;
-    else return 'no user by that id';
-    } else return 'loading ...';
-  }
+  // GroupBloc _groupBloc;
+  // GroupBloc get groupBloc => _groupBloc;
 
   StreamController<AccountState> _accountStateController =StreamController<AccountState>();
   Stream<AccountState> get accountState => _accountStateController.stream;
@@ -38,11 +26,7 @@ class AccountBloc implements BlocBase {
   StreamController<AccountEvent> _accountEventController =StreamController<AccountEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
 
-  BehaviorSubject<List<User>> _usersInAccountController = BehaviorSubject<List<User>>();
-  Stream<List<User>> get usersInAccountStream => _usersInAccountController.stream;
-  StreamSink get _usersInAccountSink => _usersInAccountController.sink;
-
-  StreamSubscription _usersInAccountSubscription;
+  
   StreamSubscription _userSubscription;
   StreamSubscription _accountSubscription;
 
@@ -50,7 +34,6 @@ class AccountBloc implements BlocBase {
     assert(authBloc != null);
     _accountSubscription =  _accountEventController.stream.listen(_mapEventToState);
     _userSubscription = repo.currentUserStream(authBloc.currentUserId).listen(_updateCurrentUserAndAccountNames);
-    usersInAccountStream.listen((List<User> users) => usersInAccount = users);
   }
 
   void _mapEventToState(AccountEvent event) {
@@ -73,22 +56,12 @@ class AccountBloc implements BlocBase {
   }
 
   void _goHome(String accountId) {
-    currentAccount = Account(accountId: accountId, accountName: accountNames[accountId]);
-    permissions =  List<String>.from(currentUser.accountInfo[currentAccount.accountId][PERMISSIONS]);
-    _usersInAccountSubscription = repo.userStream(accountId).listen(_setAccountUsers);
-    
-    _accountStateSink.add(AccountStateHome());
+    _accountStateSink.add(AccountStateHome(accountId: accountId));
   }
 
-  void _setAccountUsers(List<User> users){
-    _usersInAccountSink.add(users);
-  }
-
+  
   void _goToSelect() {
-    currentAccount = null;
-    _usersInAccountSink.add(<User>[]);
-    if(_usersInAccountSubscription != null) _usersInAccountSubscription.cancel();
-    permissions = null;
+    // _groupBloc = null;
     _accountStateSink.add(AccountStateSelect());
   }
 
@@ -115,7 +88,7 @@ class AccountBloc implements BlocBase {
     dynamic accountIdOrNull = await repo.getAccountByName(accountName);
     
     if(accountIdOrNull != null){
-      bool newAccount = !currentUser.accounts.contains(accountIdOrNull);
+      bool newAccount = !currentUser.groups.contains(accountIdOrNull);
     
       if(newAccount){
         repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
@@ -128,8 +101,8 @@ class AccountBloc implements BlocBase {
   }
 
   void _goToAccountsOrSelect() {
-    if(currentUser.accounts.length == 1){
-      accountEvent.add(AccountEventGoHome(accountId: currentUser.accounts[0]));
+    if(currentUser.groups.length == 1){
+      accountEvent.add(AccountEventGoHome(accountId: currentUser.groups[0]));
     } else {
       accountEvent.add(AccountEventGoToSelect());
     }
@@ -138,11 +111,11 @@ class AccountBloc implements BlocBase {
   void _updateCurrentUserAndAccountNames(User user) async{
     //check to see if we need to update accountNames
     if(currentUser != null){
-      if(currentUser.accounts != user.accounts){
-        accountNames = await repo.getAccountNames(user.accounts);
+      if(currentUser.groups != user.groups){
+        accountNames = await repo.getAccountNames(user.groups);
       } //otherwise they are still accurate
     } else { //no current user, so we need names from this one
-      accountNames = await repo.getAccountNames(user.accounts);
+      accountNames = await repo.getAccountNames(user.groups);
     }
     currentUser = user;
 
@@ -154,10 +127,8 @@ class AccountBloc implements BlocBase {
   void dispose() {
     _accountStateController.close();
     _accountEventController.close();
-    _usersInAccountController.close();
     _userSubscription.cancel();
     _accountSubscription.cancel();
-    if(_usersInAccountSubscription != null) _usersInAccountSubscription.cancel();
 
   }
 }
@@ -171,7 +142,10 @@ class AccountStateSelect extends AccountState {
   AccountStateSelect({this.error});
 }
 
-class AccountStateHome extends AccountState {}
+class AccountStateHome extends AccountState {
+  final String accountId;
+  AccountStateHome({this.accountId}) : assert(accountId != null);
+}
 
 class AccountEvent {}
 

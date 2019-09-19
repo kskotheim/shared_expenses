@@ -34,7 +34,7 @@ abstract class DB {
 
 class DatabaseManager implements DB {
   Firestore _firestore = Firestore.instance;
-  CollectionReference get _accountCollection => _firestore.collection(ACCOUNTS);
+  CollectionReference get _accountCollection => _firestore.collection(GROUPS);
   CollectionReference get _usersCollection => _firestore.collection(USERS);
   DocumentReference _account(String id) => _accountCollection.document(id);
   DocumentReference _user(String id) => _usersCollection.document(id);
@@ -73,7 +73,7 @@ class DatabaseManager implements DB {
   Future<void> createUser(String userId, String email) async {
     assert(userId != null, email != null);
     return _user(userId)
-        .setData({CREATED: DateTime.now(), ACCOUNTS: [], ACCOUNT_INFO: {}, EMAIL: email});
+        .setData({CREATED: DateTime.now(), GROUPS: [], ACCOUNT_INFO: {}, EMAIL: email});
   }
 
   Future<DocumentSnapshot> getUser(String userId) async {
@@ -87,7 +87,7 @@ class DatabaseManager implements DB {
   }
 
   Stream<QuerySnapshot> usersStream(String accountId) {
-    return _usersCollection.where(ACCOUNTS, arrayContains:accountId).snapshots();
+    return _usersCollection.where(GROUPS, arrayContains:accountId).snapshots();
   }
 
   Future<void> updateUser(String userId, String field, data) async {
@@ -100,7 +100,7 @@ class DatabaseManager implements DB {
     DocumentReference user =_user(userId);
     DocumentSnapshot userSnapshot = await user.get();
 
-    batch.updateData(user, {ACCOUNTS: userSnapshot[ACCOUNTS] + [accountId]});
+    batch.updateData(user, {GROUPS: userSnapshot[GROUPS] + [accountId]});
 
     Map thisAccount = {PERMISSIONS:[permission]};
     Map userAccountsInfo = userSnapshot.data[ACCOUNT_INFO];
@@ -146,7 +146,7 @@ class DatabaseManager implements DB {
   }
 
   Stream<QuerySnapshot> paymentStream(String accountId) {
-    return _account(accountId).collection(PAYMENTS).limit(10).snapshots();
+    return _account(accountId).collection(PAYMENTS).orderBy('createdAt', descending: true).limit(10).snapshots();
   }
 
 
@@ -167,7 +167,7 @@ class DatabaseManager implements DB {
   }
 
   Stream<QuerySnapshot> billStream(String accountId) {
-    return _account(accountId).collection(BILLS).limit(10).snapshots();
+    return _account(accountId).collection(BILLS).orderBy('createdAt', descending: true).limit(10).snapshots();
   }
 
   Future<List<DocumentSnapshot>> allBills(String accountId) async{

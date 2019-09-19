@@ -190,8 +190,12 @@ class Repository implements RepoInterface {
 
         if(numUsers != 0) userObligation = totalBillAmount / numUsers;
 
-        totals.forEach((user, total) => totals[user] = total + userObligation);
-
+        totals.forEach((user, total) {
+          totals[user] = total + userObligation;
+          totals[user] = (totals[user] * 100).round() / 100.0;
+          print('total: ${totals[user]}');
+        });
+        print('updating totals: $totals');
         return _db.updateTotals(accountId, totals);
 
       });

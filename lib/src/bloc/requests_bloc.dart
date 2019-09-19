@@ -21,8 +21,8 @@ class RequestsBloc implements BlocBase {
   }
 
   void approveConnectionRequest(String userId) async {
-    await _repo.deleteConnectionRequest(accountId, userId);
-    await _repo.addUserToAccount(userId, accountId);
+    _repo.deleteConnectionRequest(accountId, userId);
+    _repo.addUserToAccount(userId, accountId);
   }
   
   void deleteConnectionRequest(String userId) async {

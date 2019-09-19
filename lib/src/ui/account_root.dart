@@ -31,7 +31,7 @@ class AccountRoot extends StatelessWidget {
             }
 
             if (state is AccountStateHome) {
-              return HomePage();
+              return HomePage(accountId: state.accountId);
             }
 
             if (state is AccountStateSelect) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
@@ -8,9 +9,9 @@ class UserRequestsBloc implements BlocBase {
   final String userId;
   final Repository repo =Repository();
 
-  StreamSubscription _subscription;
+  StreamSubscription<User> _subscription;
 
-  StreamController<List<String>> _requestsController = StreamController<List<String>>();
+  BehaviorSubject<List<String>> _requestsController = BehaviorSubject<List<String>>();
   Stream<List<String>> get requests => _requestsController.stream;
 
   UserRequestsBloc({this.userId}){

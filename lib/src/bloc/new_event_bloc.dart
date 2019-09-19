@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:shared_expenses/src/bloc/account_bloc.dart';
+import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/payment.dart';
@@ -11,7 +11,7 @@ class NewEventBloc implements BlocBase {
   static const String PAYMENT = 'Payment';
 
   final Repository repo = Repository();
-  final AccountBloc accountBloc;
+  final GroupBloc groupBloc;
   List<DropdownMenuItem> userMenuItems;
   List<DropdownMenuItem> billTypeMenuItems;
 
@@ -65,15 +65,15 @@ class NewEventBloc implements BlocBase {
       _toDateControlelr.stream.transform(_toDateTransformer);
   Function get newToDate => _toDateControlelr.sink.add;
 
-  NewEventBloc({this.accountBloc}) {
-    userMenuItems = accountBloc.usersInAccount
+  NewEventBloc({this.groupBloc}) {
+    userMenuItems = groupBloc.usersInAccount
         .map((user) => DropdownMenuItem(
               child: Text(user.userName),
               value: user.userId,
             ))
         .toList();
 
-    billTypeMenuItems = _billTypes
+    billTypeMenuItems = (groupBloc.billTypes)
         .map((type) => DropdownMenuItem(
               child: Text(type),
               value: type,
@@ -102,8 +102,6 @@ class NewEventBloc implements BlocBase {
       StreamTransformer<double, double>.fromHandlers(
           handleData: (billAmount, sink) {
     _billAmount = billAmount;
-    print('$_billAmount');
-
     sink.add(billAmount);
   });
 
@@ -125,28 +123,28 @@ class NewEventBloc implements BlocBase {
       if (_billAmount != null && _selectedType != null) {
         return repo
             .createBill(
-                accountBloc.currentAccount.accountId,
+                groupBloc.accountId,
                 Bill(
                     amount: _billAmount,
-                    paidByUserId: accountBloc.currentUser.userId,
+                    paidByUserId: groupBloc.userId,
                     type: _selectedType,
                     createdAt: DateTime.now()))
             .then((_) =>
-                repo.tabulateTotals(accountBloc.currentAccount.accountId, accountBloc.usersInAccount));
+                repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else if (_optionSelected == PAYMENT) {
       if (_selectedUser != null && _billAmount != null) {
         return repo
             .createPayment(
-                accountBloc.currentAccount.accountId,
+                groupBloc.accountId,
                 Payment(
-                    fromUserId: accountBloc.currentUser.userId,
+                    fromUserId: groupBloc.userId,
                     toUserId: _selectedUser,
                     amount: _billAmount,
                     createdAt: DateTime.now()))
             .then((_) =>
-                repo.tabulateTotals(accountBloc.currentAccount.accountId, accountBloc.usersInAccount));
+                repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else
@@ -163,5 +161,4 @@ class NewEventBloc implements BlocBase {
     _optionSelectedController.close();
   }
 
-  final List<String> _billTypes = ['Electric', 'Garbage', 'Internet', 'Other'];
 }
