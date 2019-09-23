@@ -21,7 +21,8 @@ class GroupBloc implements BlocBase {
   
   StreamSubscription _usersInAccountSubscription;
   List<User> usersInAccount;
-  List<String> billTypes = ['Garbage', 'Electricity'];
+  List<String> _billTypes =  <String>[];
+  List<String> get billTypes => _billTypes;
 
   //group info
   Account currentAccount;
@@ -34,6 +35,11 @@ class GroupBloc implements BlocBase {
     _usersInAccountSubscription = repo.userStream(accountId).listen(_setAccountUsers);
     currentAccount = Account(accountId: accountId, accountName: accountBloc.accountNames[accountId]);
     permissions =  List<String>.from(accountBloc.currentUser.accountInfo[accountId][PERMISSIONS]);
+    getCategories();
+  }
+
+  Future<void> getCategories() async {
+    return _billTypes = await repo.getBillTypes(accountId);
   }
 
   String userName(String userId){

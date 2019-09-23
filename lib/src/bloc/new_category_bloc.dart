@@ -1,9 +1,16 @@
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:shared_expenses/src/bloc/group_bloc.dart';
+import 'package:shared_expenses/src/data/repository.dart';
 
 
 
 class NewCategoryBloc implements BlocBase {
+  
+  final GroupBloc groupBloc;
+
+  Repository repo = Repository.getRepo;
   
   //input stream
   StreamController<CategoryButtonEvent> _categoryEventController = StreamController<CategoryButtonEvent>();
@@ -13,20 +20,46 @@ class NewCategoryBloc implements BlocBase {
   //output stream
   StreamController<CategoryButtonState> _categoryButtonController = StreamController<CategoryButtonState>();
   Stream<CategoryButtonState> get categoryStream => _categoryButtonController.stream;
+  void showNewCategoryForm() => _categoryButtonController.sink.add(ShowNewCategoryForm());
+  void showNewCategoryButton() => _categoryButtonController.sink.add(ShowNewCategoryButton());
 
-  NewCategoryBloc(){
-    _categoryButtonController.sink.add(ShowNewCategoryButton());
+  //Stream for new category field
+  BehaviorSubject<String> _newCategoryFieldController = BehaviorSubject<String>();
+  Stream<String> get newCategoryField => _newCategoryFieldController.stream.transform(_saveCategoryText);
+  void changeNewCategoryField(String newCategory) => _newCategoryFieldController.sink.add(newCategory);
+  static String _newCategoryText = '';
+
+
+  NewCategoryBloc({this.groupBloc}){
+    assert(groupBloc != null);
     _categoryEventController.stream.listen(_mapEventToState);
   }
 
   void _mapEventToState(CategoryButtonEvent event){
     if(event is NewCategoryButtonPushed){
-      _categoryButtonController.sink.add(ShowNewCategoryForm());
+      showNewCategoryForm();
     }
     if(event is NewCategorySubmitPushed){
-      print('submitting category');
-      //submit new category and then pop context
+      _submitNewCategory();
     }
+  }
+
+  StreamTransformer _saveCategoryText = StreamTransformer<String, String>.fromHandlers(
+    handleData: (string, sink){
+      _newCategoryText  = string;
+    }
+  );
+
+  Future<void> _submitNewCategory() async {
+    List<String> billTypes = await repo.getBillTypes(groupBloc.accountId);
+
+    if(!billTypes.contains(_newCategoryText)){   
+      billTypes.add(_newCategoryText);
+      await repo.setBillTypes(groupBloc.accountId, billTypes);
+      await groupBloc.getCategories();
+      return showNewCategoryButton();
+    } 
+    else return null;
   }
   
   
@@ -34,6 +67,7 @@ class NewCategoryBloc implements BlocBase {
   void dispose() {
     _categoryEventController.close();
     _categoryButtonController.close();
+    _newCategoryFieldController.close();
   }
 
 }

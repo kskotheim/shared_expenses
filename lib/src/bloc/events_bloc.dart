@@ -48,15 +48,10 @@ class EventsBloc implements BlocBase {
         return '${groupBloc.userName(event.fromUserId)} paid ${groupBloc.userName(event.toUserId)} \$${event.amount.floor()}';
       }
       if(event is Bill){
-        return '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${_uncategorizedFilter(event.type)}bill';
+        return '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type}bill';
       }
       return 'error';
     }).toList();
-  }
-
-  String _uncategorizedFilter(String input){
-    if(_UNCATEGORIZED_STRINGS.contains(input.toLowerCase())) return input + ' ';
-    else return '';
   }
 
   @override
@@ -66,11 +61,4 @@ class EventsBloc implements BlocBase {
     _billsSubscription.cancel();
   }
 
-  static const List<String> _UNCATEGORIZED_STRINGS = [
-    'uncategorized',
-    'n/a',
-    'no category',
-    'none',
-    'blank'
-  ];
 }

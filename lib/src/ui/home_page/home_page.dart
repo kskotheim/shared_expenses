@@ -69,6 +69,7 @@ class HomePage extends StatelessWidget {
               alignment: Alignment.bottomRight,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: <Widget>[
                   goToSelectAccountButton,
                   BillCategoryButton(),
@@ -85,10 +86,6 @@ class HomePage extends StatelessWidget {
 }
 
 class ConnectionRequestsButton extends StatelessWidget {
-  final Widget _zeroContainer = Container(
-    height: 0,
-    width: 0,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +96,7 @@ class ConnectionRequestsButton extends StatelessWidget {
       return StreamBuilder(
         stream: requestsBloc.requests,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return _zeroContainer;
+          if (!snapshot.hasData) return Container();
           int numRequests = snapshot.data.length;
 
           if (numRequests > 0) {
@@ -133,20 +130,16 @@ class ConnectionRequestsButton extends StatelessWidget {
                   ],
                 ));
           } else
-            return _zeroContainer;
+            return Container();
         },
       );
     } else {
-      return _zeroContainer;
+      return Container();
     }
   }
 }
 
 class BillCategoryButton extends StatelessWidget {
-  final Widget _zeroContainer = Container(
-    height: 0,
-    width: 0,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +159,6 @@ class BillCategoryButton extends StatelessWidget {
                     )),
           ));
     } else
-      return _zeroContainer;
+      return Container();
   }
 }

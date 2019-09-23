@@ -66,6 +66,7 @@ class NewEventBloc implements BlocBase {
   Function get newToDate => _toDateControlelr.sink.add;
 
   NewEventBloc({this.groupBloc}) {
+
     userMenuItems = groupBloc.usersInAccount
         .map((user) => DropdownMenuItem(
               child: Text(user.userName),

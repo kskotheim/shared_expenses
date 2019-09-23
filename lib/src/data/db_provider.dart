@@ -186,7 +186,7 @@ class DatabaseManager implements DB {
   }
 
   Future<List<String>> getBillTypes(String accountId) async {
-    return _account(accountId).get().then((DocumentSnapshot account) => account.data[BILL_TYPES] ?? []);
+    return _account(accountId).get().then((DocumentSnapshot account) => List<String>.from(account.data[BILL_TYPES]) ?? <String>[]);
   }
 
 }
