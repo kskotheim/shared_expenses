@@ -4,17 +4,17 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/requests_bloc.dart';
-import 'package:shared_expenses/src/ui/home_page/categories/bill_categories.dart';
-import 'package:shared_expenses/src/ui/home_page/connection_requests.dart';
-import 'package:shared_expenses/src/ui/home_page/events.dart';
-import 'package:shared_expenses/src/ui/home_page/new_event/new_event.dart';
-import 'package:shared_expenses/src/ui/home_page/totals.dart';
+import 'package:shared_expenses/src/ui/group_page/account_management.dart';
+import 'package:shared_expenses/src/ui/group_page/connection_requests.dart';
+import 'package:shared_expenses/src/ui/group_page/events.dart';
+import 'package:shared_expenses/src/ui/group_page/new_event/new_event.dart';
+import 'package:shared_expenses/src/ui/group_page/totals.dart';
 
-class HomePage extends StatelessWidget {
-  final String accountId;
+class GroupPage extends StatelessWidget {
+  final String groupId;
   EventsBloc _eventsBloc;
 
-  HomePage({this.accountId}) : assert(accountId != null);
+  GroupPage({this.groupId}) : assert(groupId != null);
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +22,14 @@ class HomePage extends StatelessWidget {
     GroupBloc groupBloc = GroupBloc(
         accountBloc: accountBloc,
         userId: accountBloc.currentUser.userId,
-        accountId: accountId);
+        accountId: groupId);
 
     _eventsBloc = EventsBloc(groupBloc: groupBloc);
 
     final Widget goToSelectAccountButton = Padding(
         padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
         child: FloatingActionButton(
+          heroTag: 'account',
           backgroundColor: Colors.grey,
           child: Icon(Icons.account_circle),
           onPressed: () =>
@@ -105,6 +106,7 @@ class ConnectionRequestsButton extends StatelessWidget {
                 child: Stack(
                   children: <Widget>[
                     FloatingActionButton(
+                      heroTag: 'connection_requests',
                       child: Icon(Icons.supervisor_account),
                       onPressed: () => showDialog(
                           context: context,
@@ -148,15 +150,18 @@ class BillCategoryButton extends StatelessWidget {
       return Padding(
           padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
           child: FloatingActionButton(
+            heroTag: 'account_management',
             backgroundColor: Colors.orange,
             child: Icon(Icons.apps),
-            onPressed: () => showDialog(
-                context: context,
-                builder: (newContext) => Dialog(
-                      child: BillCategoryList(
-                        groupBloc: groupBloc,
-                      ),
-                    )),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AccountManager())),
+            
+            // showDialog(
+            //     context: context,
+            //     builder: (newContext) => Dialog(
+            //           child: BillCategoryList(
+            //             groupBloc: groupBloc,
+            //           ),
+            //         )),
           ));
     } else
       return Container();

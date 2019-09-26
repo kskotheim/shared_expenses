@@ -42,6 +42,13 @@ class GroupBloc implements BlocBase {
     return _billTypes = await repo.getBillTypes(accountId);
   }
 
+  Future<void> deleteCategory(String category) async {
+    if(_billTypes.contains(category)){
+      _billTypes.remove(category);
+    }
+    return repo.setBillTypes(accountId, _billTypes);
+  }
+
   String userName(String userId){
     if(usersInAccount != null){
     User user = usersInAccount.where((user) => user.userId == userId).toList().removeLast();

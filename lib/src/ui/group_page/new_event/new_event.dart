@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
-import 'package:shared_expenses/src/ui/home_page/new_event/new_event_dialog.dart';
+import 'package:shared_expenses/src/ui/group_page/new_event/new_event_dialog.dart';
 
 class NewEventButton extends StatelessWidget {
 

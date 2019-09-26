@@ -33,6 +33,7 @@ abstract class DB {
 
   Future<void> setBillTypes(String accountId, List<String> billTypes);
   Future<List<String>> getBillTypes(String accountId);
+  Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val);
 }
 
 class DatabaseManager implements DB {
@@ -187,6 +188,10 @@ class DatabaseManager implements DB {
 
   Future<List<String>> getBillTypes(String accountId) async {
     return _account(accountId).get().then((DocumentSnapshot account) => List<String>.from(account.data[BILL_TYPES]) ?? <String>[]);
+  }
+
+  Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val) async {
+    return _account(accountId).collection(BILLS).where(field, isEqualTo: val).getDocuments().then((snapshot) => snapshot.documents);
   }
 
 }

@@ -3,7 +3,7 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/new_category_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
-import 'package:shared_expenses/src/ui/home_page/categories/new_category_button.dart';
+import 'package:shared_expenses/src/ui/group_page/categories/new_category_button.dart';
 
 class BillCategoryList extends StatelessWidget {
   final GroupBloc groupBloc;
@@ -32,7 +32,13 @@ class BillCategoryList extends StatelessWidget {
               children: (groupBloc.billTypes != null &&
                       groupBloc.billTypes.isNotEmpty)
                   ? groupBloc.billTypes
-                      .map((type) => ListTile(title: Text(type)))
+                      .map((type) => ListTile(
+                            title: Text(type),
+                            trailing: IconButton(
+                              onPressed:() => groupBloc.deleteCategory(type),
+                              icon: Icon(Icons.delete),
+                            ),
+                          ))
                       .toList()
                   : [
                       ListTile(

@@ -35,18 +35,6 @@ class RootWidget extends StatelessWidget {
 
             return Scaffold(
                 key: _scaffoldKey,
-                // appBar: AppBar(
-                //   title: Text(title),
-                //   actions: <Widget>[
-                //     !(snapshot.data is AuthStateNotLoggedIn)
-                //         ? FlatButton(
-                //             child: Text('logout'),
-                //             onPressed: _authBloc.logout,
-                //             textColor: Colors.white,
-                //           )
-                //         : Container(),
-                //   ],
-                // ),
                 body: Center(child: pageToRender));
           }),
     );

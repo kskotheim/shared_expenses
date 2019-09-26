@@ -13,8 +13,8 @@ class AccountBloc implements BlocBase {
   User currentUser;
   Map<String, String> accountNames;
 
-  StreamController<AccountState> _accountStateController =StreamController<AccountState>();
-  Stream<AccountState> get accountState => _accountStateController.stream;
+  StreamController<PageToDisplay> _accountStateController =StreamController<PageToDisplay>();
+  Stream<PageToDisplay> get accountState => _accountStateController.stream;
   StreamSink get _accountStateSink => _accountStateController.sink;
 
   StreamController<AccountEvent> _accountEventController =StreamController<AccountEvent>();
@@ -50,34 +50,34 @@ class AccountBloc implements BlocBase {
   }
 
   void _goHome(String accountId) {
-    _accountStateSink.add(AccountStateHome(accountId: accountId));
+    _accountStateSink.add(DisplayGroupPage(groupId: accountId));
   }
 
   
   void _goToSelect() {
-    _accountStateSink.add(AccountStateSelect());
+    _accountStateSink.add(DisplaySelectAccountPage());
   }
 
   void _createAccount(String accountName) async {
-    _accountStateSink.add(AccountStateLoading());
+    _accountStateSink.add(DisplayLoadingPage());
     dynamic accountIdOrNull = await repo.getAccountByName(accountName);
 
     if(accountIdOrNull == null) {
       repo.createAccount(accountName, currentUser);
     } else {
-      _accountStateSink.add(AccountStateSelect(error: '$accountName already exists')); 
+      _accountStateSink.add(DisplaySelectAccountPage(error: '$accountName already exists')); 
     }
   }
 
   void _renameUser(String username){
     if(username !=currentUser.userName){
-      _accountStateSink.add(AccountStateLoading());
+      _accountStateSink.add(DisplayLoadingPage());
       repo.updateUserName(currentUser.userId, username);
     }
   }
 
   void _requestConnection(String accountName) async {
-    _accountStateSink.add(AccountStateLoading());
+    _accountStateSink.add(DisplayLoadingPage());
     dynamic accountIdOrNull = await repo.getAccountByName(accountName);
     
     if(accountIdOrNull != null){
@@ -86,10 +86,10 @@ class AccountBloc implements BlocBase {
       if(newAccount){
         repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
       } else {
-        _accountStateSink.add(AccountStateSelect(error: 'You are already connected to $accountName'));
+        _accountStateSink.add(DisplaySelectAccountPage(error: 'You are already connected to $accountName'));
       }
     } else {
-      _accountStateSink.add(AccountStateSelect(error: '$accountName does not exist'));
+      _accountStateSink.add(DisplaySelectAccountPage(error: '$accountName does not exist'));
     }
   }
 
@@ -126,18 +126,18 @@ class AccountBloc implements BlocBase {
   }
 }
 
-class AccountState {}
+class PageToDisplay {}
 
-class AccountStateLoading extends AccountState {}
+class DisplayLoadingPage extends PageToDisplay {}
 
-class AccountStateSelect extends AccountState {
+class DisplaySelectAccountPage extends PageToDisplay {
   final String error;
-  AccountStateSelect({this.error});
+  DisplaySelectAccountPage({this.error});
 }
 
-class AccountStateHome extends AccountState {
-  final String accountId;
-  AccountStateHome({this.accountId}) : assert(accountId != null);
+class DisplayGroupPage extends PageToDisplay {
+  final String groupId;
+  DisplayGroupPage({this.groupId}) : assert(groupId != null);
 }
 
 class AccountEvent {}

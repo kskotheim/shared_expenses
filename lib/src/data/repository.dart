@@ -39,6 +39,7 @@ abstract class RepoInterface {
 
   Future<List<String>> getBillTypes(String accountId);
   Future<void> setBillTypes(String accountId, List<String> billTypes);
+  Future<List<Bill>> billsWhere(String accountId, String field, val);
 
 }
 
@@ -228,5 +229,9 @@ class Repository implements RepoInterface {
 
   Future<void> setBillTypes(String accountId, List<String> billTypes){
     return _db.setBillTypes(accountId, billTypes);
+  }
+
+  Future<List<Bill>> billsWhere(String accountId, String field, val){
+    return _db.billsWhere(accountId, field, val).then((snapshots) => snapshots.map((snapshot) => Bill.fromJson(snapshot.data)).toList());
   }
 }

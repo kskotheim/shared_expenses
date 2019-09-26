@@ -3,7 +3,7 @@ import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/ui/account_page/account_page.dart';
-import 'package:shared_expenses/src/ui/home_page/home_page.dart';
+import 'package:shared_expenses/src/ui/group_page/group_page.dart';
 
 class AccountRoot extends StatelessWidget {
   AccountBloc _accountBloc;
@@ -19,25 +19,25 @@ class AccountRoot extends StatelessWidget {
 
     return BlocProvider(
       bloc: _accountBloc,
-      child: StreamBuilder<AccountState>(
+      child: StreamBuilder<PageToDisplay>(
           stream: _accountBloc.accountState,
           builder: (context, snapshot) {
             if (snapshot.data == null) return Container();
 
-            AccountState state = snapshot.data;
+            PageToDisplay pageToDisplay = snapshot.data;
 
-            if (state is AccountStateLoading) {
+            if (pageToDisplay is DisplayLoadingPage) {
               return LinearProgressIndicator();
             }
 
-            if (state is AccountStateHome) {
-              return HomePage(accountId: state.accountId);
+            if (pageToDisplay is DisplayGroupPage) {
+              return GroupPage(groupId: pageToDisplay.groupId);
             }
 
-            if (state is AccountStateSelect) {
-              AccountStateSelect selectState = state;
-              if(selectState.error != null){
-                WidgetsBinding.instance.addPostFrameCallback((_) => _showErrorMessage(selectState.error));
+            if (pageToDisplay is DisplaySelectAccountPage) {
+              DisplaySelectAccountPage thisState = pageToDisplay;
+              if(thisState.error != null){
+                WidgetsBinding.instance.addPostFrameCallback((_) => _showErrorMessage(thisState.error));
               }
               return SelectAccountPage();
             }

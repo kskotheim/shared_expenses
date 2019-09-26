@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/new_event_bloc.dart';
-import 'package:shared_expenses/src/ui/home_page/new_event/bill_section.dart';
-import 'package:shared_expenses/src/ui/home_page/new_event/payment_section.dart';
+import 'package:shared_expenses/src/ui/group_page/new_event/bill_section.dart';
+import 'package:shared_expenses/src/ui/group_page/new_event/payment_section.dart';
 
 class NewEventDialog extends StatelessWidget {
   NewEventBloc _newEventBloc;
