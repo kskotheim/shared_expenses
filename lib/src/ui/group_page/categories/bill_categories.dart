@@ -6,18 +6,15 @@ import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/ui/group_page/categories/new_category_button.dart';
 
 class BillCategoryList extends StatelessWidget {
-  final GroupBloc groupBloc;
-  NewCategoryBloc _newCategoryBloc;
-
-  BillCategoryList({this.groupBloc});
+  BillCategoryList();
 
   @override
   Widget build(BuildContext context) {
-    print('rebuilding bill category list');
-    _newCategoryBloc = NewCategoryBloc(groupBloc: groupBloc);
+    GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
+    NewCategoryBloc newCategoryBloc = NewCategoryBloc(groupBloc: groupBloc);
 
     return BlocProvider(
-      bloc: _newCategoryBloc,
+      bloc: newCategoryBloc,
       child: Container(
         padding: EdgeInsets.all(24.0),
         child: Column(
@@ -25,27 +22,29 @@ class BillCategoryList extends StatelessWidget {
           children: <Widget>[
             Text(
               'Bill Categories for ${groupBloc.currentAccount.accountName}',
-              style: Style.titleTextStyle,
+              style: Style.subTitleTextStyle,
             ),
-            ListView(
-              shrinkWrap: true,
-              children: (groupBloc.billTypes != null &&
-                      groupBloc.billTypes.isNotEmpty)
-                  ? groupBloc.billTypes
-                      .map((type) => ListTile(
-                            title: Text(type),
-                            trailing: IconButton(
-                              onPressed:() => groupBloc.deleteCategory(type),
-                              icon: Icon(Icons.delete),
-                            ),
-                          ))
-                      .toList()
-                  : [
-                      ListTile(
-                        title: Text('(no categories)'),
-                      )
-                    ],
-            ),
+            StreamBuilder<List<String>>(
+                stream: newCategoryBloc.categoriesInGroupStream,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data.length == 0)
+                    return ListTile(
+                      title: Text('(no categories)'),
+                    );
+
+                  return ListView(
+                    shrinkWrap: true,
+                    children: snapshot.data
+                        .map((type) => ListTile(
+                              title: Text(type),
+                              trailing: IconButton(
+                                onPressed: () => groupBloc.deleteCategory(type),
+                                icon: Icon(Icons.delete),
+                              ),
+                            ))
+                        .toList(),
+                  );
+                }),
             NewCategoryButton(),
           ],
         ),

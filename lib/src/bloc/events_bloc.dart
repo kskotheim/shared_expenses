@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
@@ -14,7 +15,7 @@ class EventsBloc implements BlocBase {
   List<AnyEvent> _theEvents;
   List<String> _theEventNames;
 
-  StreamController<List<String>> _eventsListController = StreamController<List<String>>();
+  BehaviorSubject<List<String>> _eventsListController = BehaviorSubject<List<String>>();
   Stream<List<String>> get eventList => _eventsListController.stream;
   Repository repo = Repository.getRepo;
 
@@ -48,7 +49,7 @@ class EventsBloc implements BlocBase {
         return '${groupBloc.userName(event.fromUserId)} paid ${groupBloc.userName(event.toUserId)} \$${event.amount.floor()}';
       }
       if(event is Bill){
-        return '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type}bill';
+        return '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type} bill';
       }
       return 'error';
     }).toList();

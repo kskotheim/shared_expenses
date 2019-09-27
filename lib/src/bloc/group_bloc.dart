@@ -15,14 +15,23 @@ class GroupBloc implements BlocBase {
   final String userId;
   final AccountBloc accountBloc;
 
+  // this broadcasts updates to the list of users in the account
   BehaviorSubject<List<User>> _usersInAccountController = BehaviorSubject<List<User>>();
   Stream<List<User>> get usersInAccountStream => _usersInAccountController.stream;
   StreamSink get _usersInAccountSink => _usersInAccountController.sink;
   
+  // this listens for updates to the list of users in the account
   StreamSubscription _usersInAccountSubscription;
   List<User> usersInAccount;
   List<String> _billTypes =  <String>[];
   List<String> get billTypes => _billTypes;
+
+  // this controlls whether to display the home or group management (or other?) page
+  StreamController<GroupPageToShow> _groupPageToShowController = StreamController<GroupPageToShow>();
+  Stream<GroupPageToShow> get groupPageToShowStream => _groupPageToShowController.stream;
+  void showGroupHomePage() => _groupPageToShowController.sink.add(ShowGroupHomePage());
+  void showGroupAdminPage() => _groupPageToShowController.sink.add(ShowGroupAdminPage());
+
 
   //group info
   Account currentAccount;
@@ -36,6 +45,7 @@ class GroupBloc implements BlocBase {
     currentAccount = Account(accountId: accountId, accountName: accountBloc.accountNames[accountId]);
     permissions =  List<String>.from(accountBloc.currentUser.accountInfo[accountId][PERMISSIONS]);
     getCategories();
+    showGroupHomePage();
   }
 
   Future<void> getCategories() async {
@@ -44,9 +54,12 @@ class GroupBloc implements BlocBase {
 
   Future<void> deleteCategory(String category) async {
     if(_billTypes.contains(category)){
-      _billTypes.remove(category);
-    }
-    return repo.setBillTypes(accountId, _billTypes);
+      // to do: check if there are any bills of this category
+      // and verify if you want to delete them 
+      // if so, delete all the bills, and the category
+
+      return repo.deleteBillType(accountId, category);
+    } else return Future.delayed(Duration(seconds: 0));
   }
 
   String userName(String userId){
@@ -67,5 +80,11 @@ class GroupBloc implements BlocBase {
   void dispose() {
     _usersInAccountSubscription.cancel();
     _usersInAccountController.close();
+    _groupPageToShowController.close();
   }
 }
+
+
+class GroupPageToShow {}
+class ShowGroupHomePage extends GroupPageToShow {}
+class ShowGroupAdminPage extends GroupPageToShow {}

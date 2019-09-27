@@ -31,9 +31,11 @@ abstract class DB {
   Future<List<DocumentSnapshot>> allBills(String accountId);
   Future<void> deleteBill(String accountId, String billId);
 
-  Future<void> setBillTypes(String accountId, List<String> billTypes);
-  Future<List<String>> getBillTypes(String accountId);
+  Future<List<DocumentSnapshot>> getBillTypes(String accountId);
   Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val);
+  Stream<List<DocumentSnapshot>> categoriesStream(String accountId);
+  Future<void> addBillType(String accountId, String bilLType);
+  Future<void> deleteBillType(String accountId, String billType);
 }
 
 class DatabaseManager implements DB {
@@ -182,16 +184,28 @@ class DatabaseManager implements DB {
     return _account(accountId).collection(BILLS).document(billId).delete();
   }
 
-  Future<void> setBillTypes(String accountId, List<String> billTypes){
-    return _account(accountId).updateData({BILL_TYPES: billTypes});
-  }
-
-  Future<List<String>> getBillTypes(String accountId) async {
-    return _account(accountId).get().then((DocumentSnapshot account) => List<String>.from(account.data[BILL_TYPES]) ?? <String>[]);
+  Future<List<DocumentSnapshot>> getBillTypes(String accountId) async {
+    return _account(accountId).collection(BILL_TYPES).getDocuments().then((snapshot) => snapshot.documents);
   }
 
   Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val) async {
     return _account(accountId).collection(BILLS).where(field, isEqualTo: val).getDocuments().then((snapshot) => snapshot.documents);
+  }
+
+  Stream<List<DocumentSnapshot>> categoriesStream(String groupId) {
+    return _account(groupId).collection(BILL_TYPES).snapshots().map((snapshot) => snapshot.documents);
+  }
+
+  Future<void> addBillType(String accountId, String billType) async {
+    return _account(accountId).collection(BILL_TYPES).document().setData({NAME:billType});
+  }
+
+  Future<void> deleteBillType(String accountId, String billType) async {
+    List<String> id = await _account(accountId).collection(BILL_TYPES).where(NAME, isEqualTo: billType).getDocuments().then((snapshots) => snapshots.documents.map((document) => document.documentID).toList());
+    if(id.isNotEmpty){
+      return _account(accountId).collection(BILL_TYPES).document(id[0]).delete(); 
+    }
+    else return Future.delayed(Duration(seconds: 0));
   }
 
 }

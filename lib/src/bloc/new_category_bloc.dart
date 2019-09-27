@@ -29,10 +29,21 @@ class NewCategoryBloc implements BlocBase {
   void changeNewCategoryField(String newCategory) => _newCategoryFieldController.sink.add(newCategory);
   static String _newCategoryText = '';
 
+  //Stream for the categories currently in the account
+  StreamController<List<String>> _categoriesInGroupController = StreamController<List<String>>();
+  Stream<List<String>> get categoriesInGroupStream => _categoriesInGroupController.stream;
+
+  StreamSubscription _categoriesSubscription;
+
 
   NewCategoryBloc({this.groupBloc}){
     assert(groupBloc != null);
     _categoryEventController.stream.listen(_mapEventToState);
+    _categoriesSubscription = repo.billTypeStream(groupBloc.accountId).listen(_addToCIGCSink);
+  }
+
+  void _addToCIGCSink(List<String> categories){
+    _categoriesInGroupController.sink.add(categories);
   }
 
   void _mapEventToState(CategoryButtonEvent event){
@@ -54,8 +65,7 @@ class NewCategoryBloc implements BlocBase {
     List<String> billTypes = await repo.getBillTypes(groupBloc.accountId);
 
     if(!billTypes.contains(_newCategoryText)){   
-      billTypes.add(_newCategoryText);
-      await repo.setBillTypes(groupBloc.accountId, billTypes);
+      await repo.addBillType(groupBloc.accountId, _newCategoryText);
       await groupBloc.getCategories();
       return showNewCategoryButton();
     } 
@@ -68,6 +78,8 @@ class NewCategoryBloc implements BlocBase {
     _categoryEventController.close();
     _categoryButtonController.close();
     _newCategoryFieldController.close();
+    _categoriesInGroupController.close();
+    _categoriesSubscription.cancel();
   }
 
 }

@@ -1,14 +1,13 @@
 
 import 'package:flutter/material.dart';
+import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
 
 class EventsWidget extends StatelessWidget {
-  final EventsBloc eventsBloc;
-
-  const EventsWidget({this.eventsBloc});
 
   @override
   Widget build(BuildContext context) {
+    EventsBloc eventsBloc = BlocProvider.of<EventsBloc>(context);
     return StreamBuilder<List<String>>(
         stream: eventsBloc.eventList,
         builder: (context, snapshot) {

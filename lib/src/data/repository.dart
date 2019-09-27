@@ -38,8 +38,12 @@ abstract class RepoInterface {
   Future<void> deleteConnectionRequest(String accountId, String request);
 
   Future<List<String>> getBillTypes(String accountId);
-  Future<void> setBillTypes(String accountId, List<String> billTypes);
+  Future<void> addBillType(String accountId, String billType);
+  Future<void> deleteBillType(String accountId, String billType);
+//  Future<void> setBillTypes(String accountId, List<String> billTypes);
   Future<List<Bill>> billsWhere(String accountId, String field, val);
+
+  Stream<List<String>> billTypeStream(String groupId);
 
 }
 
@@ -224,14 +228,23 @@ class Repository implements RepoInterface {
 
 
   Future<List<String>> getBillTypes(String accountId) {
-    return _db.getBillTypes(accountId);
-  }
-
-  Future<void> setBillTypes(String accountId, List<String> billTypes){
-    return _db.setBillTypes(accountId, billTypes);
+    return _db.getBillTypes(accountId).then((snapshots) => List<String>.from(snapshots.map((snapshot) => snapshot.data[NAME]).toList()));
   }
 
   Future<List<Bill>> billsWhere(String accountId, String field, val){
     return _db.billsWhere(accountId, field, val).then((snapshots) => snapshots.map((snapshot) => Bill.fromJson(snapshot.data)).toList());
   }
+
+  Stream<List<String>> billTypeStream(String groupId){
+    return _db.categoriesStream(groupId).map((snapshots) => List<String>.from(snapshots.map((snapshot) => snapshot.data[NAME]).toList()));
+  }
+
+  Future<void> addBillType(String accountId, String billType) {
+    return _db.addBillType(accountId, billType);
+  }
+
+  Future<void> deleteBillType(String accountId, String billType) {
+    return _db.deleteBillType(accountId, billType);
+  }
+
 }
