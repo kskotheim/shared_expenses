@@ -12,6 +12,7 @@ abstract class DB {
 
   Future<void> createUser(String userId, String email);
   Future<DocumentSnapshot> getUser(String userId);
+  Future<List<DocumentSnapshot>> getUsersWhere(String field, val);
   Stream<DocumentSnapshot> currentUserStream(String userId);
   Stream<QuerySnapshot> usersStream(String accountId);
   Future<void> updateUser(String userId, String field, data);
@@ -30,6 +31,9 @@ abstract class DB {
   Stream<QuerySnapshot> billStream(String accountId);
   Future<List<DocumentSnapshot>> allBills(String accountId);
   Future<void> deleteBill(String accountId, String billId);
+
+  Future<void> createAccountEvent(String accountId, Map<String, dynamic> event);
+  Stream<QuerySnapshot> accountEventStream(String accountId);
 
   Future<List<DocumentSnapshot>> getBillTypes(String accountId);
   Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val);
@@ -86,6 +90,10 @@ class DatabaseManager implements DB {
     assert(userId != null);
     return _user(userId)
         .get();
+  }
+
+  Future<List<DocumentSnapshot>> getUsersWhere(String field, val) async {
+    return _usersCollection.where(field, isEqualTo: val).getDocuments().then((snapshot) => snapshot.documents);
   }
 
   Stream<DocumentSnapshot> currentUserStream(String userId){
@@ -192,6 +200,16 @@ class DatabaseManager implements DB {
     return _account(accountId).collection(BILLS).where(field, isEqualTo: val).getDocuments().then((snapshot) => snapshot.documents);
   }
 
+
+  Stream<QuerySnapshot> accountEventStream(String accountId) {
+    return _account(accountId).collection(ACCOUNT_EVENTS).orderBy('createdAt', descending:true).limit(10).snapshots();
+  }
+
+  Future<void> createAccountEvent(String accountId, Map<String, dynamic> event) {
+    return _account(accountId).collection(ACCOUNT_EVENTS).document().setData(event);
+  }
+
+
   Stream<List<DocumentSnapshot>> categoriesStream(String groupId) {
     return _account(groupId).collection(BILL_TYPES).snapshots().map((snapshot) => snapshot.documents);
   }
@@ -207,5 +225,6 @@ class DatabaseManager implements DB {
     }
     else return Future.delayed(Duration(seconds: 0));
   }
+
 
 }

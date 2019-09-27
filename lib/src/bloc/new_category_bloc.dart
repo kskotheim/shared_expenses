@@ -19,7 +19,7 @@ class NewCategoryBloc implements BlocBase {
 
   //output stream
   StreamController<CategoryButtonState> _categoryButtonController = StreamController<CategoryButtonState>();
-  Stream<CategoryButtonState> get categoryStream => _categoryButtonController.stream;
+  Stream<CategoryButtonState> get categoryButtonStream => _categoryButtonController.stream;
   void showNewCategoryForm() => _categoryButtonController.sink.add(ShowNewCategoryForm());
   void showNewCategoryButton() => _categoryButtonController.sink.add(ShowNewCategoryButton());
 
@@ -63,11 +63,11 @@ class NewCategoryBloc implements BlocBase {
 
   Future<void> _submitNewCategory() async {
     List<String> billTypes = await repo.getBillTypes(groupBloc.accountId);
+    showNewCategoryButton();
 
     if(!billTypes.contains(_newCategoryText)){   
       await repo.addBillType(groupBloc.accountId, _newCategoryText);
-      await groupBloc.getCategories();
-      return showNewCategoryButton();
+      return groupBloc.getCategories();
     } 
     else return null;
   }

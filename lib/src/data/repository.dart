@@ -1,7 +1,7 @@
 import 'package:shared_expenses/src/data/auth_provider.dart';
 import 'package:shared_expenses/src/data/db_provider.dart';
 
-import 'package:shared_expenses/src/res/models/payment.dart';
+import 'package:shared_expenses/src/res/models/event.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
 
@@ -26,11 +26,14 @@ abstract class RepoInterface {
   Stream<List<User>> userStream(String accountId);
   Future<void> updateUserName(String userId, String name);
   Future<void> addUserToAccount(String userId, String accountId);
+  Future<List<User>> usersWhere(String field, val);
 
   Stream<List<Payment>> paymentStream(String accountId);
   Future<void> createPayment(String accountId, Payment payment);
   Stream<List<Bill>> billStream(String accountId);
   Future<void> createBill(String accountId, Bill bill);
+  Stream<List<AccountEvent>> accountEventStream(String accountId);
+  Future<void> createAccountEvent(String accountId, AccountEvent event);
   Future<void> tabulateTotals(String accountId, List<User> users);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
@@ -147,6 +150,10 @@ class Repository implements RepoInterface {
     });
   }
 
+  Future<List<User>> usersWhere(String field, val){
+    return _db.getUsersWhere(field, val).then((documents) => documents.map((document) => User.fromDocumentSnapshot(document)).toList());
+  }
+
   Stream<List<Payment>> paymentStream(String accountId){
     return _db.paymentStream(accountId).map((snapshot) => snapshot.documents.map((document) => Payment.fromJson(document.data)).toList());
   }
@@ -162,6 +169,18 @@ class Repository implements RepoInterface {
   Future<void> createBill(String accountId, Bill bill) {
     return _db.createBill(accountId, bill.toJson());
   }
+
+
+
+  Stream<List<AccountEvent>> accountEventStream(String accountId) {
+    return _db.accountEventStream(accountId).map((snapshot) => snapshot.documents.map((document) => AccountEvent.fromJson(document.data)).toList());
+  }
+
+  Future<void> createAccountEvent(String accountId, AccountEvent event) {
+    return _db.createAccountEvent(accountId, event.toJson());
+  }
+
+
 
   Future<void> tabulateTotals(String accountId, List<User> users){
     return _db.allBills(accountId).then((bills){

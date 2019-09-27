@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/new_category_bloc.dart';
 
+// listens for updates to category button state and shows either an icon or a text field
+
 class NewCategoryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -9,7 +11,7 @@ class NewCategoryButton extends StatelessWidget {
 
     return StreamBuilder<CategoryButtonState>(
       stream: newCategoryBloc
-          .categoryStream, //stream for button that processes events, including pressing 'new category' button, and submitting the new category
+          .categoryButtonStream, //stream for button that processes events, including pressing 'new category' button, and submitting the new category
       builder: (newContext, snapshot) {
         if (!snapshot.hasData || snapshot.data is ShowNewCategoryButton)
           return Row(
@@ -20,10 +22,6 @@ class NewCategoryButton extends StatelessWidget {
                 icon: Icon(Icons.add),
                 onPressed: newCategoryBloc
                     .newCategory, //add event to stream that triggers this turning into a text input
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.check),
               ),
             ],
           );

@@ -3,7 +3,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
-import 'package:shared_expenses/src/res/models/payment.dart';
+import 'package:shared_expenses/src/res/models/event.dart';
 
 class EventsBloc implements BlocBase {
 
@@ -12,7 +12,8 @@ class EventsBloc implements BlocBase {
 
   List<Payment> _thePayments;
   List<Bill> _theBills;
-  List<AnyEvent> _theEvents;
+  List<AccountEvent> _theAccountEvents;
+  List<AnyEvent> _allEvents;
   List<String> _theEventNames;
 
   BehaviorSubject<List<String>> _eventsListController = BehaviorSubject<List<String>>();
@@ -21,38 +22,52 @@ class EventsBloc implements BlocBase {
 
   StreamSubscription _paymentsSubscription;
   StreamSubscription _billsSubscription;
+  StreamSubscription _accountEventsSubscription;
 
   EventsBloc({this.groupBloc}){
     assert(groupBloc != null);
     _accountId = groupBloc.accountId;
     _paymentsSubscription = repo.paymentStream(_accountId).listen(_mapPaymentsToEvents);
     _billsSubscription = repo.billStream(_accountId).listen(_mapBillsToEvents);
+    _accountEventsSubscription = repo.accountEventStream(_accountId).listen(_mapAccountEventToEvent);
   }
 
   void _mapPaymentsToEvents(List<Payment> payments){
     _thePayments =payments;
     _setEvents();
-    _eventsListController.sink.add(_theEventNames);
   }
   
   void _mapBillsToEvents(List<Bill> bills){
     _theBills = bills;
     _setEvents();
-    _eventsListController.sink.add(_theEventNames);
+  }
+
+  void _mapAccountEventToEvent(List<AccountEvent> accountEvents){
+    _theAccountEvents = accountEvents;
+    _setEvents();
   }
 
   void _setEvents(){
-    _theEvents = List<AnyEvent>.from((_theBills ?? [])) + List<AnyEvent>.from((_thePayments ?? []));
-    _theEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    _theEventNames = _theEvents.map((event){
+    _allEvents = _clarifyEventList(_theBills) + _clarifyEventList(_thePayments) + _clarifyEventList(_theAccountEvents);
+    _allEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    _theEventNames = _allEvents.map((event){
       if(event is Payment){
         return '${groupBloc.userName(event.fromUserId)} paid ${groupBloc.userName(event.toUserId)} \$${event.amount.floor()}';
       }
       if(event is Bill){
         return '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type} bill';
       }
+      if(event is AccountEvent){
+        return '${groupBloc.userName(event.userId)} ${event.actionTaken}';
+      }
       return 'error';
     }).toList();
+
+    _eventsListController.sink.add(_theEventNames);
+  }
+
+  List<AnyEvent> _clarifyEventList(List<AnyEvent> list){
+    return List<AnyEvent>.from(list ?? []);
   }
 
   @override
@@ -60,6 +75,7 @@ class EventsBloc implements BlocBase {
     _eventsListController.close();
     _paymentsSubscription.cancel();
     _billsSubscription.cancel();
+    _accountEventsSubscription.cancel();
   }
 
 }

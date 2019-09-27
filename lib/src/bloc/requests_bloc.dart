@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:rxdart/subjects.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
+import 'package:shared_expenses/src/res/models/event.dart';
 
 
 class RequestsBloc implements BlocBase {
@@ -12,7 +14,7 @@ class RequestsBloc implements BlocBase {
   StreamSubscription subscription;
 
   //returns a Stream of 2-item lists. The first item in each list is the username, the second is the userId
-  StreamController<List<List<String>>> _requestsController = StreamController<List<List<String>>>();
+  BehaviorSubject<List<List<String>>> _requestsController = BehaviorSubject<List<List<String>>>();
   Stream<List<List<String>>> get requests => _requestsController.stream;
 
   RequestsBloc({this.accountId}){
@@ -23,6 +25,7 @@ class RequestsBloc implements BlocBase {
   void approveConnectionRequest(String userId) async {
     _repo.deleteConnectionRequest(accountId, userId);
     _repo.addUserToAccount(userId, accountId);
+    _repo.createAccountEvent(accountId, AccountEvent(userId: userId, actionTaken: 'added to account'));
   }
   
   void deleteConnectionRequest(String userId) async {

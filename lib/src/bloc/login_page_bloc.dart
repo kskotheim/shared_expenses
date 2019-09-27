@@ -68,7 +68,7 @@ class LoginPageBloc implements BlocBase {
 
 
   final _emailValidator = StreamTransformer<String, String>.fromHandlers(
-    handleData: (email, sink){
+    handleData: (email, sink) async {
       if(_isEmail(email)){
         _currentUserNameOk = true;
         _currentUserName = email;

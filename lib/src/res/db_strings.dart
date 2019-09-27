@@ -9,6 +9,7 @@ const String CREATED = 'Created';
 const String NAMES = 'Names';
 const String PERMISSIONS = 'Permissions';
 const String ACCOUNT_INFO = 'Account_Info';
+const String ACCOUNT_EVENTS = 'Account_Events';
 const String CONNECTION_REQUESTS = 'Connection_Requests';
 const String EMAIL = 'Email';
 const String ID = 'Id';
