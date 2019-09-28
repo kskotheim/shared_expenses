@@ -5,7 +5,7 @@ import 'package:shared_expenses/src/res/db_strings.dart';
 class User{
   final String userId;
   String userName;
-  List<dynamic> groups;
+  List<String> groups;
   List<String> connectionRequests;
   String email;
   Map<String, dynamic> accountInfo;

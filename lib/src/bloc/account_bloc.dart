@@ -3,6 +3,7 @@ import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
 import 'package:shared_expenses/src/data/repository.dart';
+import 'package:shared_expenses/src/res/models/event.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
 class AccountBloc implements BlocBase {
@@ -17,7 +18,7 @@ class AccountBloc implements BlocBase {
   Stream<PageToDisplay> get accountState => _accountStateController.stream;
   StreamSink get _accountStateSink => _accountStateController.sink;
 
-  StreamController<AccountEvent> _accountEventController =StreamController<AccountEvent>();
+  StreamController<AccountStateEvent> _accountEventController =StreamController<AccountStateEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
 
   
@@ -30,7 +31,7 @@ class AccountBloc implements BlocBase {
     _userSubscription = repo.currentUserStream(authBloc.currentUserId).listen(_updateCurrentUserAndAccountNames);
   }
 
-  void _mapEventToState(AccountEvent event) {
+  void _mapEventToState(AccountStateEvent event) {
     if (event is AccountEventGoHome) {
       _goHome(event.accountId);
     }
@@ -72,7 +73,12 @@ class AccountBloc implements BlocBase {
   void _renameUser(String username){
     if(username !=currentUser.userName){
       _accountStateSink.add(DisplayLoadingPage());
+      String oldUsername = currentUser.userName;
       repo.updateUserName(currentUser.userId, username);
+      currentUser.groups.forEach((group){
+        //add account event to group of name change
+        repo.createAccountEvent(group, AccountEvent(userId: currentUser.userId, actionTaken: 'changed name from $oldUsername to $username'));
+      });
     }
   }
 
@@ -140,26 +146,26 @@ class DisplayGroupPage extends PageToDisplay {
   DisplayGroupPage({this.groupId}) : assert(groupId != null);
 }
 
-class AccountEvent {}
+class AccountStateEvent {}
 
-class AccountEventGoToSelect extends AccountEvent {}
+class AccountEventGoToSelect extends AccountStateEvent {}
 
-class AccountEventGoHome extends AccountEvent {
+class AccountEventGoHome extends AccountStateEvent {
   final String accountId;
   AccountEventGoHome({this.accountId});
 }
 
-class AccountEventCreateAccount extends AccountEvent {
+class AccountEventCreateAccount extends AccountStateEvent {
   final String accountName;
   AccountEventCreateAccount({this.accountName});
 }
 
-class AccountEventRenameUser extends AccountEvent {
+class AccountEventRenameUser extends AccountStateEvent {
   final String newName;
   AccountEventRenameUser({this.newName}) : assert(newName != null);
 }
 
-class AccountEventSendConnectionRequest extends AccountEvent {
+class AccountEventSendConnectionRequest extends AccountStateEvent {
   final String accountName;
   AccountEventSendConnectionRequest({this.accountName}) : assert(accountName != null);
 }
