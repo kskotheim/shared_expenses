@@ -13,22 +13,42 @@ class AccountBloc implements BlocBase {
   //User info
   User currentUser;
   Map<String, String> accountNames;
+  List<String> get currentUserGroups => accountNames.keys.toList();
+
+  // current user's groups stream
 
   StreamController<PageToDisplay> _accountStateController =StreamController<PageToDisplay>();
   Stream<PageToDisplay> get accountState => _accountStateController.stream;
   StreamSink get _accountStateSink => _accountStateController.sink;
 
+
+  // controls which page  display
   StreamController<AccountStateEvent> _accountEventController =StreamController<AccountStateEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
 
-  
-  StreamSubscription _userSubscription;
-  StreamSubscription _accountSubscription;
 
   AccountBloc({this.authBloc}) {
     assert(authBloc != null);
-    _accountSubscription =  _accountEventController.stream.listen(_mapEventToState);
-    _userSubscription = repo.currentUserStream(authBloc.currentUserId).listen(_updateCurrentUserAndAccountNames);
+    _accountEventController.stream.listen(_mapEventToState);
+    _setUpAccount();
+
+  }
+
+  Future<void> _setUpAccount() async {
+    //get the current user and the groups that user is registered with
+    currentUser = await repo.getUserFromDb(authBloc.currentUserId);
+    repo.userGroupsSubscription(authBloc.currentUserId).listen(_setAccountNames);
+    repo.currentUserStream(currentUser.userId).listen(_recieveUserInfo);
+  }
+
+  void _recieveUserInfo(User user){
+    currentUser = user;
+    _goToAccountsOrSelect();
+  }
+
+  void _setAccountNames(names) {
+    accountNames = names;
+    _goToAccountsOrSelect();
   }
 
   void _mapEventToState(AccountStateEvent event) {
@@ -50,23 +70,25 @@ class AccountBloc implements BlocBase {
     }
   }
 
+
   void _goHome(String accountId) {
     _accountStateSink.add(DisplayGroupPage(groupId: accountId));
   }
 
-  
   void _goToSelect() {
     _accountStateSink.add(DisplaySelectAccountPage());
   }
 
   void _createAccount(String accountName) async {
-    _accountStateSink.add(DisplayLoadingPage());
-    dynamic accountIdOrNull = await repo.getAccountByName(accountName);
+    if(accountName.length > 0){
+      _accountStateSink.add(DisplayLoadingPage());
+      dynamic accountIdOrNull = await repo.getGroupByName(accountName);
 
-    if(accountIdOrNull == null) {
-      repo.createAccount(accountName, currentUser);
-    } else {
-      _accountStateSink.add(DisplaySelectAccountPage(error: '$accountName already exists')); 
+      if(accountIdOrNull == null) {
+        repo.createGroup(accountName, currentUser);
+      } else {
+        _accountStateSink.add(DisplaySelectAccountPage(error: '$accountName already exists')); 
+      }
     }
   }
 
@@ -75,7 +97,7 @@ class AccountBloc implements BlocBase {
       _accountStateSink.add(DisplayLoadingPage());
       String oldUsername = currentUser.userName;
       repo.updateUserName(currentUser.userId, username);
-      currentUser.groups.forEach((group){
+      currentUserGroups.forEach((group){
         //add account event to group of name change
         repo.createAccountEvent(group, AccountEvent(userId: currentUser.userId, actionTaken: 'changed name from $oldUsername to $username'));
       });
@@ -84,10 +106,10 @@ class AccountBloc implements BlocBase {
 
   void _requestConnection(String accountName) async {
     _accountStateSink.add(DisplayLoadingPage());
-    dynamic accountIdOrNull = await repo.getAccountByName(accountName);
+    dynamic accountIdOrNull = await repo.getGroupByName(accountName);
     
     if(accountIdOrNull != null){
-      bool newAccount = !currentUser.groups.contains(accountIdOrNull);
+      bool newAccount = !currentUserGroups.contains(accountIdOrNull);
     
       if(newAccount){
         repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
@@ -100,34 +122,17 @@ class AccountBloc implements BlocBase {
   }
 
   void _goToAccountsOrSelect() {
-    if(currentUser.groups.length == 1){
-      accountEvent.add(AccountEventGoHome(accountId: currentUser.groups[0]));
+    if(currentUserGroups.length == 1){
+      accountEvent.add(AccountEventGoHome(accountId: currentUserGroups[0]));
     } else {
       accountEvent.add(AccountEventGoToSelect());
     }
   }
 
-  void _updateCurrentUserAndAccountNames(User user) async{
-    //check to see if we need to update accountNames
-    if(currentUser != null){
-      if(currentUser.groups != user.groups){
-        accountNames = await repo.getAccountNames(user.groups);
-      } //otherwise they are still accurate
-    } else { //no current user, so we need names from this one
-      accountNames = await repo.getAccountNames(user.groups);
-    }
-    currentUser = user;
-
-    _goToAccountsOrSelect();
-  }
-
-
   @override
   void dispose() {
     _accountStateController.close();
     _accountEventController.close();
-    _userSubscription.cancel();
-    _accountSubscription.cancel();
 
   }
 }

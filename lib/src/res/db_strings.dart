@@ -1,6 +1,7 @@
 
 const String GROUPS = 'Accounts';
 const String USERS = 'Users';
+const String OWNER = 'Owner';
 const String USER = 'User';
 const String PAYMENTS = 'Payments';
 const String BILLS = 'Bills';

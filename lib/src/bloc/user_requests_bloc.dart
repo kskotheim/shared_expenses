@@ -22,7 +22,7 @@ class UserRequestsBloc implements BlocBase {
   void _mapDocumentToUserRequestList(User user) async {
     if(user.connectionRequests.length == 0) return;
 
-    List<String> requestedAccountNames = await repo.getAccountNamesList(List<String>.from(user.connectionRequests));
+    List<String> requestedAccountNames = await repo.getGroupNamesList(List<String>.from(user.connectionRequests));
 
     _requestsController.sink.add(requestedAccountNames);
   }

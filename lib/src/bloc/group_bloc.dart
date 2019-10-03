@@ -35,17 +35,27 @@ class GroupBloc implements BlocBase {
 
   //group info
   Account currentAccount;
-  List<String> permissions;
 
+  //current user is group owner
+  bool isGroupOwner;
 
 
   GroupBloc({this.accountId, this.userId, this.accountBloc}){
-    usersInAccountStream.listen((List<User> users) => usersInAccount = users);
     _usersInAccountSubscription = repo.userStream(accountId).listen(_setAccountUsers);
     currentAccount = Account(accountId: accountId, accountName: accountBloc.accountNames[accountId]);
-    permissions =  List<String>.from(accountBloc.currentUser.accountInfo[accountId][PERMISSIONS]);
-    getCategories();
+    setUpGroup();
+  }
+
+
+  void setUpGroup() async {
+    await getPermissions();
+    await getCategories();
     showGroupHomePage();
+  }
+
+  Future<void> getPermissions() async {
+    isGroupOwner = await repo.isGroupOwner(userId, accountId);
+    return;
   }
 
   Future<void> getCategories() async {
@@ -64,14 +74,15 @@ class GroupBloc implements BlocBase {
 
   String userName(String userId){
     if(usersInAccount != null){
-    User user = usersInAccount.where((user) => user.userId == userId).toList().removeLast();
-    if(user != null) return user.userName;
-    else return 'no user by that id';
+      User user = usersInAccount.where((user) => user.userId == userId).toList().removeLast();
+      if(user != null) return user.userName;
+      else return 'no user by that id';
     } else return 'loading ...';
   }
 
 
   void _setAccountUsers(List<User> users){
+    usersInAccount = users;
     _usersInAccountSink.add(users);
   }
 

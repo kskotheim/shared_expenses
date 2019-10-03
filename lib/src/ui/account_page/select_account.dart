@@ -12,7 +12,7 @@ class SelectAccountWidget extends StatelessWidget {
     _accountBloc = BlocProvider.of<AccountBloc>(context);
 
     if( _accountBloc.accountNames == null) return Text('no user data');
-    List<AccountListTile> selectAccountTile = _accountBloc.currentUser.groups.map((accountId) => AccountListTile(accountId: accountId,)).toList();
+    List<AccountListTile> selectAccountTile = _accountBloc.currentUserGroups.map((accountId) => AccountListTile(accountId: accountId,)).toList();
     
     return Column(
       children: <Widget>[

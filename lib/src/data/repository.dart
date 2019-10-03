@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/data/auth_provider.dart';
 import 'package:shared_expenses/src/data/db_provider.dart';
 
@@ -11,11 +14,13 @@ abstract class RepoInterface {
   Future<String> createUserWithEmailAndPassword(String email, String password);
   Future<void> signOut();
 
-  Future<void> createAccount(String accountName, User user);
-  Future<dynamic> getAccountByName(String name);
-  Future<void> updateAccountName(String accountId, String name);
-  Future<Map<String, String>> getAccountNames(List<String> accountIds);
-  Future<List<String>> getAccountNamesList(List<String> accountIds);
+  Future<void> createGroup(String accountName, User user);
+  Future<dynamic> getGroupByName(String name);
+  Future<void> updateGroupName(String accountId, String name);
+  Future<Map<String, String>> getGroupNames(List<String> accountIds);
+  Future<List<String>> getGroupNamesList(List<String> accountIds);
+  Future<bool> isGroupOwner(String userId, String groupId);
+  Stream<Map<String, String>> userGroupsSubscription(String userId);
 
   Future<void> setTotals(String accountId, Map<String, double> totals);
   Stream<Map<String, num>> totalsStream(String accountId);
@@ -43,7 +48,6 @@ abstract class RepoInterface {
   Future<List<String>> getBillTypes(String accountId);
   Future<void> addBillType(String accountId, String billType);
   Future<void> deleteBillType(String accountId, String billType);
-//  Future<void> setBillTypes(String accountId, List<String> billTypes);
   Future<List<Bill>> billsWhere(String accountId, String field, val);
 
   Stream<List<String>> billTypeStream(String groupId);
@@ -82,21 +86,28 @@ class Repository implements RepoInterface {
     return _auth.signOut();
   }
 
-  Future<String> createAccount(String accountName, User user) async {
-    return _db.createAccount(accountName, user.userId).then((accountId){
-      return _db.addAccountToUser(user.userId, accountId, 'owner').then((_) => accountId);
-    });
+
+
+
+  Future<String> createGroup(String groupName, User user) async {
+    // create group, make yourself admin
+
+
+    return _db.createGroup(groupName, user.userId).then((accountId) => accountId);
   }
 
-  Future<dynamic> getAccountByName(String name){
-    return _db.getAccountsWhere(NAME, name).then((documents) {
+
+
+
+  Future<dynamic> getGroupByName(String name){
+    return _db.getGroupsWhere(NAME, name).then((documents) {
       if(documents.length > 0) return documents[0].documentID;
       else return null;
     });
   }
 
-  Future<Map<String, String>> getAccountNames(List<String> accountIds){
-    return _db.getAccountNames(accountIds).then((nameList){
+  Future<Map<String, String>> getGroupNames(List<String> accountIds){
+    return _db.getGroupNames(accountIds).then((nameList){
       Map<String, String> toReturn = {};
       for(int i=0; i<accountIds.length; i++){
         toReturn[accountIds[i]] = nameList[i];
@@ -105,12 +116,29 @@ class Repository implements RepoInterface {
     });
   }
 
-  Future<List<String>> getAccountNamesList(List<String> accountIds){
-    return _db.getAccountNames(accountIds);
+  Future<List<String>> getGroupNamesList(List<String> accountIds){
+    return _db.getGroupNames(accountIds);
   }
 
-  Future<void> updateAccountName(String accountId, String name) {
-    return _db.updateAccount(accountId, NAME, name);
+  Future<bool> isGroupOwner(String userId, String groupId) async {
+    DocumentSnapshot groupSnap = await _db.getGroup(groupId);
+    return groupSnap.data[OWNER] == userId;
+  }
+
+
+  Stream<Map<String, String>> userGroupsSubscription(String userId){
+    return _db.userGroupsStream(userId).map((query) {
+      Map<String, String> groupIdToNameMap = Map<String, String>();
+      query.documents.forEach((document){
+        groupIdToNameMap[document.documentID] = document.data[NAME];
+      });
+      return groupIdToNameMap;
+    });
+  }
+
+
+  Future<void> updateGroupName(String accountId, String name) {
+    return _db.updateGroup(accountId, NAME, name);
   }
 
   Future<void> setTotals(String accountId, Map<String, double> totals){
@@ -118,7 +146,7 @@ class Repository implements RepoInterface {
   }
 
   Stream<Map<String, num>> totalsStream(String accountId){
-    return _db.totalsStream(accountId);
+    return _db.totalsStream(accountId).map((DocumentSnapshot snapshot) => snapshot.data.cast<String, num>());
   }
 
   Future<void> createUser(String userId, String email) {
@@ -131,13 +159,18 @@ class Repository implements RepoInterface {
 
   Stream<User> currentUserStream(String userId){
     return _db.currentUserStream(userId).map((document) {
-      document.data[ID] =document.documentID;
+      document.data[ID] = document.documentID;
       return User.fromDocumentSnapshot(document);
     });
   }
 
   Stream<List<User>> userStream(String accountId){
-    return _db.usersStream(accountId).map((snapshot) => snapshot.documents.map((document) => User.fromDocumentSnapshot(document)).toList());
+    return _db.usersStream(accountId).transform(StreamTransformer.fromHandlers(
+      handleData: (ids, sink) async {
+        List<User> users = await Future.wait(ids.map((id) => getUserFromDb(id)));
+        sink.add(users);
+      }
+    ));
   }
 
   Future<void> updateUserName(String userId, String name){
@@ -145,9 +178,7 @@ class Repository implements RepoInterface {
   }
 
   Future<void> addUserToAccount(String userId, String accountId){
-    return _db.getUser(userId).then((user){
-      return _db.addAccountToUser(userId, accountId, 'user');
-    });
+    return _db.addGroupToUser(userId, accountId);
   }
 
   Future<List<User>> usersWhere(String field, val){
@@ -155,7 +186,7 @@ class Repository implements RepoInterface {
   }
 
   Stream<List<Payment>> paymentStream(String accountId){
-    return _db.paymentStream(accountId).map((snapshot) => snapshot.documents.map((document) => Payment.fromJson(document.data)).toList());
+    return _db.paymentStream(accountId, true).map((snapshot) => snapshot.documents.map((document) => Payment.fromJson(document.data)).toList());
   }
 
   Future<void> createPayment(String accountId, Payment payment) {
@@ -163,7 +194,7 @@ class Repository implements RepoInterface {
   }
 
   Stream<List<Bill>> billStream(String accountId){
-    return _db.billStream(accountId).map((snapshot) => snapshot.documents.map((document) => Bill.fromJson(document.data)).toList());
+    return _db.billStream(accountId, true).map((snapshot) => snapshot.documents.map((document) => Bill.fromJson(document.data)).toList());
   }
 
   Future<void> createBill(String accountId, Bill bill) {
@@ -173,7 +204,7 @@ class Repository implements RepoInterface {
 
 
   Stream<List<AccountEvent>> accountEventStream(String accountId) {
-    return _db.accountEventStream(accountId).map((snapshot) => snapshot.documents.map((document) => AccountEvent.fromJson(document.data)).toList());
+    return _db.accountEventStream(accountId, true).map((snapshot) => snapshot.documents.map((document) => AccountEvent.fromJson(document.data)).toList());
   }
 
   Future<void> createAccountEvent(String accountId, AccountEvent event) {
@@ -231,18 +262,18 @@ class Repository implements RepoInterface {
 
 
   Future<void> createAccountConnectionRequest(String accountId, String userId) {
-    return _db.createAccountConnectionRequest(accountId, userId);
+    return _db.createGroupConnectionRequest(accountId, userId);
   }
 
   Stream<List<Map<String, dynamic>>> connectionRequests(String accountId){
-    return _db.accountConnectionRequests(accountId).map((snapshot) => snapshot.documents.map((document) {
+    return _db.groupConnectionRequests(accountId).map((snapshot) => snapshot.documents.map((document) {
       document.data[ID] =document.documentID;
       return document.data;
     }).toList());
   }
 
   Future<void> deleteConnectionRequest(String accountId, String requestId){
-    return _db.deleteAccountConnectionRequest(accountId, requestId);
+    return _db.deleteGroupConnectionRequest(accountId, requestId);
   }
 
 

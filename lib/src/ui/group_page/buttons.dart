@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
@@ -28,7 +27,7 @@ class ConnectionRequestsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
-    if (groupBloc.permissions.contains('owner')) {
+    if (groupBloc.isGroupOwner) {
       RequestsBloc requestsBloc = RequestsBloc(accountId: groupBloc.accountId);
 
       return StreamBuilder(
@@ -82,7 +81,7 @@ class BillCategoryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
-    if (groupBloc.permissions.contains('owner')) {
+    if (groupBloc.isGroupOwner) {
       return Padding(
           padding: Style.floatingActionPadding,
           child: FloatingActionButton(

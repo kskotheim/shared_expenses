@@ -16,38 +16,34 @@ class EventsBloc implements BlocBase {
   List<AnyEvent> _allEvents;
   List<Text> _theEventTextWidgets;
 
-  BehaviorSubject<List<Text>> _eventsListController =
-      BehaviorSubject<List<Text>>();
+  BehaviorSubject<List<Text>> _eventsListController =BehaviorSubject<List<Text>>();
   Stream<List<Text>> get eventList => _eventsListController.stream;
   Repository repo = Repository.getRepo;
 
-  BehaviorSubject<EventSortMethod> _eventSortMethodController =
-      BehaviorSubject<EventSortMethod>();
-  Stream<EventSortMethod> get eventSortMethod =>
-      _eventSortMethodController.stream;
+  BehaviorSubject<EventSortMethod> _eventSortMethodController =BehaviorSubject<EventSortMethod>();
+  Stream<EventSortMethod> get eventSortMethod =>_eventSortMethodController.stream;
   void sortByAll() => _eventSortMethodController.sink.add(SortAll());
   void sortByBill() => _eventSortMethodController.sink.add(SortBills());
   void sortByPayment() => _eventSortMethodController.sink.add(SortPayments());
-  void sortByAccountEvents() =>
-      _eventSortMethodController.sink.add(SortAccountEvents());
+  void sortByAccountEvents() =>_eventSortMethodController.sink.add(SortAccountEvents());
   EventSortMethod _theSortMethod;
 
   StreamSubscription _paymentsSubscription;
   StreamSubscription _billsSubscription;
   StreamSubscription _accountEventsSubscription;
+  StreamSubscription _usersSubscription;
 
   EventsBloc({this.groupBloc}) {
     assert(groupBloc != null);
     _accountId = groupBloc.accountId;
-    _paymentsSubscription =
-        repo.paymentStream(_accountId).listen(_mapPaymentsToEvents);
+    _paymentsSubscription = repo.paymentStream(_accountId).listen(_mapPaymentsToEvents);
     _billsSubscription = repo.billStream(_accountId).listen(_mapBillsToEvents);
-    _accountEventsSubscription =
-        repo.accountEventStream(_accountId).listen(_mapAccountEventToEvent);
+    _accountEventsSubscription = repo.accountEventStream(_accountId).listen(_mapAccountEventToEvent);
     _eventSortMethodController.stream.listen((method) {
       _theSortMethod = method;
       _setEvents();
     });
+    _usersSubscription = groupBloc.usersInAccountStream.listen((users) => _setEvents());
     sortByAll();
   }
 

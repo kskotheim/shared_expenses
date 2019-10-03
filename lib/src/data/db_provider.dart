@@ -2,38 +2,40 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/res/db_strings.dart';
 
 abstract class DB {
-  Future<String> createAccount(String accountName, String userId);
-  Future<void> updateAccount(String accountId, String field, data);
-  Future<List<String>> getAccountNames(List<String> accountIds);
-  Future<List<DocumentSnapshot>> getAccountsWhere(String field, val);
+  Future<String> createGroup(String accountName, String userId);
+  Future<void> updateGroup(String accountId, String field, data);
+  Future<DocumentSnapshot> getGroup(String groupId);
+  Future<List<String>> getGroupNames(List<String> accountIds);
+  Future<List<DocumentSnapshot>> getGroupsWhere(String field, val);
+  Stream<QuerySnapshot> userGroupsStream(String userId);
 
-  Stream<Map<String, num>> totalsStream(String accountId);
+  Stream<DocumentSnapshot> totalsStream(String accountId);
   Future<void> updateTotals(String accountId, Map<String, num> totals);
 
   Future<void> createUser(String userId, String email);
   Future<DocumentSnapshot> getUser(String userId);
   Future<List<DocumentSnapshot>> getUsersWhere(String field, val);
   Stream<DocumentSnapshot> currentUserStream(String userId);
-  Stream<QuerySnapshot> usersStream(String accountId);
+  Stream<List<String>> usersStream(String accountId);
   Future<void> updateUser(String userId, String field, data);
-  Future<void> addAccountToUser(String userId, String accountId, String permission);
+  Future<void> addGroupToUser(String userId, String accountId);
 
-  Future<void> createAccountConnectionRequest(String accountId, String userId);
-  Stream<QuerySnapshot> accountConnectionRequests(String accountId);
-  Future<void> deleteAccountConnectionRequest(String accountId, String requestId);
+  Future<void> createGroupConnectionRequest(String accountId, String userId);
+  Stream<QuerySnapshot> groupConnectionRequests(String accountId);
+  Future<void> deleteGroupConnectionRequest(String accountId, String requestId);
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
-  Stream<QuerySnapshot> paymentStream(String accountId);
+  Stream<QuerySnapshot> paymentStream(String accountId, bool limited);
   Future<List<DocumentSnapshot>> allPayments(String accountId);
   Future<void> deletePayment(String accountId, String paymentId);
 
   Future<void> createBill(String accountId, Map<String, dynamic> bill);
-  Stream<QuerySnapshot> billStream(String accountId);
+  Stream<QuerySnapshot> billStream(String accountId, bool limited);
   Future<List<DocumentSnapshot>> allBills(String accountId);
   Future<void> deleteBill(String accountId, String billId);
 
   Future<void> createAccountEvent(String accountId, Map<String, dynamic> event);
-  Stream<QuerySnapshot> accountEventStream(String accountId);
+  Stream<QuerySnapshot> accountEventStream(String accountId, bool limited);
 
   Future<List<DocumentSnapshot>> getBillTypes(String accountId);
   Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val);
@@ -49,41 +51,71 @@ class DatabaseManager implements DB {
   DocumentReference _account(String id) => _accountCollection.document(id);
   DocumentReference _user(String id) => _usersCollection.document(id);
 
-  Future<String> createAccount(String actName, String userId) async {
-    return _accountCollection.document().get().then((document){
-      return _account(document.documentID).setData({NAME: actName, TOTALS: {userId:0.0}}).then((_) => document.documentID);
-    });
+
+
+  Future<String> createGroup(String actName, String userId) async {
+    //create the group and get a reference for the document Id
+    DocumentSnapshot newAcctSnap = await _accountCollection.document().get();
+
+    // set the default group info
+    await _account(newAcctSnap.documentID).setData({NAME: actName, OWNER: userId, USERS:[userId]});
+
+    // create the totals document and set the default data
+    await _account(newAcctSnap.documentID).collection(TOTALS).document(TOTALS).setData({userId:0});
+
+    // // create the users collection and add this user
+    // await _account(newAcctSnap.documentID).collection(USERS).document(userId).setData({});
+
+    return newAcctSnap.documentID;
   }
 
-  Future<void> updateAccount(String accountId, String field, data) async {
+
+
+  Future<void> updateGroup(String accountId, String field, data) async {
     return _account(accountId)
         .updateData({field: data});
   }
 
-  Future<List<String>> getAccountNames(List<String> accountIds) async {
+  Future<DocumentSnapshot> getGroup(String groupId) async {
+    return _account(groupId).get();
+  }
+
+  Future<List<String>> getGroupNames(List<String> accountIds) async {
     return Future.wait(accountIds.map((accountId) => _account(accountId)
         .get()
         .then((snapshot) => snapshot.data != null ? snapshot.data.containsKey(NAME) ? snapshot.data[NAME] : 'no name' : 'no data')));
   } 
 
-  Future<List<DocumentSnapshot>> getAccountsWhere(String field, val){
+  Future<List<DocumentSnapshot>> getGroupsWhere(String field, val){
     return _accountCollection.where(field, isEqualTo: val).getDocuments().then((query) => query.documents);
   }
 
-
-  Stream<Map<String, num>> totalsStream(String accountId) {
-    return _account(accountId).snapshots().map((document) => Map<String, num>.from(document.data[TOTALS]) ?? <String, num>{});
+  Stream<QuerySnapshot> userGroupsStream(String userId) {
+    return _accountCollection.where(USERS, arrayContains: userId).snapshots();
   }
+
+
+
+
+  Stream<DocumentSnapshot> totalsStream(String accountId) {
+    return _account(accountId).collection(TOTALS).document(TOTALS).snapshots();
+  }
+
+
+
 
   Future<void> updateTotals(String accountId, Map<String, num> totals) async {
-    return _account(accountId).updateData({TOTALS:totals});
+    return _account(accountId).collection(TOTALS).document(TOTALS).updateData(totals);
   }
+
+
+
 
 
   Future<void> createUser(String userId, String email) async {
     assert(userId != null, email != null);
     return _user(userId)
-        .setData({CREATED: DateTime.now(), GROUPS: [], ACCOUNT_INFO: {}, EMAIL: email});
+        .setData({CREATED: DateTime.now(), EMAIL: email});
   }
 
   Future<DocumentSnapshot> getUser(String userId) async {
@@ -100,8 +132,8 @@ class DatabaseManager implements DB {
     return _user(userId).snapshots();
   }
 
-  Stream<QuerySnapshot> usersStream(String accountId) {
-    return _usersCollection.where(GROUPS, arrayContains:accountId).snapshots();
+  Stream<List<String>> usersStream(String accountId) {
+    return _account(accountId).snapshots().map((groupSnap) => List<String>.from(groupSnap.data[USERS]));
   }
 
   Future<void> updateUser(String userId, String field, data) async {
@@ -109,47 +141,53 @@ class DatabaseManager implements DB {
         .updateData({field: data});
   }
 
-  Future<void> addAccountToUser(String userId, String accountId, String permission) async {
+
+
+  Future<void> addGroupToUser(String userId, String accountId) async {
     WriteBatch batch =_firestore.batch();
-    DocumentReference user =_user(userId);
-    DocumentSnapshot userSnapshot = await user.get();
 
-    batch.updateData(user, {GROUPS: userSnapshot[GROUPS] + [accountId]});
+    DocumentReference groupDocument = _account(accountId);
+    DocumentSnapshot groupSnapshot = await groupDocument.get();
+    List<String> users = List<String>.from(groupSnapshot.data[USERS]);
+    users.add(userId);
 
-    Map thisAccount = {PERMISSIONS:[permission]};
-    Map userAccountsInfo = userSnapshot.data[ACCOUNT_INFO];
-    userAccountsInfo[accountId] = thisAccount;
+    batch.updateData(groupDocument, {USERS:users});
 
-    DocumentReference account = _account(accountId);
-    DocumentSnapshot accountSnapshot = await account.get();
-    Map<String, num> totals = Map<String, num>.from(accountSnapshot.data[TOTALS]);
+    DocumentReference totalsDocument = _account(accountId).collection(TOTALS).document(TOTALS);
+    DocumentSnapshot totalsSnapshot = await totalsDocument.get();
+    Map<String, num> totals = Map<String, num>.from(totalsSnapshot.data);
     totals[userId] = 0;
-    batch.updateData(account, {TOTALS:totals});
+    batch.updateData(totalsDocument, totals);
 
-    batch.updateData(user, {ACCOUNT_INFO:userAccountsInfo});
+    // do something about dates 
+    // Map<String, List<>> ;
+
 
     return batch.commit();
   }
 
 
-  Future<void> createAccountConnectionRequest(String accountId, String userId) async {
+  Future<void> createGroupConnectionRequest(String accountId, String userId) async {
     return _user(userId).get().then((user){
       return _user(userId).updateData({CONNECTION_REQUESTS: (user.data[CONNECTION_REQUESTS] ?? []) + [accountId]});
 
     });
   }
 
-  Stream<QuerySnapshot> accountConnectionRequests(String accountId){
+  Stream<QuerySnapshot> groupConnectionRequests(String accountId){
     return _usersCollection.where(CONNECTION_REQUESTS, arrayContains: accountId).snapshots();
   }
 
-  Future<void> deleteAccountConnectionRequest(String accountId, String userId) async {
+  Future<void> deleteGroupConnectionRequest(String accountId, String userId) async {
     return _user(userId).get().then((user){
       List<String> connectionRequests = List<String>.from(user.data[CONNECTION_REQUESTS] ?? []);
       while(connectionRequests.contains(accountId)) connectionRequests.remove(accountId);
       return _user(userId).updateData({CONNECTION_REQUESTS: connectionRequests});
     });
   }
+
+
+
 
   Future<void> createPayment(
       String accountId, Map<String, dynamic> payment) async {
@@ -159,8 +197,12 @@ class DatabaseManager implements DB {
         .setData(payment);
   }
 
-  Stream<QuerySnapshot> paymentStream(String accountId) {
-    return _account(accountId).collection(PAYMENTS).orderBy('createdAt', descending: true).limit(10).snapshots();
+  Stream<QuerySnapshot> paymentStream(String accountId, bool limited) {
+    if(limited)
+      return _account(accountId).collection(PAYMENTS).orderBy('createdAt', descending: true).limit(10).snapshots();
+    else
+      return _account(accountId).collection(PAYMENTS).orderBy('createdAt', descending: true).snapshots();
+
   }
 
 
@@ -180,8 +222,11 @@ class DatabaseManager implements DB {
     return _account(accountId).collection(BILLS).document().setData(bill);
   }
 
-  Stream<QuerySnapshot> billStream(String accountId) {
-    return _account(accountId).collection(BILLS).orderBy('createdAt', descending: true).limit(10).snapshots();
+  Stream<QuerySnapshot> billStream(String accountId, bool limited) {
+    if(limited)
+      return _account(accountId).collection(BILLS).orderBy('createdAt', descending: true).limit(10).snapshots();
+    else 
+      return _account(accountId).collection(BILLS).orderBy('createdAt', descending: true).snapshots();
   }
 
   Future<List<DocumentSnapshot>> allBills(String accountId) async{
@@ -201,8 +246,11 @@ class DatabaseManager implements DB {
   }
 
 
-  Stream<QuerySnapshot> accountEventStream(String accountId) {
-    return _account(accountId).collection(ACCOUNT_EVENTS).orderBy('createdAt', descending:true).limit(10).snapshots();
+  Stream<QuerySnapshot> accountEventStream(String accountId, bool limited) {
+    if(limited)
+      return _account(accountId).collection(ACCOUNT_EVENTS).orderBy('createdAt', descending:true).limit(10).snapshots();
+    else
+      return _account(accountId).collection(ACCOUNT_EVENTS).orderBy('createdAt', descending:true).snapshots();
   }
 
   Future<void> createAccountEvent(String accountId, Map<String, dynamic> event) {

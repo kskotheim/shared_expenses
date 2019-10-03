@@ -49,7 +49,11 @@ class EventsWidget extends StatelessWidget {
                   padding: Style.eventsViewPadding,
                   child: ListView(
                     shrinkWrap: true,
-                    children: snapshot.data.map((textWidget) => ListTile(title: textWidget,)).toList(),
+                    children: snapshot.data
+                        .map((textWidget) => ListTile(
+                              title: textWidget,
+                            ))
+                        .toList(),
                   ),
                 ),
               );
