@@ -58,6 +58,7 @@ class NewCategoryBloc implements BlocBase {
   StreamTransformer _saveCategoryText = StreamTransformer<String, String>.fromHandlers(
     handleData: (string, sink){
       _newCategoryText  = string;
+      sink.add(string);
     }
   );
 

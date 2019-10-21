@@ -6,7 +6,6 @@ import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/ui/group_page/categories/new_category_button.dart';
 
 class BillCategoryList extends StatelessWidget {
-  BillCategoryList();
 
   @override
   Widget build(BuildContext context) {

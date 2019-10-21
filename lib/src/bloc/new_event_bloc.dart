@@ -10,17 +10,26 @@ class NewEventBloc implements BlocBase {
   static const String BILL = 'Bill';
   static const String PAYMENT = 'Payment';
 
-  final Repository repo = Repository();
+  final Repository _repo = Repository.getRepo;
   final GroupBloc groupBloc;
-  List<DropdownMenuItem> userMenuItems;
-  List<DropdownMenuItem> billTypeMenuItems;
 
   static String _optionSelected;
   static String _selectedUser;
   static String _selectedType;
+  static String _paymentNotes;
   static double _billAmount;
   static DateTime _fromDate;
   static DateTime _toDate;
+
+  static void resetVals(){
+    _optionSelected = null;
+    _selectedUser = null;
+    _selectedType = null;
+    _paymentNotes = null;
+    _billAmount = null;
+    _fromDate = null;
+    _toDate = null;
+  }
 
   StreamController<String> _optionSelectedController =
       StreamController<String>();
@@ -42,6 +51,11 @@ class NewEventBloc implements BlocBase {
       _billAmountController.stream.transform(_billAmountTransformer);
   void newBillAmount(String amt) =>
       _billAmountController.sink.add(double.parse(amt));
+
+  //Notes
+  BehaviorSubject<String> _paymentNotesController = BehaviorSubject<String>();
+  Stream<String> get paymentNotes => _paymentNotesController.stream.transform(_paymentNotesTransformer);
+  Function get newPaymentNote => _paymentNotesController.sink.add;
 
   //Bill options:
   //Bill type
@@ -65,22 +79,7 @@ class NewEventBloc implements BlocBase {
       _toDateControlelr.stream.transform(_toDateTransformer);
   Function get newToDate => _toDateControlelr.sink.add;
 
-  NewEventBloc({this.groupBloc}) {
-
-    userMenuItems = groupBloc.usersInAccount
-        .map((user) => DropdownMenuItem(
-              child: Text(user.userName),
-              value: user.userId,
-            ))
-        .toList();
-
-    billTypeMenuItems = (groupBloc.billTypes)
-        .map((type) => DropdownMenuItem(
-              child: Text(type),
-              value: type,
-            ))
-        .toList();
-  }
+  NewEventBloc({this.groupBloc}) : assert(groupBloc != null);
 
   final StreamTransformer<String, String> _optionSelectedTransformer =
       StreamTransformer<String, String>.fromHandlers(
@@ -105,6 +104,12 @@ class NewEventBloc implements BlocBase {
     _billAmount = billAmount;
     sink.add(billAmount);
   });
+  final StreamTransformer<String, String> _paymentNotesTransformer =
+      StreamTransformer<String, String>.fromHandlers(
+          handleData: (paymentNotes, sink) {
+    _paymentNotes = paymentNotes;
+    sink.add(paymentNotes);
+  });
 
   final StreamTransformer<DateTime, DateTime> _fromDateTransformer =
       StreamTransformer<DateTime, DateTime>.fromHandlers(
@@ -122,30 +127,33 @@ class NewEventBloc implements BlocBase {
   Future<void> submitInfo() {
     if (_optionSelected == BILL) {
       if (_billAmount != null && _selectedType != null) {
-        return repo
+        return _repo
             .createBill(
                 groupBloc.accountId,
                 Bill(
                     amount: _billAmount,
                     paidByUserId: groupBloc.userId,
                     type: _selectedType,
-                    createdAt: DateTime.now()))
+                    createdAt: DateTime.now(),
+                    fromDate: _fromDate,
+                    toDate: _toDate))
             .then((_) =>
-                repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
+                _repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else if (_optionSelected == PAYMENT) {
       if (_selectedUser != null && _billAmount != null) {
-        return repo
+        return _repo
             .createPayment(
                 groupBloc.accountId,
                 Payment(
                     fromUserId: groupBloc.userId,
                     toUserId: _selectedUser,
                     amount: _billAmount,
+                    notes: _paymentNotes,
                     createdAt: DateTime.now()))
             .then((_) =>
-                repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
+                _repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
       } else
         return Future.delayed(Duration(seconds: 0));
     } else
@@ -157,6 +165,7 @@ class NewEventBloc implements BlocBase {
     _selectedUserController.close();
     _selectedTypeController.close();
     _billAmountController.close();
+    _paymentNotesController.close();
     _toDateControlelr.close();
     _fromDateController.close();
     _optionSelectedController.close();

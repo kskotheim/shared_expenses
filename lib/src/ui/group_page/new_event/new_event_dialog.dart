@@ -62,7 +62,7 @@ class NewEventDialog extends StatelessWidget {
             }),
       ),
     );
-  }
+  } 
 
   final List<DropdownMenuItem> _billOrPaymentMenuItems = [
     DropdownMenuItem(

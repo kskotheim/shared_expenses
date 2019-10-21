@@ -20,6 +20,13 @@ abstract class DB {
   Future<void> updateUser(String userId, String field, data);
   Future<void> addGroupToUser(String userId, String accountId);
 
+  Future<void> createUserModifier(String accountId, Map<String, dynamic> userModifier);
+  Future<void> updateUserModifier(String accoungId, String modifierId, Map<String, dynamic> userModifier);
+  Future<void> deleteUserModifier(String accountId, String modifierId);
+  Stream<QuerySnapshot> userModifierStream(String accountId);
+  Future<List<DocumentSnapshot>> allUserModifiers(String accountId);
+
+
   Future<void> createGroupConnectionRequest(String accountId, String userId);
   Stream<QuerySnapshot> groupConnectionRequests(String accountId);
   Future<void> deleteGroupConnectionRequest(String accountId, String requestId);
@@ -39,7 +46,7 @@ abstract class DB {
 
   Future<List<DocumentSnapshot>> getBillTypes(String accountId);
   Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val);
-  Stream<List<DocumentSnapshot>> categoriesStream(String accountId);
+  Stream<List<DocumentSnapshot>> billCategories(String accountId);
   Future<void> addBillType(String accountId, String bilLType);
   Future<void> deleteBillType(String accountId, String billType);
 }
@@ -50,6 +57,7 @@ class DatabaseManager implements DB {
   CollectionReference get _usersCollection => _firestore.collection(USERS);
   DocumentReference _account(String id) => _accountCollection.document(id);
   DocumentReference _user(String id) => _usersCollection.document(id);
+  CollectionReference _userModifiers(String accountId) => _account(accountId).collection(USER_MODIFIERS);
 
 
 
@@ -159,13 +167,31 @@ class DatabaseManager implements DB {
     totals[userId] = 0;
     batch.updateData(totalsDocument, totals);
 
-    // do something about dates 
-    // Map<String, List<>> ;
-
-
     return batch.commit();
   }
 
+
+  Future<void> createUserModifier (String accountId, Map<String, dynamic> userModifier) async {
+    return _userModifiers(accountId).document().setData(userModifier);
+  }
+
+  Future<void> updateUserModifier (String accountId, String modifierId, Map<String, dynamic> userModifier) async {
+    return _userModifiers(accountId).document(modifierId).updateData(userModifier);
+  }
+
+  Future<void> deleteUserModifier (String accountId, String modifierId) async {
+    return _userModifiers(accountId).document(modifierId).delete();
+  }
+
+  Stream<QuerySnapshot> userModifierStream (String accountId){
+    return _userModifiers(accountId).snapshots();
+  }
+
+  Future<List<DocumentSnapshot>> allUserModifiers(String accountId) async {
+    return _userModifiers(accountId).getDocuments().then((snapshot) => snapshot.documents);
+  }
+
+  
 
   Future<void> createGroupConnectionRequest(String accountId, String userId) async {
     return _user(userId).get().then((user){
@@ -258,7 +284,7 @@ class DatabaseManager implements DB {
   }
 
 
-  Stream<List<DocumentSnapshot>> categoriesStream(String groupId) {
+  Stream<List<DocumentSnapshot>> billCategories(String groupId) {
     return _account(groupId).collection(BILL_TYPES).snapshots().map((snapshot) => snapshot.documents);
   }
 

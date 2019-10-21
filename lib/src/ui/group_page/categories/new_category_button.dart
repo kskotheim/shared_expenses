@@ -32,7 +32,7 @@ class NewCategoryButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: Icon(Icons.cancel),
                 onPressed: newCategoryBloc.showNewCategoryButton,
               ),
               Container(

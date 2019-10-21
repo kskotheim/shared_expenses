@@ -3,6 +3,7 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/ui/group_page/categories/bill_categories.dart';
+import 'package:shared_expenses/src/ui/group_page/user_modifiers/user_modifiers.dart';
 
 class AccountManager extends StatelessWidget {
 
@@ -21,7 +22,7 @@ class AccountManager extends StatelessWidget {
                 children: <Widget>[
                   BillCategoryList(),
                   Divider(),
-                  Container(height: 200, color: Colors.grey,),
+                  UserModifierList(),
                 ],
               ),
             ),

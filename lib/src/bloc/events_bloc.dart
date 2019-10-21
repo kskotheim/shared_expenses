@@ -13,11 +13,9 @@ class EventsBloc implements BlocBase {
   List<Payment> _thePayments;
   List<Bill> _theBills;
   List<AccountEvent> _theAccountEvents;
-  List<AnyEvent> _allEvents;
-  List<Text> _theEventTextWidgets;
 
-  BehaviorSubject<List<Text>> _eventsListController =BehaviorSubject<List<Text>>();
-  Stream<List<Text>> get eventList => _eventsListController.stream;
+  BehaviorSubject<List<List<Text>>> _eventsListController =BehaviorSubject<List<List<Text>>>();
+  Stream<List<List<Text>>> get eventList => _eventsListController.stream;
   Repository repo = Repository.getRepo;
 
   BehaviorSubject<EventSortMethod> _eventSortMethodController =BehaviorSubject<EventSortMethod>();
@@ -63,6 +61,8 @@ class EventsBloc implements BlocBase {
   }
 
   void _setEvents() {
+    List<AnyEvent> _allEvents;
+
     if (_theSortMethod is SortAll) {
       _allEvents = _clarifyEventList(_theBills) +
           _clarifyEventList(_thePayments) +
@@ -77,31 +77,35 @@ class EventsBloc implements BlocBase {
     if (_theSortMethod is SortAccountEvents) {
       _allEvents = _clarifyEventList(_theAccountEvents);
     }
-
+ 
     _allEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    _theEventTextWidgets = List<Text>.from(_allEvents.map((event) {
+    List<List<Text>> theEventTextWidgets = List<List<Text>>.from(_allEvents.map((event) {
+      String primaryString;
+      String secondaryString;
+      TextStyle textStyle;
+
       if (event is Payment) {
-        return Text(
-          '${groupBloc.userName(event.fromUserId)} paid ${groupBloc.userName(event.toUserId)} \$${event.amount.floor()}',
-          style: TextStyle(color: Colors.green.shade600),
-        );
+        primaryString = '${groupBloc.userName(event.fromUserId)} paid ${groupBloc.userName(event.toUserId)} \$${event.amount.floor()}';
+        textStyle =  TextStyle(color: Colors.green.shade600);
+        secondaryString = 'Made on ${event.createdAt.month}/${event.createdAt.day}';
+        if(event.notes != null && event.notes.length > 0) secondaryString += ', ${event.notes}';
       }
       if (event is Bill) {
-        return Text(
-          '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type} bill',
-          style: TextStyle(color: Colors.red.shade600),
-        );
+        primaryString =  '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type} bill';
+        textStyle =  TextStyle(color: Colors.red.shade600);
+        secondaryString = 'Paid on ${event.createdAt.month}/${event.createdAt.day}';
+        if(event.fromDate == null || !event.fromDate.isAtSameMomentAs(event.createdAt)) secondaryString += ', from ${event.fromDate.month}/${event.fromDate.day} to ${event.toDate.month}/${event.toDate.day}';
       }
       if (event is AccountEvent) {
-        return Text(
-          '${groupBloc.userName(event.userId)} ${event.actionTaken}',
-          style: TextStyle(color: Colors.blue),
-        );
+        primaryString = '${groupBloc.userName(event.userId)} ${event.actionTaken}';
+        textStyle =  TextStyle(color: Colors.blue);
+        secondaryString = 'Event occured on ${event.createdAt.month}/${event.createdAt.day}';
       }
-      return 'error';
+
+      return <Text>[Text(primaryString, style: textStyle,), Text(secondaryString)];
     }));
 
-    _eventsListController.sink.add(_theEventTextWidgets);
+    _eventsListController.sink.add(theEventTextWidgets);
   }
 
   List<AnyEvent> _clarifyEventList(List<AnyEvent> list) {
@@ -115,6 +119,7 @@ class EventsBloc implements BlocBase {
     _billsSubscription.cancel();
     _accountEventsSubscription.cancel();
     _eventSortMethodController.close();
+    _usersSubscription.cancel();
   }
 }
 

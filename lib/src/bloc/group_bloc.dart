@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
-import 'package:shared_expenses/src/res/db_strings.dart';
 import 'package:shared_expenses/src/res/models/account.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
@@ -22,9 +22,25 @@ class GroupBloc implements BlocBase {
   
   // this listens for updates to the list of users in the account
   StreamSubscription _usersInAccountSubscription;
-  List<User> usersInAccount;
+  List<User> _usersInAccount;
+  List<User> get usersInAccount => _usersInAccount;
   List<String> _billTypes =  <String>[];
   List<String> get billTypes => _billTypes;
+
+  List<DropdownMenuItem> get userMenuItems => _usersInAccount
+      .map((user) => DropdownMenuItem(
+            child: Text(user.userName),
+            value: user.userId,
+          ))
+      .toList();
+
+  List<DropdownMenuItem> get billTypeMenuItems => _billTypes
+      .map((type) => DropdownMenuItem(
+            child: Text(type),
+            value: type,
+          ))
+      .toList();
+
 
   // this controlls whether to display the home or group management (or other?) page
   StreamController<GroupPageToShow> _groupPageToShowController = StreamController<GroupPageToShow>();
@@ -72,17 +88,24 @@ class GroupBloc implements BlocBase {
     } else return Future.delayed(Duration(seconds: 0));
   }
 
+  Future<void> deleteModifier(UserModifier modifier) async {
+    return repo.deleteUserModifier(accountId, modifier);
+  }
+
   String userName(String userId){
     if(usersInAccount != null){
-      User user = usersInAccount.where((user) => user.userId == userId).toList().removeLast();
+      List<User> usersWithThatId;      
+      usersWithThatId = usersInAccount.where((user) => user.userId == userId).toList();
+      User user;
+      if(usersWithThatId.isNotEmpty) user = usersWithThatId.removeLast();
       if(user != null) return user.userName;
-      else return 'no user by that id';
+      else return 'unknown user';
     } else return 'loading ...';
   }
 
 
   void _setAccountUsers(List<User> users){
-    usersInAccount = users;
+    _usersInAccount = users;
     _usersInAccountSink.add(users);
   }
 

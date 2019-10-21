@@ -122,10 +122,12 @@ class AccountBloc implements BlocBase {
   }
 
   void _goToAccountsOrSelect() {
-    if(currentUserGroups.length == 1){
-      accountEvent.add(AccountEventGoHome(accountId: currentUserGroups[0]));
-    } else {
-      accountEvent.add(AccountEventGoToSelect());
+    if(accountNames != null && currentUser != null){
+      if(currentUserGroups.length == 1){
+        accountEvent.add(AccountEventGoHome(accountId: currentUserGroups[0]));
+      } else {
+        accountEvent.add(AccountEventGoToSelect());
+      }
     }
   }
 

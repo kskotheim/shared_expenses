@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/new_event_bloc.dart';
+import 'package:shared_expenses/src/res/util.dart';
 
 class BillSection extends StatelessWidget {
-  NewEventBloc _newEventBloc;
 
   @override
   Widget build(BuildContext context) {
-    _newEventBloc = BlocProvider.of<NewEventBloc>(context);
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
+
 
     return Column(
       children: <Widget>[
@@ -18,12 +19,12 @@ class BillSection extends StatelessWidget {
           children: <Widget>[
             Text('Type: '),
             StreamBuilder<String>(
-              stream: _newEventBloc.selectedType,
+              stream: newEventBloc.selectedType,
               builder: (context, snapshot) {
                 return DropdownButton(
                   value: snapshot.data,
-                  items: _newEventBloc.billTypeMenuItems,
-                  onChanged: _newEventBloc.selectType,
+                  items: newEventBloc.groupBloc.billTypeMenuItems,
+                  onChanged: newEventBloc.selectType,
                 );
               }
             ),
@@ -37,12 +38,12 @@ class BillSection extends StatelessWidget {
           children: <Widget>[
             Text('Amount: '),
             StreamBuilder<double>(
-              stream: _newEventBloc.billAmount,
+              stream: newEventBloc.billAmount,
               builder: (context, snapshot) {
                 return Container(
                     width: 100.0,
                     child: TextField(
-                      onChanged: _newEventBloc.newBillAmount,
+                      onChanged: newEventBloc.newBillAmount,
                       keyboardType: TextInputType.number,
                     ));
               }
@@ -58,13 +59,13 @@ class BillSection extends StatelessWidget {
             Text('From:'),
             FlatButton(
               child: StreamBuilder<DateTime>(
-                stream: _newEventBloc.fromDate,
+                stream: newEventBloc.fromDate,
                 builder: (context, snapshot) {
                   return Text(parseDateTime(snapshot.data) ?? 'Current');
                 }
               ),
               onPressed: () => pickDate(context).then((val){
-                _newEventBloc.newFromDate(val);
+                newEventBloc.newFromDate(val);
               }),
             ),
           ],
@@ -75,13 +76,13 @@ class BillSection extends StatelessWidget {
             Text('To:'),
             FlatButton(
               child: StreamBuilder<Object>(
-                stream: _newEventBloc.toDate,
+                stream: newEventBloc.toDate,
                 builder: (context, snapshot) {
                   return Text(parseDateTime(snapshot.data) ?? 'Current');
                 }
               ),
               onPressed: () => pickDate(context).then((val){
-                _newEventBloc.newToDate(val);
+                newEventBloc.newToDate(val);
               }),
             ),
           ],
@@ -99,9 +100,4 @@ Future<DateTime> pickDate(BuildContext context) {
     firstDate: DateTime.parse("20000101"),
     lastDate: DateTime.parse("21001231"),
   );
-}
-
-String parseDateTime(DateTime time){
-  if(time == null) return null;
-  return '${time.month}/${time.day}/${time.year % 2000}';
 }

@@ -40,7 +40,7 @@ class EventsWidget extends StatelessWidget {
                 ],
               );
             }),
-        StreamBuilder<List<Text>>(
+        StreamBuilder<List<List<Text>>>(
             stream: eventsBloc.eventList,
             builder: (context, snapshot) {
               if (snapshot.data == null) return Text('no events data');
@@ -50,8 +50,9 @@ class EventsWidget extends StatelessWidget {
                   child: ListView(
                     shrinkWrap: true,
                     children: snapshot.data
-                        .map((textWidget) => ListTile(
-                              title: textWidget,
+                        .map((textWidget) => EventListTile(
+                              title: textWidget[0],
+                              subtitle: textWidget[1],
                             ))
                         .toList(),
                   ),
@@ -79,6 +80,34 @@ class SortButton extends StatelessWidget {
         text,
         style: TextStyle(fontSize: 10.0, color: Colors.blueGrey),
       ),
+    );
+  }
+}
+
+
+class EventListTile extends StatefulWidget {
+
+  final Text title;
+  final Text subtitle;
+  final Key key = UniqueKey();
+
+  EventListTile({this.title, this.subtitle});
+
+  @override
+  _EventListTileState createState() => _EventListTileState();
+}
+
+class _EventListTileState extends State<EventListTile> {
+
+  bool expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      key: widget.key,
+      onLongPress: () => setState(() => expanded = !expanded),
+      title: widget.title,
+      subtitle: expanded ? widget.subtitle : null,
     );
   }
 }

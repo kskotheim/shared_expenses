@@ -3,10 +3,10 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/new_event_bloc.dart';
 
 class PaymentSection extends StatelessWidget {
-  NewEventBloc _newEventBloc;
+
   @override
   Widget build(BuildContext context) {
-    _newEventBloc = BlocProvider.of<NewEventBloc>(context);
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
 
     return Column(
       children: <Widget>[
@@ -17,12 +17,12 @@ class PaymentSection extends StatelessWidget {
           children: <Widget>[
             Text('To: '),
             StreamBuilder<String>(
-              stream: _newEventBloc.selectedUser,
+              stream: newEventBloc.selectedUser,
               builder: (context, snapshot) {
                 return DropdownButton(
-                  items: _newEventBloc.userMenuItems,
+                  items: newEventBloc.groupBloc.userMenuItems,
                   value: snapshot.data,
-                  onChanged: _newEventBloc.selectUser
+                  onChanged: newEventBloc.selectUser
                 );
               }
             ),
@@ -38,16 +38,35 @@ class PaymentSection extends StatelessWidget {
             Container(
                 width: 100.0,
                 child: StreamBuilder<double>(
-                  stream: _newEventBloc.billAmount,
+                  stream: newEventBloc.billAmount,
                   builder: (context, snapshot) {
                     return TextField(
                       keyboardType: TextInputType.number,
-                      onChanged: _newEventBloc.newBillAmount,
+                      onChanged: newEventBloc.newBillAmount,
                     );
                   }
                 )),
           ],
         ),
+
+        //notes
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text('Notes: '),
+            Container(width: 100.0,
+            child: StreamBuilder<String>(
+              stream: newEventBloc.paymentNotes,
+              builder: (context, snapshot){
+                return TextField(
+                  keyboardType: TextInputType.text,
+                  onChanged: newEventBloc.newPaymentNote,
+                );
+              },
+            ),),
+          ],
+        )
       ],
     );
   }

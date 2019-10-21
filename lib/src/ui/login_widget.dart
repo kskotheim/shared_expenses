@@ -5,36 +5,34 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/login_page_bloc.dart';
 
 class LoginWidget extends StatelessWidget {
-  AuthBloc _authBloc;
-  LoginPageBloc _loginPageBloc;
 
   @override
   Widget build(BuildContext context) {
-    _authBloc = BlocProvider.of<AuthBloc>(context);
-    _loginPageBloc = LoginPageBloc(authBloc: _authBloc);
+    AuthBloc authBloc = BlocProvider.of<AuthBloc>(context);
+    LoginPageBloc loginPageBloc = LoginPageBloc(authBloc: authBloc);
 
     LoginField _nameField = LoginField(
       hint: 'email',
-      onChanged: _loginPageBloc.changeName,
-      stream: _loginPageBloc.email,
+      onChanged: loginPageBloc.changeName,
+      stream: loginPageBloc.email,
     );
     LoginField _passwordField = LoginField(
       obscureText: true,
       hint: 'password',
-      onChanged: _loginPageBloc.changePassword,
-      stream: _loginPageBloc.password,
+      onChanged: loginPageBloc.changePassword,
+      stream: loginPageBloc.password,
     );
     LoginField _secondPasswordField = LoginField(
       obscureText: true,
       hint: 'verify password',
-      onChanged: _loginPageBloc.changeverifiedPassword,
-      stream: _loginPageBloc.verifiedPassword,
+      onChanged: loginPageBloc.changeverifiedPassword,
+      stream: loginPageBloc.verifiedPassword,
     );
 
     return BlocProvider(
-      bloc: _loginPageBloc,
+      bloc: loginPageBloc,
       child: StreamBuilder<Object>(
-          stream: _loginPageBloc.loginPageState,
+          stream: loginPageBloc.loginPageState,
           builder: (context, snapshot) {
             if (snapshot.data == null) return Text('no data in login field');
 
@@ -51,7 +49,7 @@ class LoginWidget extends StatelessWidget {
                     Container(height: 40),
                     RaisedButton(
                       onPressed: () {
-                        _loginPageBloc.loginPageEventSink
+                        loginPageBloc.loginPageEventSink
                             .add(LoginButtonPressed());
                       },
                       child:
@@ -62,7 +60,7 @@ class LoginWidget extends StatelessWidget {
                           ? 'Go to Login'
                           : 'Go to Create Account'),
                       onPressed: () {
-                        _loginPageBloc.loginPageEventSink
+                        loginPageBloc.loginPageEventSink
                             .add(SwitchToCreateAccountButtonPressed());
                       },
                     ),
