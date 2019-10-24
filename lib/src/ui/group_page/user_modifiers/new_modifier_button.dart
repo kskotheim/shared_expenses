@@ -14,12 +14,12 @@ class NewModifierButton extends StatelessWidget {
       child: IconButton(
         icon: Icon(Icons.add),
         onPressed: () {
-          NewUserModifierBloc.resetVals();
+          NewUserModifierBloc newUserModifierBloc = NewUserModifierBloc(groupBloc: groupBloc);
           showDialog(
               context: context,
               builder: (newContext) => NewModifierDialog(
                     groupBloc: groupBloc,
-                    userModifierBloc: NewUserModifierBloc(groupBloc: groupBloc),
+                    userModifierBloc: newUserModifierBloc,
                   ));
         },
       ),

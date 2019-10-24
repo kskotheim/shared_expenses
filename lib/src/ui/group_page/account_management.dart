@@ -17,8 +17,7 @@ class AccountManager extends StatelessWidget {
         child: Stack(
           children: <Widget>[
             Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: ListView(
                 children: <Widget>[
                   BillCategoryList(),
                   Divider(),

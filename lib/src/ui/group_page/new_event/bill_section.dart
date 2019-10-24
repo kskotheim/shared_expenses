@@ -5,52 +5,118 @@ import 'package:shared_expenses/src/res/util.dart';
 
 class BillSection extends StatelessWidget {
 
+  final List<String> categories;
+
+  BillSection({this.categories}) : assert(categories != null);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        SelectCategorySection(categories: categories,),
+        AmountSection(),
+        BillNotesSection(),
+        DatesSection(),
+        SubmitBillButton(),
+      ],
+    );
+
+  }
+}
+
+
+class SelectCategorySection extends StatelessWidget {
+  final List<String> categories;
+
+  SelectCategorySection({this.categories});
+
   @override
   Widget build(BuildContext context) {
     NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
 
-
-    return Column(
-      children: <Widget>[
-        //type
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Type: '),
-            StreamBuilder<String>(
-              stream: newEventBloc.selectedType,
-              builder: (context, snapshot) {
-                return DropdownButton(
-                  value: snapshot.data,
-                  items: newEventBloc.groupBloc.billTypeMenuItems,
-                  onChanged: newEventBloc.selectType,
-                );
-              }
+    Widget categoryList = Container(
+      child: StreamBuilder<String>(
+        stream: newEventBloc.selectedType,
+        builder: (context, snapshot) {
+          return GridView.builder(
+            shrinkWrap: true,
+            itemCount: categories.length,
+            itemBuilder: (context, i) => FlatButton(
+              color: snapshot.data == categories[i]
+                  ? Colors.blueGrey.shade200
+                  : null,
+              onPressed: () => newEventBloc.selectUser(categories[i]),
+              child: Text(categories[i]),
             ),
-          ],
-        ),
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 100.0),
+          );
+        },
+      ),
+    );
 
-        //amount
-        Row(
+    return categoryList;
+  }
+}
+
+
+class AmountSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
+    return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text('Amount: '),
             StreamBuilder<double>(
-              stream: newEventBloc.billAmount,
-              builder: (context, snapshot) {
-                return Container(
-                    width: 100.0,
-                    child: TextField(
-                      onChanged: newEventBloc.newBillAmount,
-                      keyboardType: TextInputType.number,
-                    ));
-              }
-            ),
+                stream: newEventBloc.billAmount,
+                builder: (context, snapshot) {
+                  return Container(
+                      width: 100.0,
+                      child: TextField(
+                        onChanged: newEventBloc.newBillAmount,
+                        keyboardType: TextInputType.number,
+                      ));
+                }),
           ],
-        ),
+        );
+  }
+}
 
+
+
+class BillNotesSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text('Notes:'),
+        StreamBuilder<String>(
+            stream: newEventBloc.billNotes,
+            builder: (context, snapshot) {
+              return Container(
+                width: 100.0,
+                child: TextField(
+                  onChanged: newEventBloc.newBillNote,
+                ),
+              );
+            })
+      ],
+    );
+  }
+}
+
+class DatesSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
+
+    return Column(
+      children: <Widget>[
         //datesApplied
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -59,12 +125,11 @@ class BillSection extends StatelessWidget {
             Text('From:'),
             FlatButton(
               child: StreamBuilder<DateTime>(
-                stream: newEventBloc.fromDate,
-                builder: (context, snapshot) {
-                  return Text(parseDateTime(snapshot.data) ?? 'Current');
-                }
-              ),
-              onPressed: () => pickDate(context).then((val){
+                  stream: newEventBloc.fromDate,
+                  builder: (context, snapshot) {
+                    return Text(parseDateTime(snapshot.data) ?? 'Current');
+                  }),
+              onPressed: () => pickDate(context).then((val) {
                 newEventBloc.newFromDate(val);
               }),
             ),
@@ -76,12 +141,11 @@ class BillSection extends StatelessWidget {
             Text('To:'),
             FlatButton(
               child: StreamBuilder<Object>(
-                stream: newEventBloc.toDate,
-                builder: (context, snapshot) {
-                  return Text(parseDateTime(snapshot.data) ?? 'Current');
-                }
-              ),
-              onPressed: () => pickDate(context).then((val){
+                  stream: newEventBloc.toDate,
+                  builder: (context, snapshot) {
+                    return Text(parseDateTime(snapshot.data) ?? 'Current');
+                  }),
+              onPressed: () => pickDate(context).then((val) {
                 newEventBloc.newToDate(val);
               }),
             ),
@@ -89,6 +153,25 @@ class BillSection extends StatelessWidget {
         )
       ],
     );
+  }
+}
+
+
+
+class SubmitBillButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
+    return StreamBuilder<bool>(
+        stream: newEventBloc.billPageValidated,
+        builder: (context, snapshot) {
+          return FlatButton(
+            child: Text('Submit'),
+            onPressed: (snapshot.hasData && snapshot.data)
+                ? () => newEventBloc.submitInfo().then((_) => Navigator.pop(context))
+                : null,
+          );
+        });
   }
 }
 

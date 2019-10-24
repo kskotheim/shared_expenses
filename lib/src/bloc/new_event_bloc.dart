@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
@@ -7,62 +6,106 @@ import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/event.dart';
 
 class NewEventBloc implements BlocBase {
-  static const String BILL = 'Bill';
-  static const String PAYMENT = 'Payment';
-
   final Repository _repo = Repository.getRepo;
   final GroupBloc groupBloc;
 
-  static String _optionSelected;
-  static String _selectedUser;
-  static String _selectedType;
-  static String _paymentNotes;
-  static double _billAmount;
-  static DateTime _fromDate;
-  static DateTime _toDate;
+  BillOrPaymentSection _selectedOption;
+  String _selectedUser;
+  String _paymentNotes;
+  String _billNotes;
+  double _billAmount;
+  String _billType;
+  DateTime _fromDate;
+  DateTime _toDate;
 
-  static void resetVals(){
-    _optionSelected = null;
+  bool _submitted = false;
+
+  void _resetVals() {
     _selectedUser = null;
-    _selectedType = null;
     _paymentNotes = null;
+    _billNotes = null;
     _billAmount = null;
+    _billType = null;
     _fromDate = null;
     _toDate = null;
   }
 
-  StreamController<String> _optionSelectedController =
-      StreamController<String>();
-  Stream<String> get optionSelected =>
-      _optionSelectedController.stream.transform(_optionSelectedTransformer);
-  void selectPayment() => _optionSelectedController.sink.add(PAYMENT);
-  void selectBill() => _optionSelectedController.sink.add(BILL);
+  // Whether to show bill or payment section
+  BehaviorSubject<BillOrPaymentSection> _selectedOptionController =
+      BehaviorSubject<BillOrPaymentSection>();
+  Stream<BillOrPaymentSection> get selectedOption =>
+      _selectedOptionController.stream.map(_saveSelectedOption);
+  void showBillSection() =>
+      _selectedOptionController.sink.add(ShowBillSection());
+  void showPaymentSection() =>
+      _selectedOptionController.sink.add(ShowPaymentSection());
+  BillOrPaymentSection _saveSelectedOption(BillOrPaymentSection section) {
+    _resetVals();
+    _selectedOption = section;
+    return section;
+  }
 
   //Payment options:
   //User payment is to
   BehaviorSubject<String> _selectedUserController = BehaviorSubject<String>();
   Stream<String> get selectedUser =>
-      _selectedUserController.stream.transform(_selectedUserTransformer);
+      _selectedUserController.stream.map(_saveUser);
   Function get selectUser => _selectedUserController.sink.add;
+  String get selectedUserName => groupBloc.usersInAccount.firstWhere((user) => user.userId == _selectedUser).userName;
+
+  String _saveUser(String user) {
+    _selectedUser = user;
+    _checkIfPaymentPageIsValid();
+    return user;
+  }
 
   //Amount
   BehaviorSubject<double> _billAmountController = BehaviorSubject<double>();
   Stream<double> get billAmount =>
-      _billAmountController.stream.transform(_billAmountTransformer);
+      _billAmountController.stream.map(_saveAmount);
   void newBillAmount(String amt) =>
       _billAmountController.sink.add(double.parse(amt));
 
+  double _saveAmount(double amount) {
+    _billAmount = amount;
+    _checkIfPaymentPageIsValid();
+    _checkIfBillPageIsValid();
+    return amount;
+  }
+
   //Notes
   BehaviorSubject<String> _paymentNotesController = BehaviorSubject<String>();
-  Stream<String> get paymentNotes => _paymentNotesController.stream.transform(_paymentNotesTransformer);
+  Stream<String> get paymentNotes =>
+      _paymentNotesController.stream.map(_saveNotes);
   Function get newPaymentNote => _paymentNotesController.sink.add;
 
+  String _saveNotes(String notes) {
+    _paymentNotes = notes;
+    return notes;
+  }
+  BehaviorSubject<String> _billNotesController = BehaviorSubject<String>();
+  Stream<String> get billNotes =>
+      _billNotesController.stream.map(_saveBillNotes);
+  Function get newBillNote => _billNotesController.sink.add;
+
+  String _saveBillNotes(String notes) {
+    _billNotes = notes;
+    return notes;
+  }
   //Bill options:
   //Bill type
+
+
   BehaviorSubject<String> _selectedTypeController = BehaviorSubject<String>();
   Stream<String> get selectedType =>
-      _selectedTypeController.stream.transform(_selectedTypeTransformer);
-  Function get selectType => _selectedTypeController.sink.add;
+      _selectedUserController.stream.map(_saveType);
+  Function get selectType => _selectedUserController.sink.add;
+
+  String _saveType(String type) {
+    _billType = type;
+    _checkIfBillPageIsValid();
+    return type;
+  }
 
   //Amount
   //Same controller as above
@@ -70,105 +113,101 @@ class NewEventBloc implements BlocBase {
   //Bill from date
   BehaviorSubject<DateTime> _fromDateController = BehaviorSubject<DateTime>();
   Stream<DateTime> get fromDate =>
-      _fromDateController.stream.transform(_fromDateTransformer);
+      _fromDateController.stream.map(_saveFromDate);
   Function get newFromDate => _fromDateController.sink.add;
+
+  DateTime _saveFromDate(DateTime fromDate) {
+    _fromDate = fromDate;
+    return fromDate;
+  }
 
   //Bill to date
   BehaviorSubject<DateTime> _toDateControlelr = BehaviorSubject<DateTime>();
-  Stream<DateTime> get toDate =>
-      _toDateControlelr.stream.transform(_toDateTransformer);
+  Stream<DateTime> get toDate => _toDateControlelr.stream.map(_saveToDate);
   Function get newToDate => _toDateControlelr.sink.add;
 
-  NewEventBloc({this.groupBloc}) : assert(groupBloc != null);
-
-  final StreamTransformer<String, String> _optionSelectedTransformer =
-      StreamTransformer<String, String>.fromHandlers(
-          handleData: (selection, sink) {
-    _optionSelected = selection;
-    sink.add(selection);
-  });
-
-  final StreamTransformer<String, String> _selectedUserTransformer =
-      StreamTransformer<String, String>.fromHandlers(handleData: (user, sink) {
-    _selectedUser = user;
-    sink.add(user);
-  });
-  final StreamTransformer<String, String> _selectedTypeTransformer =
-      StreamTransformer<String, String>.fromHandlers(handleData: (type, sink) {
-    _selectedType = type;
-    sink.add(type);
-  });
-  final StreamTransformer<double, double> _billAmountTransformer =
-      StreamTransformer<double, double>.fromHandlers(
-          handleData: (billAmount, sink) {
-    _billAmount = billAmount;
-    sink.add(billAmount);
-  });
-  final StreamTransformer<String, String> _paymentNotesTransformer =
-      StreamTransformer<String, String>.fromHandlers(
-          handleData: (paymentNotes, sink) {
-    _paymentNotes = paymentNotes;
-    sink.add(paymentNotes);
-  });
-
-  final StreamTransformer<DateTime, DateTime> _fromDateTransformer =
-      StreamTransformer<DateTime, DateTime>.fromHandlers(
-          handleData: (fromDate, sink) {
-    _fromDate = fromDate;
-    sink.add(fromDate);
-  });
-  final StreamTransformer<DateTime, DateTime> _toDateTransformer =
-      StreamTransformer<DateTime, DateTime>.fromHandlers(
-          handleData: (toDate, sink) {
+  DateTime _saveToDate(DateTime toDate) {
     _toDate = toDate;
-    sink.add(toDate);
-  });
+    return toDate;
+  }
+
+  NewEventBloc({this.groupBloc}) {
+    assert(groupBloc != null);
+  }
+
+  // payment and bill page validators
+  BehaviorSubject<bool> _paymentPageValidator = BehaviorSubject<bool>();
+  Stream get paymentPageValidated => _paymentPageValidator.stream;
+
+  BehaviorSubject<bool> _billPageValidator = BehaviorSubject<bool>();
+  Stream get billPageValidated => _billPageValidator.stream;
+
+  void _checkIfPaymentPageIsValid() {
+    if (_selectedUser != null && _billAmount != null)
+      _paymentPageValidator.sink.add(true);
+  }
+void _checkIfBillPageIsValid() {
+    if (_billType != null && _billAmount != null)
+      _billPageValidator.sink.add(true);
+  }
 
   Future<void> submitInfo() {
-    if (_optionSelected == BILL) {
-      if (_billAmount != null && _selectedType != null) {
-        return _repo
-            .createBill(
-                groupBloc.accountId,
-                Bill(
-                    amount: _billAmount,
-                    paidByUserId: groupBloc.userId,
-                    type: _selectedType,
-                    createdAt: DateTime.now(),
-                    fromDate: _fromDate,
-                    toDate: _toDate))
-            .then((_) =>
-                _repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
-      } else
-        return Future.delayed(Duration(seconds: 0));
-    } else if (_optionSelected == PAYMENT) {
-      if (_selectedUser != null && _billAmount != null) {
-        return _repo
-            .createPayment(
-                groupBloc.accountId,
-                Payment(
-                    fromUserId: groupBloc.userId,
-                    toUserId: _selectedUser,
-                    amount: _billAmount,
-                    notes: _paymentNotes,
-                    createdAt: DateTime.now()))
-            .then((_) =>
-                _repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount));
-      } else
-        return Future.delayed(Duration(seconds: 0));
-    } else
-      return Future.delayed(Duration(seconds: 0));
+    if (!_submitted) {
+      _submitted = true;
+      if (_selectedOption is ShowBillSection) {
+        if (_billAmount != null && _billType != null) {
+          return _repo
+              .createBill(
+                  groupBloc.accountId,
+                  Bill(
+                      amount: _billAmount,
+                      paidByUserId: groupBloc.userId,
+                      type: _billType,
+                      notes: _billNotes,
+                      createdAt: DateTime.now(),
+                      fromDate: _fromDate,
+                      toDate: _toDate))
+              .then((_) => _repo.tabulateTotals(
+                  groupBloc.accountId, groupBloc.usersInAccount));
+        } else
+          return Future.delayed(Duration(seconds: 0));
+      } else if (_selectedOption is ShowPaymentSection) {
+        if (_selectedUser != null && _billAmount != null) {
+          return _repo
+              .createPayment(
+                  groupBloc.accountId,
+                  Payment(
+                      fromUserId: groupBloc.userId,
+                      toUserId: _selectedUser,
+                      amount: _billAmount,
+                      notes: _paymentNotes,
+                      createdAt: DateTime.now()))
+              .then((_) => _repo.tabulateTotals(
+                  groupBloc.accountId, groupBloc.usersInAccount));
+        } 
+      } 
+    }
+    return Future.delayed(Duration(seconds: 0));
   }
 
   @override
   void dispose() {
     _selectedUserController.close();
-    _selectedTypeController.close();
+    _selectedOptionController.close();
     _billAmountController.close();
     _paymentNotesController.close();
     _toDateControlelr.close();
     _fromDateController.close();
-    _optionSelectedController.close();
+    _paymentPageValidator.close();
+    _selectedTypeController.close();
+    _billPageValidator.close();
+    _billNotesController.close();
   }
-
 }
+
+class BillOrPaymentSection {}
+
+class ShowBillSection extends BillOrPaymentSection {}
+
+class ShowPaymentSection extends BillOrPaymentSection {}
+

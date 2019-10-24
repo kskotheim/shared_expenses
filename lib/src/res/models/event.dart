@@ -43,6 +43,7 @@ class Bill implements AnyEvent {
   String paidByUserId;
   String type;
   double amount;
+  String notes;
   DateTime createdAt;
   DateTime fromDate;
   DateTime toDate;
@@ -103,6 +104,7 @@ class Bill implements AnyEvent {
       {this.paidByUserId,
       this.type,
       this.amount,
+      this.notes,
       this.createdAt,
       this.toDate,
       this.fromDate}) {
@@ -112,6 +114,7 @@ class Bill implements AnyEvent {
     if (createdAt == null) createdAt = DateTime.now();
     if (toDate == null) toDate = createdAt;
     if (fromDate == null) fromDate = createdAt;
+    if (notes == null) notes = '';
   }
 
   Bill.fromJson(Map<String, dynamic> billRecord) {
@@ -121,6 +124,7 @@ class Bill implements AnyEvent {
     createdAt = parseTime(billRecord['createdAt']);
     fromDate = parseTime(billRecord['fromDate'] ?? createdAt);
     toDate = parseTime(billRecord['toDate'] ?? createdAt);
+    notes = billRecord['notes'] ?? '';
   }
 
   Map<String, dynamic> toJson() {
@@ -128,6 +132,7 @@ class Bill implements AnyEvent {
       'paidByUserId': paidByUserId,
       'type': type,
       'amount': amount,
+      'notes': notes,
       'createdAt': createdAt,
       'fromDate': fromDate,
       'toDate': toDate

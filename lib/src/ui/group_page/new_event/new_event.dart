@@ -7,16 +7,17 @@ import 'package:shared_expenses/src/ui/group_page/new_event/new_event_dialog.dar
 class NewEventButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
       child: FloatingActionButton(
         onPressed: () {
-          NewEventBloc.resetVals();
+          NewEventBloc newEventBloc = NewEventBloc(groupBloc: groupBloc);
           showDialog(
             context: context,
             builder: (newContext) => NewEventDialog(
-              groupBloc: BlocProvider.of<GroupBloc>(context),
-            ),
+                groupBloc: groupBloc,
+                newEventBloc:newEventBloc),
           );
         },
         child: Icon(Icons.add),
