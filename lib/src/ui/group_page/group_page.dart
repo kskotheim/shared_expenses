@@ -89,10 +89,24 @@ class GroupHomePage extends StatelessWidget {
               BillCategoryButton(),
               ConnectionRequestsButton(),
               NewEventButton(),
+              TabulateTotalsButton(),
             ],
           ),
         )
       ],
+    );
+  }
+}
+
+class TabulateTotalsButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
+    return IconButton(
+      color: Colors.red,
+      icon: Icon(Icons.refresh),
+      onPressed: groupBloc.tabulateTotals,
+      
     );
   }
 }

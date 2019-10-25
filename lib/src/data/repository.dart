@@ -260,7 +260,8 @@ class Repository implements RepoInterface {
     List<Payment> paymentObjs =
         payments.map((payment) => Payment.fromJson(payment.data)).toList();
     List<UserModifier> modifierObjs = userModifiers
-        .map((modifier) => UserModifier.fromDocumentSnapshot(modifier)).toList();
+        .map((modifier) => UserModifier.fromDocumentSnapshot(modifier))
+        .toList();
     Map<String, List<UserModifier>> sortedModifiers = {};
 
     // sort user modifiers into map based on userId
@@ -328,14 +329,7 @@ class Repository implements RepoInterface {
       Map<String, double> userShares = Map<String, double>.fromIterable(users,
           key: (user) => user.userId, value: (user) => 1);
       modifierObjs.forEach((modifier) {
-        if (
-            (modifier.fromDate == null && modifier.toDate == null) ||
-            (modifier.fromDate == null && modifier.toDate.isAfter(bill.toDate)) ||
-            (modifier.toDate == null && modifier.fromDate.isBefore(bill.fromDate)) ||
-            modifier.fromDate.isAtSameMomentAs(bill.fromDate) ||
-            modifier.toDate.isAtSameMomentAs(bill.toDate) ||
-            (modifier.fromDate.isBefore(bill.fromDate) &&
-                modifier.toDate.isAfter(bill.toDate))) {
+        if (modifier.intersectsWithBill(bill)) {
           if (modifier.categories == null ||
               modifier.categories.contains(bill.type)) {
             userShares[modifier.userId] *= modifier.shares;

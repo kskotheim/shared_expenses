@@ -44,7 +44,7 @@ class UserModifierList extends StatelessWidget {
                       title: Text(title),
                       trailing: IconButton(
                         onPressed: () =>
-                            groupBloc.deleteModifier(modifier),
+                            groupBloc.deleteModifier(modifier).then((_) => groupBloc.tabulateTotals()),
                         icon: Icon(Icons.delete),
                       ),
                     );

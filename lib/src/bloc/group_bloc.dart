@@ -116,6 +116,13 @@ class GroupBloc implements BlocBase {
     _usersInAccountController.close();
     _groupPageToShowController.close();
   }
+
+
+  //for debugging
+  void tabulateTotals(){
+    repo.tabulateTotals(accountId, _usersInAccount).then((_) => print('tabulated'));
+  }
+
 }
 
 
