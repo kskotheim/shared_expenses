@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/new_event_bloc.dart';
+import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/ui/group_page/new_event/new_event_dialog.dart';
 
 class NewEventButton extends StatelessWidget {
@@ -9,7 +10,7 @@ class NewEventButton extends StatelessWidget {
   Widget build(BuildContext context) {
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(9.0, 18.0, 9.0, 18.0),
+      padding: Style.floatingActionPadding,
       child: FloatingActionButton(
         onPressed: () {
           NewEventBloc newEventBloc = NewEventBloc(groupBloc: groupBloc);

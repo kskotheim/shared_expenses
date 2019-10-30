@@ -53,7 +53,6 @@ class GroupHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
 
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
-    AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
 
     return Stack(
       children: <Widget>[
@@ -81,15 +80,14 @@ class GroupHomePage extends StatelessWidget {
         ),
         Align(
           alignment: Alignment.bottomRight,
-          child: Row(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: <Widget>[
               GoToSelectAccountButton(),
-              BillCategoryButton(),
+              AdminPageButton(),
               ConnectionRequestsButton(),
               NewEventButton(),
-              TabulateTotalsButton(),
             ],
           ),
         )

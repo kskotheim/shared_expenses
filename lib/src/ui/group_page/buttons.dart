@@ -5,7 +5,6 @@ import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/requests_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
 
-
 class GoToSelectAccountButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -77,7 +76,7 @@ class ConnectionRequestsButton extends StatelessWidget {
   }
 }
 
-class BillCategoryButton extends StatelessWidget {
+class AdminPageButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
@@ -89,57 +88,71 @@ class BillCategoryButton extends StatelessWidget {
             backgroundColor: Colors.orange,
             child: Icon(Icons.apps),
             onPressed: groupBloc.showGroupAdminPage,
-
-            // showDialog(
-            //     context: context,
-            //     builder: (newContext) => Dialog(
-            //           child: BillCategoryList(
-            //             groupBloc: groupBloc,
-            //           ),
-            //         )),
           ));
     } else
-      return Container();
+      return Padding(
+          padding: Style.floatingActionPadding,
+          child: FloatingActionButton(
+            heroTag: 'show_modifiers',
+            backgroundColor: Colors.blue.shade600,
+            child: Icon(Icons.apps),
+            onPressed: () => showDialog(
+              context: context,
+              child: AlertDialog(
+                title: Text('User Modifiers'),
+                content: Container(
+                  height: 250.0,
+                  width: 200.0,
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: groupBloc.userModifiers
+                        .map((modifier) =>
+                            ListTile(title: Text(modifier.description ?? 'no description')))
+                        .toList(),
+                  ),
+                ),
+              ),
+            ),
+          ));
   }
 }
 
-
-
-
 class ConnectionRequestsList extends StatelessWidget {
-
   String acctId;
   RequestsBloc requestsBloc;
 
-  ConnectionRequestsList({this.acctId, this.requestsBloc}) : assert(acctId != null || requestsBloc != null);
+  ConnectionRequestsList({this.acctId, this.requestsBloc})
+      : assert(acctId != null || requestsBloc != null);
 
   @override
   Widget build(BuildContext context) {
-    if(requestsBloc == null) requestsBloc = RequestsBloc(accountId: acctId);
+    if (requestsBloc == null) requestsBloc = RequestsBloc(accountId: acctId);
 
     return BlocProvider(
       bloc: requestsBloc,
-          child: StreamBuilder<List<List<String>>>(
+      child: StreamBuilder<List<List<String>>>(
           stream: requestsBloc.requests,
           builder: (context, snapshot) {
             if (snapshot.data == null) return Text('no connection requests');
             return ListView(
               shrinkWrap: true,
-              children: snapshot.data.map((request) => ListTile(
-                title: Text(request[0]),
-                leading: IconButton(
-                  icon: Icon(Icons.check),
-                  onPressed: (){
-                    requestsBloc.approveConnectionRequest(request[1]);
-                  },
-                ),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: (){
-                    requestsBloc.deleteConnectionRequest(request[1]);
-                  },
-                ),
-              )).toList(),
+              children: snapshot.data
+                  .map((request) => ListTile(
+                        title: Text(request[0]),
+                        leading: IconButton(
+                          icon: Icon(Icons.check),
+                          onPressed: () {
+                            requestsBloc.approveConnectionRequest(request[1]);
+                          },
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            requestsBloc.deleteConnectionRequest(request[1]);
+                          },
+                        ),
+                      ))
+                  .toList(),
             );
           }),
     );

@@ -25,3 +25,4 @@ const String TYPE = 'Type';
 const String AMOUNT = 'Amount';
 const String SHARES = 'Shares';
 const String CATEGORIES = 'Categories';
+const String DESCRIPTION = 'Description';

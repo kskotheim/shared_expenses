@@ -180,7 +180,7 @@ class Repository implements RepoInterface {
     await createAccountEvent(
         accountId,
         AccountEvent(
-            userId: modifier.userId, actionTaken: ' modifier created'));
+            userId: modifier.userId, actionTaken: ' modifier created', secondaryString: modifier.description));
     return _db.createUserModifier(accountId, modifier.toJson());
   }
 
@@ -192,7 +192,7 @@ class Repository implements RepoInterface {
     await createAccountEvent(
         accountId,
         AccountEvent(
-            userId: modifier.userId, actionTaken: ' modifier removed'));
+            userId: modifier.userId, actionTaken: ' modifier removed', secondaryString: modifier.description));
     return _db.deleteUserModifier(accountId, modifier.modifierId);
   }
 
@@ -204,7 +204,7 @@ class Repository implements RepoInterface {
   }
 
   Stream<List<Payment>> paymentStream(String accountId) {
-    return _db.paymentStream(accountId, true).map((snapshot) => snapshot
+    return _db.paymentStream(accountId).map((snapshot) => snapshot
         .documents
         .map((document) => Payment.fromJson(document.data))
         .toList());
@@ -214,7 +214,7 @@ class Repository implements RepoInterface {
       _db.createPayment(accountId, payment.toJson());
 
   Stream<List<Bill>> billStream(String accountId) {
-    return _db.billStream(accountId, true).map((snapshot) => snapshot.documents
+    return _db.billStream(accountId).map((snapshot) => snapshot.documents
         .map((document) => Bill.fromJson(document.data))
         .toList());
   }
@@ -223,7 +223,7 @@ class Repository implements RepoInterface {
       _db.createBill(accountId, bill.toJson());
 
   Stream<List<AccountEvent>> accountEventStream(String accountId) {
-    return _db.accountEventStream(accountId, true).map((snapshot) => snapshot
+    return _db.accountEventStream(accountId).map((snapshot) => snapshot
         .documents
         .map((document) => AccountEvent.fromJson(document.data))
         .toList());
@@ -343,6 +343,11 @@ class Repository implements RepoInterface {
       users.forEach((user) {
         totals[user.userId] += userShares[user.userId] * costPerShare;
       });
+    });
+
+    // apply payment totals
+    totals.keys.forEach((user){
+      totals[user] += paymentTotals[user];
     });
 
     // round calculated totals to the penny

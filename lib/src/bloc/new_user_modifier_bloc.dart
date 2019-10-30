@@ -121,8 +121,8 @@ class NewUserModifierBloc implements BlocBase {
 
   BehaviorSubject<bool> _modifierValidatorController = BehaviorSubject<bool>();
   Stream<bool> get modifierValidated => _modifierValidatorController.stream;
-  void _validateModifier(){
-    if(_selectedUser != null && _shares != null){
+  void _validateModifier() {
+    if (_selectedUser != null && _shares != null) {
       _modifierValidatorController.sink.add(true);
     } else {
       _modifierValidatorController.sink.add(false);
@@ -144,7 +144,7 @@ class NewUserModifierBloc implements BlocBase {
   }
 
   Future<String> submitModifier() async {
-    if(!_submitted){
+    if (!_submitted) {
       _submitted = true;
       List<String> selectedCategories = [];
       _selectedCategories.forEach((key, val) {
@@ -166,9 +166,13 @@ class NewUserModifierBloc implements BlocBase {
               fromDate: _fromDate,
               toDate: _toDate,
               categories:
-                  selectedCategories.isNotEmpty ? selectedCategories : null),
+                  selectedCategories.isNotEmpty ? selectedCategories : null,
+              // user # of shares (categories) from -> to
+              description:
+                  '${groupBloc.userName(_selectedUser)} $_shares shares ${selectedCategories.isNotEmpty ? selectedCategories.join(', ') : ''} ${_fromDate != null ? parseDateTime(_fromDate) : 'Beginning'} to ${_toDate != null ? parseDateTime(_toDate) : 'End'}'),
         );
-        await _repo.tabulateTotals(groupBloc.accountId, groupBloc.usersInAccount);
+        await _repo.tabulateTotals(
+            groupBloc.accountId, groupBloc.usersInAccount);
       }
     }
     return Future.delayed(Duration(seconds: 0));

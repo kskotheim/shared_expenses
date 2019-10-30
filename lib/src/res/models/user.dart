@@ -29,6 +29,7 @@ class UserModifier {
   DateTime fromDate;
   DateTime toDate;
   List<String> categories;
+  String description;
 
   UserModifier(
       {@required this.userId,
@@ -36,7 +37,8 @@ class UserModifier {
       this.modifierId,
       this.fromDate,
       this.toDate,
-      this.categories})
+      this.categories,
+      this.description})
       : assert(userId != null),
         assert(shares != null);
 
@@ -52,6 +54,9 @@ class UserModifier {
             : null,
         categories = userModifier.data.containsKey(CATEGORIES)
             ? List<String>.from(userModifier.data[CATEGORIES])
+            : null,
+        description = userModifier.data.containsKey(DESCRIPTION)
+            ? userModifier.data[DESCRIPTION]
             : null;
 
   Map<String, dynamic> toJson() {
@@ -64,6 +69,9 @@ class UserModifier {
     }
     if (categories != null) {
       modifier[CATEGORIES] = categories;
+    }
+    if(description != null){
+      modifier[DESCRIPTION] = description;
     }
     return modifier;
   }

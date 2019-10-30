@@ -32,17 +32,17 @@ abstract class DB {
   Future<void> deleteGroupConnectionRequest(String accountId, String requestId);
 
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
-  Stream<QuerySnapshot> paymentStream(String accountId, bool limited);
+  Stream<QuerySnapshot> paymentStream(String accountId);
   Future<List<DocumentSnapshot>> allPayments(String accountId);
   Future<void> deletePayment(String accountId, String paymentId);
 
   Future<void> createBill(String accountId, Map<String, dynamic> bill);
-  Stream<QuerySnapshot> billStream(String accountId, bool limited);
+  Stream<QuerySnapshot> billStream(String accountId);
   Future<List<DocumentSnapshot>> allBills(String accountId);
   Future<void> deleteBill(String accountId, String billId);
 
   Future<void> createAccountEvent(String accountId, Map<String, dynamic> event);
-  Stream<QuerySnapshot> accountEventStream(String accountId, bool limited);
+  Stream<QuerySnapshot> accountEventStream(String accountId);
 
   Future<List<DocumentSnapshot>> getBillTypes(String accountId);
   Future<List<DocumentSnapshot>> billsWhere(String accountId, String field, val);
@@ -223,10 +223,8 @@ class DatabaseManager implements DB {
         .setData(payment);
   }
 
-  Stream<QuerySnapshot> paymentStream(String accountId, bool limited) {
-    if(limited)
-      return _account(accountId).collection(PAYMENTS).orderBy('createdAt', descending: true).limit(10).snapshots();
-    else
+  Stream<QuerySnapshot> paymentStream(String accountId) {
+    
       return _account(accountId).collection(PAYMENTS).orderBy('createdAt', descending: true).snapshots();
 
   }
@@ -248,10 +246,7 @@ class DatabaseManager implements DB {
     return _account(accountId).collection(BILLS).document().setData(bill);
   }
 
-  Stream<QuerySnapshot> billStream(String accountId, bool limited) {
-    if(limited)
-      return _account(accountId).collection(BILLS).orderBy('createdAt', descending: true).limit(10).snapshots();
-    else 
+  Stream<QuerySnapshot> billStream(String accountId) {
       return _account(accountId).collection(BILLS).orderBy('createdAt', descending: true).snapshots();
   }
 
@@ -272,10 +267,7 @@ class DatabaseManager implements DB {
   }
 
 
-  Stream<QuerySnapshot> accountEventStream(String accountId, bool limited) {
-    if(limited)
-      return _account(accountId).collection(ACCOUNT_EVENTS).orderBy('createdAt', descending:true).limit(10).snapshots();
-    else
+  Stream<QuerySnapshot> accountEventStream(String accountId) {
       return _account(accountId).collection(ACCOUNT_EVENTS).orderBy('createdAt', descending:true).snapshots();
   }
 

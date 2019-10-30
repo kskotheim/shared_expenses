@@ -15,32 +15,36 @@ class EventsWidget extends StatelessWidget {
             builder: (context, snapshot) {
               if (!snapshot.hasData) return Container();
               return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   SortButton(
                     text: 'all',
                     onPressed: eventsBloc.sortByAll,
-                    selected: snapshot.data is SortAll,
+                    onLongPress: eventsBloc.sortByAll,
+                    selected: snapshot.data.sortList[0],
                   ),
                   SortButton(
                     text: 'bill',
-                    onPressed: eventsBloc.sortByBill,
-                    selected: snapshot.data is SortBills,
+                    onPressed: eventsBloc.addSortByBill,
+                    onLongPress: eventsBloc.sortByBill,
+                    selected: snapshot.data.sortList[1],
                   ),
                   SortButton(
                     text: 'payment',
-                    onPressed: eventsBloc.sortByPayment,
-                    selected: snapshot.data is SortPayments,
+                    onPressed: eventsBloc.addSortByPayment,
+                    onLongPress: eventsBloc.sortByPayment,
+                    selected: snapshot.data.sortList[2],
                   ),
                   SortButton(
                     text: 'event',
-                    onPressed: eventsBloc.sortByAccountEvents,
-                    selected: snapshot.data is SortAccountEvents,
+                    onPressed: eventsBloc.addSortByEvent,
+                    onLongPress: eventsBloc.sortByAccountEvents,
+                    selected: snapshot.data.sortList[3],
                   ),
                 ],
               );
             }),
-        StreamBuilder<List<List<Text>>>(
+        StreamBuilder<List<List<Widget>>>(
             stream: eventsBloc.eventList,
             builder: (context, snapshot) {
               if (snapshot.data == null) return Text('no events data');
@@ -53,6 +57,7 @@ class EventsWidget extends StatelessWidget {
                         .map((textWidget) => EventListTile(
                               title: textWidget[0],
                               subtitle: textWidget[1],
+                              leading: textWidget[2],
                             ))
                         .toList(),
                   ),
@@ -67,38 +72,44 @@ class EventsWidget extends StatelessWidget {
 class SortButton extends StatelessWidget {
   final String text;
   final onPressed;
+  final onLongPress;
   final bool selected;
 
-  SortButton({this.text, this.selected, this.onPressed});
+  SortButton({this.text, this.selected, this.onPressed, this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
-    return FlatButton(
-      color: selected ? Colors.grey.shade200 : Colors.white,
-      onPressed: onPressed,
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 10.0, color: Colors.blueGrey),
+    return InkWell(
+      onTap: onPressed,
+      onLongPress: onLongPress,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(4.0)),
+          color: selected ? Colors.grey.shade200 : null,
+        ),
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          text,
+          style: TextStyle(fontSize: 10.0, color: Colors.blueGrey),
+        ),
       ),
     );
   }
 }
 
-
 class EventListTile extends StatefulWidget {
-
   final Text title;
   final Text subtitle;
+  final Widget leading;
   final Key key = UniqueKey();
 
-  EventListTile({this.title, this.subtitle});
+  EventListTile({this.title, this.subtitle, this.leading});
 
   @override
   _EventListTileState createState() => _EventListTileState();
 }
 
 class _EventListTileState extends State<EventListTile> {
-
   bool expanded = false;
 
   @override
@@ -106,6 +117,7 @@ class _EventListTileState extends State<EventListTile> {
     return ListTile(
       key: widget.key,
       onLongPress: () => setState(() => expanded = !expanded),
+      leading: widget.leading,
       title: widget.title,
       subtitle: expanded ? widget.subtitle : null,
     );

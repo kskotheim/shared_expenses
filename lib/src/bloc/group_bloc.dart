@@ -27,19 +27,9 @@ class GroupBloc implements BlocBase {
   List<String> _billTypes =  <String>[];
   List<String> get billTypes => _billTypes;
 
-  List<DropdownMenuItem> get userMenuItems => _usersInAccount
-      .map((user) => DropdownMenuItem(
-            child: Text(user.userName),
-            value: user.userId,
-          ))
-      .toList();
-
-  List<DropdownMenuItem> get billTypeMenuItems => _billTypes
-      .map((type) => DropdownMenuItem(
-            child: Text(type),
-            value: type,
-          ))
-      .toList();
+  StreamSubscription _userModifierSubscription;
+  List<UserModifier> _userModifiers;
+  List<UserModifier> get userModifiers => _userModifiers;
 
 
   // this controlls whether to display the home or group management (or other?) page
@@ -58,6 +48,7 @@ class GroupBloc implements BlocBase {
 
   GroupBloc({this.accountId, this.userId, this.accountBloc}){
     _usersInAccountSubscription = repo.userStream(accountId).listen(_setAccountUsers);
+    _userModifierSubscription = repo.userModifierStream(accountId).listen(_setUserModifiers);
     currentAccount = Account(accountId: accountId, accountName: accountBloc.accountNames[accountId]);
     setUpGroup();
   }
@@ -69,14 +60,8 @@ class GroupBloc implements BlocBase {
     showGroupHomePage();
   }
 
-  Future<void> getPermissions() async {
-    isGroupOwner = await repo.isGroupOwner(userId, accountId);
-    return;
-  }
-
-  Future<void> getCategories() async {
-    return _billTypes = await repo.getBillTypes(accountId);
-  }
+  Future<void> getPermissions() async => isGroupOwner = await repo.isGroupOwner(userId, accountId);
+  Future<void> getCategories() async => _billTypes = await repo.getBillTypes(accountId);
 
   Future<void> deleteCategory(String category) async {
     if(_billTypes.contains(category)){
@@ -109,12 +94,17 @@ class GroupBloc implements BlocBase {
     _usersInAccountSink.add(users);
   }
 
+  void _setUserModifiers(List<UserModifier> modifiers){
+    _userModifiers = modifiers;
+  }
+
   
   @override
   void dispose() {
     _usersInAccountSubscription.cancel();
     _usersInAccountController.close();
     _groupPageToShowController.close();
+    _userModifierSubscription.cancel();
   }
 
 

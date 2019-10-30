@@ -144,8 +144,9 @@ class AccountEvent implements AnyEvent {
   DateTime createdAt;
   String userId;
   String actionTaken; // added to account, edited bill / category, changed name
+  String secondaryString;
 
-  AccountEvent({this.createdAt, this.userId, this.actionTaken}) {
+  AccountEvent({this.createdAt, this.userId, this.actionTaken, this.secondaryString}) {
     assert(userId != null);
     assert(actionTaken != null);
 
@@ -156,13 +157,15 @@ class AccountEvent implements AnyEvent {
     createdAt = parseTime(json['createdAt']);
     userId = json['userId'];
     actionTaken = json['actionTaken'];
+    secondaryString = json['secondaryString'];
   }
 
   Map<String, dynamic> toJson() {
     return {
       'createdAt': createdAt,
       'userId': userId,
-      'actionTaken': actionTaken
+      'actionTaken': actionTaken,
+      'secondaryString': secondaryString
     };
   }
 }
