@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/login_page_bloc.dart';
+import 'package:shared_expenses/src/res/style.dart';
 
 class LoginWidget extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     AuthBloc authBloc = BlocProvider.of<AuthBloc>(context);
@@ -43,6 +43,14 @@ class LoginWidget extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
+                    Text(
+                      'Shared Expenses',
+                      style: Style.titleTextStyle,
+                    ),
+                    Container(
+                      height: 40.0,
+                    ),
+                    Text(creatingNewAccount ? 'Create New Account:' : 'Login:', style: Style.tinyTextStyle,),
                     _nameField,
                     _passwordField,
                     creatingNewAccount ? _secondPasswordField : Container(),
@@ -52,13 +60,17 @@ class LoginWidget extends StatelessWidget {
                         loginPageBloc.loginPageEventSink
                             .add(LoginButtonPressed());
                       },
-                      child:
-                          Text(creatingNewAccount ? 'Create Account' : 'Login'),
+                      child: Text(
+                          creatingNewAccount ? 'Create Account' : 'Login',
+                          style: Style.regularTextStyle),
                     ),
                     RaisedButton(
-                      child: Text(creatingNewAccount
-                          ? 'Go to Login'
-                          : 'Go to Create Account'),
+                      child: Text(
+                        creatingNewAccount
+                            ? 'Go to Login'
+                            : 'Go to Create Account',
+                        style: Style.regularTextStyle,
+                      ),
                       onPressed: () {
                         loginPageBloc.loginPageEventSink
                             .add(SwitchToCreateAccountButtonPressed());
@@ -93,6 +105,7 @@ class LoginField extends StatelessWidget {
             child: TextField(
               onChanged: onChanged,
               obscureText: obscureText,
+              style: Style.regularTextStyle,
               decoration:
                   InputDecoration(hintText: hint, errorText: snapshot.error),
             ),

@@ -90,7 +90,7 @@ class SortButton extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Text(
           text,
-          style: TextStyle(fontSize: 10.0, color: Colors.blueGrey),
+          style: Style.tinyTextStyle,
         ),
       ),
     );

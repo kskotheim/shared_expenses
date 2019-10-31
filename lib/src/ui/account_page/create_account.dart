@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:shared_expenses/src/res/style.dart';
 
 class CreateAccountSection extends StatefulWidget {
   @override
@@ -33,7 +34,7 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
         child: Column(
           children: <Widget>[
             Icon(Icons.add),
-            Text('Create Account'),
+            Text('Create Account', style: Style.regularTextStyle,),
           ],
         ),
       ),
@@ -45,10 +46,11 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
 
     return Column(
       children: <Widget>[
-        Text("New Account Name:"),
+        Text("New Account Name:", style: Style.regularTextStyle),
         Container(
           width: 200.0,
           child: TextField(
+            style: Style.regularTextStyle,
             controller: _nameController,
           ),
         ),
@@ -56,12 +58,12 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             FlatButton(
-              child: Text('Submit'),
+              child: Text('Submit', style: Style.regularTextStyle),
               onPressed: () => _accountBloc.accountEvent.add(
                   AccountEventCreateAccount(accountName: _nameController.text)),
             ),
             FlatButton(
-              child: Text('Cancel'),
+              child: Text('Cancel', style: Style.regularTextStyle),
               onPressed: () {
                 setState(() {
                   _createAccount = false;

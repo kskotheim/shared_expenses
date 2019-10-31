@@ -168,7 +168,7 @@ class SubmitBillButton extends StatelessWidget {
           return FlatButton(
             child: Text('Submit'),
             onPressed: (snapshot.hasData && snapshot.data)
-                ? () => newEventBloc.submitInfo().then((_) => Navigator.pop(context))
+                ? newEventBloc.showConfirmation
                 : null,
           );
         });

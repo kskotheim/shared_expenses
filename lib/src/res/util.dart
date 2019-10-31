@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:shared_expenses/src/res/style.dart';
+
 String parseDateTime(DateTime time) {
   if (time == null) return null;
   return '${time.month}/${time.day}/${time.year % 2000}';
@@ -43,5 +46,37 @@ String getMonthString(int month) {
       break;
     default:
       return 'Err';
+  }
+}
+
+class DateIcon extends StatelessWidget {
+
+  final int month;
+  final int day;
+  final Color color;
+  BoxBorder border;
+
+  DateIcon(this.month, this.day, [this.color, this.border]);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(6.0, 2.0, 6.0, 2.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24.0),
+        color: color,
+        border: border,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text('$day', style: Style.subTitleTextStyle),
+          Text(
+            '${getMonthString(month)}',
+            style: Style.tinyTextStyle,
+          ),
+        ],
+      ),
+    );
   }
 }

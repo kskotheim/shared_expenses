@@ -6,6 +6,7 @@ class Payment implements AnyEvent {
   num amount;
   DateTime createdAt;
   String notes;
+  String paymentId;
 
   Payment(
       {this.fromUserId,
@@ -20,12 +21,14 @@ class Payment implements AnyEvent {
     if (notes == null) notes = '';
   }
 
-  Payment.fromJson(Map<String, dynamic> paymentRecord) {
+  Payment.fromJson(DocumentSnapshot document) {
+    Map<String, dynamic> paymentRecord = document.data;
     fromUserId = paymentRecord['fromUserId'];
     toUserId = paymentRecord['toUserId'];
     amount = paymentRecord['amount'];
     createdAt = parseTime(paymentRecord['createdAt'].toDate());
     notes = paymentRecord['notes'];
+    paymentId = document.documentID;
   }
 
   Map<String, dynamic> toJson() {
@@ -47,20 +50,21 @@ class Bill implements AnyEvent {
   DateTime createdAt;
   DateTime fromDate;
   DateTime toDate;
+  String billId;
 
   // this method splits one bill into multiple according to a list of DateTimes.
   // it is used for calculating bill totals by scaling portions of bills according to
   // user modifier dates
-  static List<Bill> splitBill(Bill bill, List<DateTime> splitDates){
+  static List<Bill> splitBill(Bill bill, List<DateTime> splitDates) {
     List<Bill> theBills = [];
-    for(int i=0; i<splitDates.length; i++){
-      if(theBills.isEmpty){
+    for (int i = 0; i < splitDates.length; i++) {
+      if (theBills.isEmpty) {
         theBills.addAll(_splitBill(bill, splitDates[i]));
-      }
-      else {
+      } else {
         Bill billToSplit;
         theBills.forEach((bill) {
-          if(bill.fromDate.isBefore(splitDates[i]) && bill.toDate.isAfter(splitDates[i])) billToSplit = bill;
+          if (bill.fromDate.isBefore(splitDates[i]) &&
+              bill.toDate.isAfter(splitDates[i])) billToSplit = bill;
         });
         theBills.remove(billToSplit);
         theBills.addAll(_splitBill(billToSplit, splitDates[i]));
@@ -117,7 +121,8 @@ class Bill implements AnyEvent {
     if (notes == null) notes = '';
   }
 
-  Bill.fromJson(Map<String, dynamic> billRecord) {
+  Bill.fromJson(DocumentSnapshot document) {
+    Map<String, dynamic> billRecord = document.data;
     paidByUserId = billRecord['paidByUserId'];
     type = billRecord['type'];
     amount = billRecord['amount'];
@@ -125,6 +130,7 @@ class Bill implements AnyEvent {
     fromDate = parseTime(billRecord['fromDate'] ?? createdAt);
     toDate = parseTime(billRecord['toDate'] ?? createdAt);
     notes = billRecord['notes'] ?? '';
+    billId = document.documentID;
   }
 
   Map<String, dynamic> toJson() {
@@ -146,7 +152,8 @@ class AccountEvent implements AnyEvent {
   String actionTaken; // added to account, edited bill / category, changed name
   String secondaryString;
 
-  AccountEvent({this.createdAt, this.userId, this.actionTaken, this.secondaryString}) {
+  AccountEvent(
+      {this.createdAt, this.userId, this.actionTaken, this.secondaryString}) {
     assert(userId != null);
     assert(actionTaken != null);
 

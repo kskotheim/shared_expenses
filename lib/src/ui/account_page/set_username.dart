@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:shared_expenses/src/res/style.dart';
 
 
 
@@ -25,18 +26,19 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text("Username:"),
+          Text("Name:", style: Style.regularTextStyle,),
           Container(
             width: 200.0,
             child: TextField(
               controller: _nameController,
+              style: Style.subTitleTextStyle,
             ),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               FlatButton(
-                child: Text('Submit'),
+                child: Text('Submit', style: Style.regularTextStyle,),
                 onPressed: () {
                   accountBloc.accountEvent.add(AccountEventRenameUser(newName: _nameController.text));
                   setState((){
@@ -44,7 +46,7 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
                   });
                 },
               ),
-              FlatButton(child: Text('Cancel'),onPressed: (){
+              FlatButton(child: Text('Cancel', style: Style.regularTextStyle,),onPressed: (){
                 setState(() {
                   _editUsername = false;
                 });
@@ -56,7 +58,7 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
     else return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text('Username: ${accountBloc.currentUser.userName ?? 'No Username'}', style: TextStyle(fontSize: 18.0)),
+          Text('Name: ${accountBloc.currentUser.userName ?? 'No Username'}', style: Style.regularTextStyle),
           Container(width: 30.0),
           InkWell(
             onTap: (){
@@ -66,7 +68,7 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
             },
             child: Container(
               padding: EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 5.0),
-              child: Text('Edit'),
+              child: Text('Edit', style: Style.tinyTextStyle,),
               decoration: BoxDecoration(border: Border.all(color: Colors.brown), borderRadius: BorderRadius.all(Radius.circular(5.0)), gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors:[Colors.orange, Colors.red])),
             ),
           )

@@ -90,6 +90,8 @@ class SelectUserSection extends StatelessWidget {
 }
 
 class ShareAmountSection extends StatelessWidget {
+  TextEditingController _sharesController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     NewUserModifierBloc newModifierBloc =
@@ -100,12 +102,14 @@ class ShareAmountSection extends StatelessWidget {
         Text('Shares: '),
         Container(
           width: 100.0,
-          child: StreamBuilder<num>(
+          child: StreamBuilder<String>(
             stream: newModifierBloc.shares,
-            builder: (context, shapshot) {
+            builder: (context, snapshot) {
+              _sharesController.value = _sharesController.value.copyWith(text: snapshot.data.toString());
               return TextField(
                 keyboardType: TextInputType.number,
                 onChanged: newModifierBloc.setShares,
+                controller: _sharesController,
               );
             },
           ),

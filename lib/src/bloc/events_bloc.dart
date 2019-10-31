@@ -129,23 +129,12 @@ class EventsBloc implements BlocBase {
       String primaryString;
       String secondaryString;
       TextStyle textStyle;
-      Widget leadingWidget = Container(
-        padding: EdgeInsets.fromLTRB(6.0, 2.0, 6.0, 2.0),
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24.0), color: Colors.grey.shade300),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text('${event.createdAt.day}', style: Style.subTitleTextStyle),
-            Text('${getMonthString(event.createdAt.month)}', style: Style.tinyTextStyle,),
-          ],
-        ),
-      );
+      Widget leadingWidget = DateIcon(event.createdAt.month, event.createdAt.day, Colors.grey.shade200, null);
 
       if (event is Payment) {
         primaryString =
             '${groupBloc.userName(event.fromUserId)} paid ${groupBloc.userName(event.toUserId)} \$${event.amount.floor()}';
-        textStyle = TextStyle(color: Colors.green.shade600);
+        textStyle = Style.regularTextStyleGreen;
         secondaryString =
             'Made on ${event.createdAt.month}/${event.createdAt.day}';
         if (event.notes != null && event.notes.length > 0)
@@ -154,7 +143,7 @@ class EventsBloc implements BlocBase {
       if (event is Bill) {
         primaryString =
             '${groupBloc.userName(event.paidByUserId)} paid \$${event.amount.floor()} ${event.type} bill';
-        textStyle = TextStyle(color: Colors.red.shade600);
+        textStyle = Style.regularTextStyleRed;
         secondaryString =
             'Paid on ${event.createdAt.month}/${event.createdAt.day}, ${event.notes}';
         if (event.fromDate == null ||
@@ -165,7 +154,7 @@ class EventsBloc implements BlocBase {
       if (event is AccountEvent) {
         primaryString =
             '${groupBloc.userName(event.userId)} ${event.actionTaken}';
-        textStyle = TextStyle(color: Colors.blue);
+        textStyle = Style.regularTextStyleBlue;
         secondaryString = event.secondaryString != null
             ? event.secondaryString
             : 'Event occured on ${event.createdAt.month}/${event.createdAt.day}';

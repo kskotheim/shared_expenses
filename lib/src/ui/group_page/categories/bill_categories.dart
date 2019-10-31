@@ -6,7 +6,6 @@ import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/ui/group_page/categories/new_category_button.dart';
 
 class BillCategoryList extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
@@ -37,7 +36,25 @@ class BillCategoryList extends StatelessWidget {
                         .map((type) => ListTile(
                               title: Text(type),
                               trailing: IconButton(
-                                onPressed: () => groupBloc.deleteCategory(type),
+                                onPressed: () => showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(
+                                        'Are you sure you want to delete this category?'),
+                                    content: Text(
+                                        'Any bills currently entered under this category will not be affected by new modifiers, even if you create a new category with the same name'),
+                                    actions: <Widget>[
+                                      FlatButton(
+                                        child: Text('Cancel'),
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(),
+                                      ),
+                                      DeleteCategoryButton(deleteGroup: () async => groupBloc.deleteCategory(type),),
+                                    ],
+                                  ),
+                                ),
+
+                                //groupBloc.deleteCategory(type),
                                 icon: Icon(Icons.delete),
                               ),
                             ))
@@ -48,6 +65,32 @@ class BillCategoryList extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class DeleteCategoryButton extends StatefulWidget {
+  final Function deleteGroup;
+
+  DeleteCategoryButton({this.deleteGroup})
+      : assert(deleteGroup != null);
+
+  @override
+  _DeleteCategoryButtonState createState() => _DeleteCategoryButtonState();
+}
+
+class _DeleteCategoryButtonState extends State<DeleteCategoryButton> {
+  bool deleting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: Text(deleting ? 'Deleting ...' : 'Delete'),
+      onPressed: !deleting ? () async {
+        setState(() => deleting = true);
+        await widget.deleteGroup();
+        return Navigator.of(context).pop();
+      } : null,
     );
   }
 }

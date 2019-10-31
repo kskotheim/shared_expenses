@@ -3,6 +3,7 @@ import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/user_requests_bloc.dart';
+import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/ui/account_page/connect_account.dart';
 import 'package:shared_expenses/src/ui/account_page/create_account.dart';
 import 'package:shared_expenses/src/ui/account_page/select_account.dart';
@@ -15,8 +16,10 @@ class SelectAccountPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
+          Container(height: 10.0,),
+          Text('Shared Expenses', style: Style.titleTextStyle,),
           Container(
-            height: 10.0,
+            height: 30.0,
           ),
           SetUsernameWidget(),
           Container(
@@ -59,28 +62,28 @@ class EmailAddressWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text('Email: $email'),
+        Text('Email: $email', style: Style.regularTextStyle),
         Container(width: 30.0),
         InkWell(
           child: Container(
             padding: EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 5.0),
             decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5.0)), border: Border.all(color: Colors.brown), gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [Colors.redAccent, Colors.orangeAccent])),
-            child: Text('Logout'),
+            child: Text('Logout', style: Style.tinyTextStyle),
           ),
           onTap: () => showDialog(
               context: context,
               builder: (context) => SimpleDialog(
-                    title: Text('Logout?'),
+                    title: Text('Logout?', style: Style.titleTextStyle),
                     children: <Widget>[
                       FlatButton(
-                        child: Text('Logout'),
+                        child: Text('Logout', style: Style.regularTextStyle),
                         onPressed: (){
                           _authBloc.logout();
                           return Navigator.pop(context);
                         },
                       ),
                       FlatButton(
-                        child: Text('Cancel'),
+                        child: Text('Cancel', style: Style.regularTextStyle),
                         onPressed: () => Navigator.pop(context),
                       )
                     ],
@@ -109,11 +112,11 @@ class ConnectionRequestsSection extends StatelessWidget {
           return Column(
             children: <Widget>[
               snapshot.data.length != 0
-                  ? Text('Connection Requests: ')
+                  ? Text('Connection Requests: ', style: Style.regularTextStyle)
                   : Container(),
               Column(
                 children:
-                    snapshot.data.map((request) => Text(request)).toList(),
+                    snapshot.data.map((request) => Text(request, style: Style.regularTextStyle)).toList(),
               ),
             ],
           );

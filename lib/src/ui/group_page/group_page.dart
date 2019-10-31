@@ -3,6 +3,7 @@ import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
+import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/ui/group_page/account_management.dart';
 import 'package:shared_expenses/src/ui/group_page/events.dart';
 import 'package:shared_expenses/src/ui/group_page/new_event/new_event.dart';
@@ -53,6 +54,7 @@ class GroupHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
 
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
+    AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
 
     return Stack(
       children: <Widget>[
@@ -61,8 +63,14 @@ class GroupHomePage extends StatelessWidget {
             Expanded(
               flex: 1,
               child: Center(
-                child: Text(groupBloc.currentAccount.accountName,
-                    style: TextStyle(fontSize: 25.0)),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(groupBloc.currentAccount.accountName,
+                        style: Style.titleTextStyle),
+                        Text('${accountBloc.currentUser.userName} - ${groupBloc.isGroupOwner ? 'Group Owner' : 'Group Member'}', style: Style.tinyTextStyle,),
+                  ],
+                ),
               ),
             ),
             Expanded(

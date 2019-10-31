@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/event.dart';
+import 'package:shared_expenses/src/res/util.dart';
 
 class NewEventBloc implements BlocBase {
   final Repository _repo = Repository.getRepo;
@@ -44,6 +46,12 @@ class NewEventBloc implements BlocBase {
     _selectedOption = section;
     return section;
   }
+
+  // Whether to show confirm dialog
+  StreamController<bool> _showConfirmationController = StreamController<bool>();
+  Stream<bool> get showConfirmationStream => _showConfirmationController.stream;
+  void showConfirmation() => _showConfirmationController.sink.add(true);
+  void hideConfirmation() => _showConfirmationController.sink.add(false);
 
   //Payment options:
   //User payment is to
@@ -190,6 +198,24 @@ void _checkIfBillPageIsValid() {
     return Future.delayed(Duration(seconds: 0));
   }
 
+  List<Widget> selectedEventDetails(){
+    if(_selectedOption is ShowBillSection){
+      return <Widget>[
+        Text('Bill'),
+        Text('Amount: \$${_billAmount.toStringAsFixed(2)}' ),
+        Text('Type: $_billType'),
+        Text('From: ${parseDateTime(_fromDate) ?? 'Current'}'),
+        Text('To: ${parseDateTime(_toDate) ?? 'Current'}'),
+      ];
+    } else {
+      return <Widget>[
+        Text('Payment'),
+        Text('Amount: \$${_billAmount.toStringAsFixed(2)}' ),
+        Text('To: ${groupBloc.userName(_selectedUser)}'),
+      ];
+    }
+  }
+
   @override
   void dispose() {
     _selectedUserController.close();
@@ -202,6 +228,7 @@ void _checkIfBillPageIsValid() {
     _selectedTypeController.close();
     _billPageValidator.close();
     _billNotesController.close();
+    _showConfirmationController.close();
   }
 }
 

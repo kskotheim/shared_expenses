@@ -38,7 +38,7 @@ class AuthBloc implements BlocBase {
   }
 
   //login state
-  bool _creatingNewAccount = false;
+  bool _creatingNewAccount = true;
   bool get creatingNewAccount => _creatingNewAccount;
   void goToCreateAccount() => _creatingNewAccount = !_creatingNewAccount;
 

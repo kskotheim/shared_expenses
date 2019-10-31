@@ -73,16 +73,16 @@ class NewUserModifierBloc implements BlocBase {
 
   // Number of shares
   BehaviorSubject<String> _sharesController = BehaviorSubject<String>();
-  Stream<num> get shares => _sharesController.stream.map(_saveShares);
+  Stream<String> get shares => _sharesController.stream.map(_saveShares);
   Function get setShares => _sharesController.sink.add;
 
-  num _saveShares(String shares) {
+  String _saveShares(String shares) {
     if (shares.length > 0)
       _shares = double.parse(shares);
     else
       _shares = null;
     _validateModifier();
-    return _shares;
+    return shares;
   }
 
   // Modifier from date
@@ -131,9 +131,8 @@ class NewUserModifierBloc implements BlocBase {
 
   NewUserModifierBloc({this.groupBloc}) {
     assert(groupBloc != null);
-    print('building new user modifier bloc');
     groupBloc.billTypes.forEach((type) => _selectedCategories[type] = false);
-
+    setShares('');
     _updateSelectedCategoriesStream();
     _selectCategoryController.stream.listen(_selectSpecificCategory);
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:shared_expenses/src/res/style.dart';
 
 class ConnectAccountSection extends StatefulWidget {
   @override
@@ -33,7 +34,7 @@ class _ConnectAccountSectionState extends State<ConnectAccountSection> {
         child: Column(
           children: <Widget>[
             Icon(Icons.transit_enterexit),
-            Text('Connect To Account'),
+            Text('Connect To Account', style: Style.regularTextStyle),
           ],
         ),
       ),
@@ -45,10 +46,11 @@ class _ConnectAccountSectionState extends State<ConnectAccountSection> {
 
     return Column(
       children: <Widget>[
-        Text("Request Connection To:"),
+        Text("Request Connection To:", style: Style.regularTextStyle),
         Container(
           width: 200.0,
           child: TextField(
+            style: Style.regularTextStyle,
             controller: _nameController,
           ),
         ),
@@ -56,14 +58,14 @@ class _ConnectAccountSectionState extends State<ConnectAccountSection> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             FlatButton(
-              child: Text('Submit'),
+              child: Text('Submit', style: Style.regularTextStyle,),
               //Send connect to account event to account bloc
               onPressed: () => _accountBloc.accountEvent.add(
                   AccountEventSendConnectionRequest(
                       accountName: _nameController.text)),
             ),
             FlatButton(
-              child: Text('Cancel'),
+              child: Text('Cancel', style: Style.regularTextStyle),
               onPressed: () {
                 setState(() {
                   _connectAccount = false;

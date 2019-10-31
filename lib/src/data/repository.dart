@@ -45,6 +45,8 @@ abstract class RepoInterface {
   Stream<List<AccountEvent>> accountEventStream(String accountId);
   Future<void> createAccountEvent(String accountId, AccountEvent event);
   Future<void> tabulateTotals(String accountId, List<User> users);
+  Future<void> deleteBill(String accountId, String billId);
+  Future<void> deletePayment(String accountId, String billId);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
   Stream<List<Map<String, dynamic>>> connectionRequests(String accountId);
@@ -206,7 +208,7 @@ class Repository implements RepoInterface {
   Stream<List<Payment>> paymentStream(String accountId) {
     return _db.paymentStream(accountId).map((snapshot) => snapshot
         .documents
-        .map((document) => Payment.fromJson(document.data))
+        .map((document) => Payment.fromJson(document))
         .toList());
   }
 
@@ -215,7 +217,7 @@ class Repository implements RepoInterface {
 
   Stream<List<Bill>> billStream(String accountId) {
     return _db.billStream(accountId).map((snapshot) => snapshot.documents
-        .map((document) => Bill.fromJson(document.data))
+        .map((document) => Bill.fromJson(document))
         .toList());
   }
 
@@ -256,9 +258,9 @@ class Repository implements RepoInterface {
 
     // instantiate bill, payment, and user modifier objects
     List<Bill> billObjs =
-        bills.map((bill) => Bill.fromJson(bill.data)).toList();
+        bills.map((bill) => Bill.fromJson(bill)).toList();
     List<Payment> paymentObjs =
-        payments.map((payment) => Payment.fromJson(payment.data)).toList();
+        payments.map((payment) => Payment.fromJson(payment)).toList();
     List<UserModifier> modifierObjs = userModifiers
         .map((modifier) => UserModifier.fromDocumentSnapshot(modifier))
         .toList();
@@ -357,6 +359,14 @@ class Repository implements RepoInterface {
     return _db.updateTotals(accountId, totals);
   }
 
+  Future<void> deleteBill(String accountId, String billId){
+    return _db.deleteBill(accountId, billId);
+  }
+
+  Future<void> deletePayment(String accountId, String paymentId){
+    return _db.deletePayment(accountId, paymentId);
+  }
+
   Future<void> createAccountConnectionRequest(
           String accountId, String userId) =>
       _db.createGroupConnectionRequest(accountId, userId);
@@ -380,7 +390,7 @@ class Repository implements RepoInterface {
 
   Future<List<Bill>> billsWhere(String accountId, String field, val) {
     return _db.billsWhere(accountId, field, val).then((snapshots) =>
-        snapshots.map((snapshot) => Bill.fromJson(snapshot.data)).toList());
+        snapshots.map((snapshot) => Bill.fromJson(snapshot)).toList());
   }
 
   Stream<List<String>> billTypeStream(String groupId) {
