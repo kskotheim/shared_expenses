@@ -170,8 +170,7 @@ class NewUserModifierBloc implements BlocBase {
               description:
                   '${groupBloc.userName(_selectedUser)} $_shares shares ${selectedCategories.isNotEmpty ? selectedCategories.join(', ') : ''} ${_fromDate != null ? parseDateTime(_fromDate) : 'Beginning'} to ${_toDate != null ? parseDateTime(_toDate) : 'End'}'),
         );
-        await _repo.tabulateTotals(
-            groupBloc.accountId, groupBloc.usersInAccount);
+        await _repo.tabulateTotals(groupBloc.accountId);
       }
     }
     return Future.delayed(Duration(seconds: 0));

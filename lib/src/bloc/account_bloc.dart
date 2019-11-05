@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
@@ -13,7 +14,7 @@ class AccountBloc implements BlocBase {
   //User info
   User currentUser;
   Map<String, String> accountNames;
-  List<String> get currentUserGroups => accountNames.keys.toList();
+  List<String> get currentUserGroups => accountNames?.keys?.toList();
 
   // current user's groups stream
 
@@ -42,13 +43,17 @@ class AccountBloc implements BlocBase {
   }
 
   void _recieveUserInfo(User user){
-    currentUser = user;
-    _goToAccountsOrSelect();
+    if(currentUser != user){
+      currentUser = user;
+      _goToAccountsOrSelect();
+    }
   }
 
-  void _setAccountNames(names) {
-    accountNames = names;
-    _goToAccountsOrSelect();
+  void _setAccountNames(Map<String, String> names) {
+    if(!listEquals(currentUserGroups, names.keys.toList())){
+      accountNames = names;
+      _goToAccountsOrSelect();
+    }
   }
 
   void _mapEventToState(AccountStateEvent event) {

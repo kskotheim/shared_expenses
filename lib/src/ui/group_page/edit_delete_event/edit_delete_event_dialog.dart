@@ -11,7 +11,7 @@ class EditDeleteEventDialog extends StatelessWidget {
   final GroupBloc groupBloc;
 
   EditDeleteEventDialog({this.editDeleteEventBloc, this.groupBloc})
-      : assert(editDeleteEventBloc != null);
+      : assert(editDeleteEventBloc != null, groupBloc != null);
 
   @override
   Widget build(BuildContext context) {

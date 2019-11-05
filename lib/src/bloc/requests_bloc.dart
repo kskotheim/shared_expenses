@@ -23,11 +23,9 @@ class RequestsBloc implements BlocBase {
   }
 
   void approveConnectionRequest(String userId) async {
-
     // this should be done by the user, not the administrator? or anyone can modify user document ...
     _repo.deleteConnectionRequest(accountId, userId);
     _repo.addUserToAccount(userId, accountId);
-    _repo.createAccountEvent(accountId, AccountEvent(userId: userId, actionTaken: 'added to account'));
   }
   
   void deleteConnectionRequest(String userId) async {

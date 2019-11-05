@@ -9,6 +9,7 @@ class User {
   String userName;
   List<String> connectionRequests;
   String email;
+  bool ghost = false;
 
   User({this.userId, this.userName, this.email}) : assert(userId != null);
 
@@ -18,6 +19,7 @@ class User {
       : userId = user.documentID,
         userName = user.data[NAME],
         email = user.data[EMAIL],
+        ghost = user.data[GHOST] ?? false,
         connectionRequests =
             List<String>.from(user.data[CONNECTION_REQUESTS] ?? []);
 }

@@ -4,7 +4,7 @@ import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/events_bloc.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
-import 'package:shared_expenses/src/ui/group_page/account_management.dart';
+import 'package:shared_expenses/src/ui/group_page/admin/account_management.dart';
 import 'package:shared_expenses/src/ui/group_page/events.dart';
 import 'package:shared_expenses/src/ui/group_page/new_event/new_event.dart';
 import 'package:shared_expenses/src/ui/group_page/totals.dart';

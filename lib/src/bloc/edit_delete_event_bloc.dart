@@ -61,7 +61,7 @@ class EditDeleteEventBloc implements BlocBase {
   Future<void> deleteBill(Bill bill) async {
     if (!deleting) {
       deleting = true;
-      return Future.wait([
+      await Future.wait([
         repo.deleteBill(groupBloc.accountId, bill.billId),
         repo.createAccountEvent(
             groupBloc.accountId,
@@ -69,6 +69,7 @@ class EditDeleteEventBloc implements BlocBase {
                 userId: groupBloc.userId,
                 actionTaken: 'deleted \$${bill.amount.round()} ${bill.type} bill'))
       ]);
+      return repo.tabulateTotals(groupBloc.accountId);
     }
   }
 
@@ -76,7 +77,7 @@ class EditDeleteEventBloc implements BlocBase {
     if (!deleting) {
       deleting = true;
 
-      return Future.wait([
+      await Future.wait([
         repo.deletePayment(groupBloc.accountId, payment.paymentId),
         repo.createAccountEvent(
             groupBloc.accountId,
@@ -85,6 +86,7 @@ class EditDeleteEventBloc implements BlocBase {
                 actionTaken:
                     'deleted \$${payment.amount.round()} payment by ${groupBloc.userName(payment.fromUserId)}'))
       ]);
+      return repo.tabulateTotals(groupBloc.accountId);
     }
   }
 

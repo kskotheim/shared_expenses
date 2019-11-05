@@ -26,6 +26,8 @@ abstract class RepoInterface {
   Stream<Map<String, num>> totalsStream(String accountId);
 
   Future<void> createUser(String userId, String email);
+  Future<void> createGhostUser(String accountId, String name);
+  Future<void> deleteGhostUser(String userId, String adminUserId, String accountId);
   Future<User> getUserFromDb(String userId);
   Stream<User> currentUserStream(String userId);
   Stream<List<User>> userStream(String accountId);
@@ -44,7 +46,7 @@ abstract class RepoInterface {
   Future<void> createBill(String accountId, Bill bill);
   Stream<List<AccountEvent>> accountEventStream(String accountId);
   Future<void> createAccountEvent(String accountId, AccountEvent event);
-  Future<void> tabulateTotals(String accountId, List<User> users);
+  Future<void> tabulateTotals(String accountId);
   Future<void> deleteBill(String accountId, String billId);
   Future<void> deletePayment(String accountId, String billId);
 
@@ -148,6 +150,29 @@ class Repository implements RepoInterface {
 
   Future<void> createUser(String userId, String email) =>
       _db.createUser(userId, email);
+
+  Future<void> createGhostUser(String accountId, String name) async {
+    String ghostUserId = await _db.createGhostUser(name);
+    return addUserToAccount(ghostUserId, accountId);
+  }
+
+  Future<void> deleteGhostUser(String userId, String adminUserId, String accountId) async {
+    return Future.wait([
+      // delete modifiers
+      _db.getModifiersWhere(accountId, USER, userId).then((documents) => Future.wait(documents.map((document) => _db.deleteUserModifier(accountId, document.documentID)))),
+      // delete payments
+      _db.paymentsWhere(accountId, 'fromUserId', userId).then((documents) => Future.wait(documents.map((document) => _db.deletePayment(accountId, document.documentID)))),
+      _db.paymentsWhere(accountId, 'toUserId', userId).then((documents) => Future.wait(documents.map((document) => _db.deletePayment(accountId, document.documentID)))),
+      // delete bills
+      _db.billsWhere(accountId, 'paidByUserId', userId).then((documents) => Future.wait(documents.map((document) => _db.deleteBill(accountId, document.documentID)))),
+      //delete events
+      _db.accountEventsWhere(accountId, 'userId', userId).then((documents) => Future.wait(documents.map((document) => _db.deleteAccountEvent(accountId, document.documentID)))),
+      _db.createAccountEvent(accountId, AccountEvent(userId: adminUserId, actionTaken: 'removed ghost user').toJson()),
+      _db.removeUserFromGroup(userId, accountId),
+      _db.deleteUser(userId),
+    ]);
+  }
+
   Future<User> getUserFromDb(String userId) =>
       _db.getUser(userId).then((user) => User.fromDocumentSnapshot(user));
 
@@ -168,8 +193,12 @@ class Repository implements RepoInterface {
 
   Future<void> updateUserName(String userId, String name) =>
       _db.updateUser(userId, NAME, name);
-  Future<void> addUserToAccount(String userId, String accountId) =>
-      _db.addGroupToUser(userId, accountId);
+
+  Future<void> addUserToAccount(String userId, String accountId) async {
+    await createAccountEvent(accountId,
+        AccountEvent(userId: userId, actionTaken: 'added to account'));
+    return _db.addGroupToUser(userId, accountId);
+  }
 
   Future<List<User>> usersWhere(String field, val) {
     return _db.getUsersWhere(field, val).then((documents) => documents
@@ -182,7 +211,9 @@ class Repository implements RepoInterface {
     await createAccountEvent(
         accountId,
         AccountEvent(
-            userId: modifier.userId, actionTaken: ' modifier created', secondaryString: modifier.description));
+            userId: modifier.userId,
+            actionTaken: ' modifier created',
+            secondaryString: modifier.description));
     return _db.createUserModifier(accountId, modifier.toJson());
   }
 
@@ -194,7 +225,9 @@ class Repository implements RepoInterface {
     await createAccountEvent(
         accountId,
         AccountEvent(
-            userId: modifier.userId, actionTaken: ' modifier removed', secondaryString: modifier.description));
+            userId: modifier.userId,
+            actionTaken: ' modifier removed',
+            secondaryString: modifier.description));
     return _db.deleteUserModifier(accountId, modifier.modifierId);
   }
 
@@ -206,8 +239,7 @@ class Repository implements RepoInterface {
   }
 
   Stream<List<Payment>> paymentStream(String accountId) {
-    return _db.paymentStream(accountId).map((snapshot) => snapshot
-        .documents
+    return _db.paymentStream(accountId).map((snapshot) => snapshot.documents
         .map((document) => Payment.fromJson(document))
         .toList());
   }
@@ -216,9 +248,8 @@ class Repository implements RepoInterface {
       _db.createPayment(accountId, payment.toJson());
 
   Stream<List<Bill>> billStream(String accountId) {
-    return _db.billStream(accountId).map((snapshot) => snapshot.documents
-        .map((document) => Bill.fromJson(document))
-        .toList());
+    return _db.billStream(accountId).map((snapshot) =>
+        snapshot.documents.map((document) => Bill.fromJson(document)).toList());
   }
 
   Future<void> createBill(String accountId, Bill bill) =>
@@ -234,31 +265,32 @@ class Repository implements RepoInterface {
   Future<void> createAccountEvent(String accountId, AccountEvent event) =>
       _db.createAccountEvent(accountId, event.toJson());
 
-  Future<void> tabulateTotals(String accountId, List<User> users) async {
-    List<List<DocumentSnapshot>> futuresAwaited = await Future.wait([
+  Future<void> tabulateTotals(String accountId) async {
+    List<List<dynamic>> futuresAwaited = await Future.wait([
       _db.allBills(accountId),
       _db.allPayments(accountId),
-      _db.allUserModifiers(accountId)
+      _db.allUserModifiers(accountId),
+      _db.usersStream(accountId).first
     ]);
 
     List<DocumentSnapshot> bills = futuresAwaited[0];
     List<DocumentSnapshot> payments = futuresAwaited[1];
     List<DocumentSnapshot> userModifiers = futuresAwaited[2];
+    List<String> userIds = futuresAwaited[3];
 
     //initiate totals arrays
     Map<String, num> totals = {};
     Map<String, num> paymentTotals = {};
     Map<String, num> billTotals = {};
 
-    users.forEach((user) {
-      totals[user.userId] = 0;
-      paymentTotals[user.userId] = 0;
-      billTotals[user.userId] = 0;
+    userIds.forEach((user) {
+      totals[user] = 0;
+      paymentTotals[user] = 0;
+      billTotals[user] = 0;
     });
 
     // instantiate bill, payment, and user modifier objects
-    List<Bill> billObjs =
-        bills.map((bill) => Bill.fromJson(bill)).toList();
+    List<Bill> billObjs = bills.map((bill) => Bill.fromJson(bill)).toList();
     List<Payment> paymentObjs =
         payments.map((payment) => Payment.fromJson(payment)).toList();
     List<UserModifier> modifierObjs = userModifiers
@@ -328,8 +360,8 @@ class Repository implements RepoInterface {
 
     // for each bill, calculate total shares and apply each user's obligation and the user who paid the bill
     billObjs.forEach((bill) {
-      Map<String, double> userShares = Map<String, double>.fromIterable(users,
-          key: (user) => user.userId, value: (user) => 1);
+      Map<String, double> userShares = Map<String, double>.fromIterable(userIds,
+          key: (user) => user, value: (user) => 1);
       modifierObjs.forEach((modifier) {
         if (modifier.intersectsWithBill(bill)) {
           if (modifier.categories == null ||
@@ -342,13 +374,13 @@ class Repository implements RepoInterface {
       if (totalShares == 0) return;
       num costPerShare = bill.amount / totalShares;
       totals[bill.paidByUserId] -= bill.amount;
-      users.forEach((user) {
-        totals[user.userId] += userShares[user.userId] * costPerShare;
+      userIds.forEach((user) {
+        totals[user] += userShares[user] * costPerShare;
       });
     });
 
     // apply payment totals
-    totals.keys.forEach((user){
+    totals.keys.forEach((user) {
       totals[user] += paymentTotals[user];
     });
 
@@ -359,11 +391,11 @@ class Repository implements RepoInterface {
     return _db.updateTotals(accountId, totals);
   }
 
-  Future<void> deleteBill(String accountId, String billId){
+  Future<void> deleteBill(String accountId, String billId) {
     return _db.deleteBill(accountId, billId);
   }
 
-  Future<void> deletePayment(String accountId, String paymentId){
+  Future<void> deletePayment(String accountId, String paymentId) {
     return _db.deletePayment(accountId, paymentId);
   }
 

@@ -59,7 +59,9 @@ class NewEventBloc implements BlocBase {
   Stream<String> get selectedUser =>
       _selectedUserController.stream.map(_saveUser);
   Function get selectUser => _selectedUserController.sink.add;
-  String get selectedUserName => groupBloc.usersInAccount.firstWhere((user) => user.userId == _selectedUser).userName;
+  String get selectedUserName => groupBloc.usersInAccount
+      .firstWhere((user) => user.userId == _selectedUser)
+      .userName;
 
   String _saveUser(String user) {
     _selectedUser = user;
@@ -71,8 +73,10 @@ class NewEventBloc implements BlocBase {
   BehaviorSubject<double> _billAmountController = BehaviorSubject<double>();
   Stream<double> get billAmount =>
       _billAmountController.stream.map(_saveAmount);
-  void newBillAmount(String amt) =>
-      _billAmountController.sink.add(double.parse(amt));
+  void newBillAmount(String amt) {
+    if(amt == '') return _billAmountController.sink.add(0);
+    _billAmountController.sink.add(double.parse(amt));
+  }
 
   double _saveAmount(double amount) {
     _billAmount = amount;
@@ -91,6 +95,7 @@ class NewEventBloc implements BlocBase {
     _paymentNotes = notes;
     return notes;
   }
+
   BehaviorSubject<String> _billNotesController = BehaviorSubject<String>();
   Stream<String> get billNotes =>
       _billNotesController.stream.map(_saveBillNotes);
@@ -102,7 +107,6 @@ class NewEventBloc implements BlocBase {
   }
   //Bill options:
   //Bill type
-
 
   BehaviorSubject<String> _selectedTypeController = BehaviorSubject<String>();
   Stream<String> get selectedType =>
@@ -126,6 +130,7 @@ class NewEventBloc implements BlocBase {
 
   DateTime _saveFromDate(DateTime fromDate) {
     _fromDate = fromDate;
+    _checkIfBillPageIsValid();
     return fromDate;
   }
 
@@ -136,6 +141,7 @@ class NewEventBloc implements BlocBase {
 
   DateTime _saveToDate(DateTime toDate) {
     _toDate = toDate;
+    _checkIfBillPageIsValid();
     return toDate;
   }
 
@@ -151,12 +157,22 @@ class NewEventBloc implements BlocBase {
   Stream get billPageValidated => _billPageValidator.stream;
 
   void _checkIfPaymentPageIsValid() {
-    if (_selectedUser != null && _billAmount != null)
-      _paymentPageValidator.sink.add(true);
+    if (_selectedUser != null && _billAmount != null && _billAmount > 0)
+      return _paymentPageValidator.sink.add(true);
+
+    _paymentPageValidator.sink.add(false);
   }
-void _checkIfBillPageIsValid() {
-    if (_billType != null && _billAmount != null)
-      _billPageValidator.sink.add(true);
+
+  void _checkIfBillPageIsValid() {
+    if (_billType != null &&
+        _billAmount != null &&
+        _billAmount > 0) if ((_fromDate == null ||
+            _toDate == null) ||
+        _fromDate.isBefore(_toDate) ||
+        _fromDate.isAtSameMomentAs(_toDate))
+      return _billPageValidator.sink.add(true);
+
+    _billPageValidator.sink.add(false);
   }
 
   Future<void> submitInfo() {
@@ -175,8 +191,7 @@ void _checkIfBillPageIsValid() {
                       createdAt: DateTime.now(),
                       fromDate: _fromDate,
                       toDate: _toDate))
-              .then((_) => _repo.tabulateTotals(
-                  groupBloc.accountId, groupBloc.usersInAccount));
+              .then((_) => _repo.tabulateTotals(groupBloc.accountId));
         } else
           return Future.delayed(Duration(seconds: 0));
       } else if (_selectedOption is ShowPaymentSection) {
@@ -190,19 +205,18 @@ void _checkIfBillPageIsValid() {
                       amount: _billAmount,
                       notes: _paymentNotes,
                       createdAt: DateTime.now()))
-              .then((_) => _repo.tabulateTotals(
-                  groupBloc.accountId, groupBloc.usersInAccount));
-        } 
-      } 
+              .then((_) => _repo.tabulateTotals(groupBloc.accountId));
+        }
+      }
     }
     return Future.delayed(Duration(seconds: 0));
   }
 
-  List<Widget> selectedEventDetails(){
-    if(_selectedOption is ShowBillSection){
+  List<Widget> selectedEventDetails() {
+    if (_selectedOption is ShowBillSection) {
       return <Widget>[
         Text('Bill'),
-        Text('Amount: \$${_billAmount.toStringAsFixed(2)}' ),
+        Text('Amount: \$${_billAmount.toStringAsFixed(2)}'),
         Text('Type: $_billType'),
         Text('From: ${parseDateTime(_fromDate) ?? 'Current'}'),
         Text('To: ${parseDateTime(_toDate) ?? 'Current'}'),
@@ -210,7 +224,7 @@ void _checkIfBillPageIsValid() {
     } else {
       return <Widget>[
         Text('Payment'),
-        Text('Amount: \$${_billAmount.toStringAsFixed(2)}' ),
+        Text('Amount: \$${_billAmount.toStringAsFixed(2)}'),
         Text('To: ${groupBloc.userName(_selectedUser)}'),
       ];
     }
@@ -237,4 +251,3 @@ class BillOrPaymentSection {}
 class ShowBillSection extends BillOrPaymentSection {}
 
 class ShowPaymentSection extends BillOrPaymentSection {}
-

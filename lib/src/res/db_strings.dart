@@ -17,6 +17,7 @@ const String EMAIL = 'Email';
 const String ID = 'Id';
 const String TOTALS = 'Totals';
 const String BILL_TYPES = 'Bill_Types';
+const String GHOST = 'Ghost';
 
 
 const String FROM = 'From';

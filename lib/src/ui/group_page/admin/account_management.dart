@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/edit_delete_event_bloc.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
+import 'package:shared_expenses/src/bloc/new_ghost_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
+import 'package:shared_expenses/src/ui/group_page/admin/ghost_user_dialog.dart';
 import 'package:shared_expenses/src/ui/group_page/categories/bill_categories.dart';
 import 'package:shared_expenses/src/ui/group_page/edit_delete_event/edit_delete_event_dialog.dart';
 import 'package:shared_expenses/src/ui/group_page/user_modifiers/user_modifiers.dart';
@@ -38,7 +40,8 @@ class AccountManager extends StatelessWidget {
                       backgroundColor: Colors.red,
                       onPressed: () => showDialog(
                         builder: (newContext) {
-                          EditDeleteEventBloc editDeleteBloc = EditDeleteEventBloc(groupBloc: groupBloc);
+                          EditDeleteEventBloc editDeleteBloc =
+                              EditDeleteEventBloc(groupBloc: groupBloc);
                           return EditDeleteEventDialog(
                             editDeleteEventBloc: editDeleteBloc,
                             groupBloc: groupBloc,
@@ -46,6 +49,21 @@ class AccountManager extends StatelessWidget {
                         },
                         context: context,
                       ),
+                    ),
+                  ),
+                  Padding(
+                    padding: Style.floatingActionPadding,
+                    child: FloatingActionButton(
+                      heroTag: 'ghost_users',
+                      child: Icon(Icons.supervised_user_circle),
+                      backgroundColor: Colors.blueGrey.shade300,
+                      onPressed: () => showDialog(
+                          context: context,
+                          builder: (newContext) {
+                            NewGhostBloc newGhostBloc = NewGhostBloc(groupBloc: groupBloc);
+                            return GhostUserDialog(
+                                groupBloc: groupBloc, ghostBloc: newGhostBloc);
+                          }),
                     ),
                   ),
                   Padding(
@@ -66,3 +84,4 @@ class AccountManager extends StatelessWidget {
     );
   }
 }
+

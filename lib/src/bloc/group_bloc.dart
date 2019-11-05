@@ -110,7 +110,7 @@ class GroupBloc implements BlocBase {
 
   //for debugging
   void tabulateTotals(){
-    repo.tabulateTotals(accountId, _usersInAccount).then((_) => print('tabulated'));
+    repo.tabulateTotals(accountId).then((_) => print('tabulated'));
   }
 
 }

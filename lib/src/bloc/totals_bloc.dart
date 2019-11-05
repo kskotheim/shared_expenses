@@ -28,7 +28,7 @@ class TotalsBloc implements BlocBase {
 
   void _addUsers(List<User> users) {
     _users = users;
-
+    
     _checkAndPropagateTotals();
   }
 
