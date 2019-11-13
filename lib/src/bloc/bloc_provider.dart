@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 //This class is a generic bloc provider from https://www.didierboelens.com/2018/08/reactive-programming---streams---bloc/
 //it allows easy access to the blocs by ancestor widgets and handles calling their dispose method
+// it ought to be replaced with the Provider package, which does essentially the same thing
 
 class BlocProvider<T extends BlocBase> extends StatefulWidget {
   BlocProvider({

@@ -40,11 +40,13 @@ abstract class DB {
   Future<void> createPayment(String accountId, Map<String, dynamic> payment);
   Stream<QuerySnapshot> paymentStream(String accountId);
   Future<List<DocumentSnapshot>> allPayments(String accountId);
+  Future<void> updatePayment(String accountId, String paymentId, Map<String, dynamic> paymentData);
   Future<void> deletePayment(String accountId, String paymentId);
 
   Future<void> createBill(String accountId, Map<String, dynamic> bill);
   Stream<QuerySnapshot> billStream(String accountId);
   Future<List<DocumentSnapshot>> allBills(String accountId);
+  Future<void> updateBill(String accountId, String billId, Map<String, dynamic> billData);
   Future<void> deleteBill(String accountId, String billId);
 
   Future<void> createAccountEvent(String accountId, Map<String, dynamic> event);
@@ -298,6 +300,10 @@ class DatabaseManager implements DB {
         .then((snapshot) => snapshot.documents);
   }
 
+  Future<void> updatePayment(String accountId, String paymentId, Map<String, dynamic> paymentData){
+    return _account(accountId).collection(PAYMENTS).document(paymentId).updateData(paymentData);
+  }
+
   Future<void> deletePayment(String accountId, String paymentId) async {
     return _account(accountId)
         .collection(PAYMENTS)
@@ -321,6 +327,10 @@ class DatabaseManager implements DB {
         .collection(BILLS)
         .getDocuments()
         .then((snapshot) => snapshot.documents);
+  }
+
+  Future<void> updateBill(String accountId, String billId, Map<String, dynamic> billData)async {
+    return _account(accountId).collection(BILLS).document(billId).updateData(billData);
   }
 
   Future<void> deleteBill(String accountId, String billId) async {

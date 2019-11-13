@@ -37,7 +37,7 @@ class AccountListTile extends StatelessWidget {
         
         child: Container(
           padding: EdgeInsets.fromLTRB(32.0, 15.0, 32.0, 15.0),
-          decoration: BoxDecoration(border: Border.all(color: Colors.brown), borderRadius: BorderRadius.all(Radius.circular(12.0)), gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [Colors.greenAccent, Colors.lightBlueAccent])),
+          decoration: Style.selectAccountDecoration,
           child: Text(_accountBloc.accountNames[accountId] ?? 'error finding account', style: Style.boldSubTitleStyle,),
         ),
         onTap: () => _accountBloc.accountEvent

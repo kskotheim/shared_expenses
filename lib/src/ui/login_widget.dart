@@ -4,6 +4,7 @@ import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/login_page_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
+import 'package:shared_expenses/src/res/util.dart';
 
 class LoginWidget extends StatelessWidget {
   @override
@@ -48,9 +49,16 @@ class LoginWidget extends StatelessWidget {
                       style: Style.titleTextStyle,
                     ),
                     Container(
-                      height: 40.0,
+                      height: 10.0,
                     ),
-                    Text(creatingNewAccount ? 'Create New Account:' : 'Login:', style: Style.tinyTextStyle,),
+                    IconImage30Pct(),
+                    Container(
+                      height: 10.0,
+                    ),
+                    Text(
+                      creatingNewAccount ? 'Create New Account:' : 'Login:',
+                      style: Style.tinyTextStyle,
+                    ),
                     _nameField,
                     _passwordField,
                     creatingNewAccount ? _secondPasswordField : Container(),

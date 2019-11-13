@@ -69,7 +69,7 @@ class _SetUsernameWidgetState extends State<SetUsernameWidget> {
             child: Container(
               padding: EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 5.0),
               child: Text('Edit', style: Style.tinyTextStyle,),
-              decoration: BoxDecoration(border: Border.all(color: Colors.brown), borderRadius: BorderRadius.all(Radius.circular(5.0)), gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors:[Colors.orange, Colors.red])),
+              decoration: Style.editDeleteDecorationReverse,
             ),
           )
         ],

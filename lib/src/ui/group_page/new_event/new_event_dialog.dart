@@ -30,6 +30,7 @@ class NewEventDialog extends StatelessWidget {
                     if (snapshot.data is ShowBillSection)
                       sectionToShow = BillSection(
                         categories: groupBloc.billTypes,
+                        users: groupBloc.usersInAccount,
                       );
                     else if (snapshot.data is ShowPaymentSection)
                       sectionToShow = PaymentSection(

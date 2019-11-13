@@ -47,8 +47,11 @@ abstract class RepoInterface {
   Stream<List<AccountEvent>> accountEventStream(String accountId);
   Future<void> createAccountEvent(String accountId, AccountEvent event);
   Future<void> tabulateTotals(String accountId);
+
   Future<void> deleteBill(String accountId, String billId);
   Future<void> deletePayment(String accountId, String billId);
+  Future<void> updateBill(String accountId, String billId, Map<String, dynamic> billData);
+  Future<void> updatePayment(String accountId, String paymentId, Map<String, dynamic> paymentData);
 
   Future<void> createAccountConnectionRequest(String accountId, String userId);
   Stream<List<Map<String, dynamic>>> connectionRequests(String accountId);
@@ -372,6 +375,7 @@ class Repository implements RepoInterface {
       });
       num totalShares = userShares.values.reduce((a, b) => a + b);
       if (totalShares == 0) return;
+      // if total shares for this bill are greater than 0, 
       num costPerShare = bill.amount / totalShares;
       totals[bill.paidByUserId] -= bill.amount;
       userIds.forEach((user) {
@@ -391,13 +395,10 @@ class Repository implements RepoInterface {
     return _db.updateTotals(accountId, totals);
   }
 
-  Future<void> deleteBill(String accountId, String billId) {
-    return _db.deleteBill(accountId, billId);
-  }
-
-  Future<void> deletePayment(String accountId, String paymentId) {
-    return _db.deletePayment(accountId, paymentId);
-  }
+  Future<void> deleteBill(String accountId, String billId) => _db.deleteBill(accountId, billId);
+  Future<void> deletePayment(String accountId, String paymentId) => _db.deletePayment(accountId, paymentId);
+  Future<void> updatePayment(String accountId, String paymentId, Map<String, dynamic> paymentData) => _db.updatePayment(accountId, paymentId, paymentData);
+  Future<void> updateBill(String accountId, String billId, Map<String, dynamic> billData) => _db.updateBill(accountId, billId, billData);
 
   Future<void> createAccountConnectionRequest(
           String accountId, String userId) =>

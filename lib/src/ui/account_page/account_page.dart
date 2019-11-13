@@ -4,6 +4,7 @@ import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/user_requests_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
+import 'package:shared_expenses/src/res/util.dart';
 import 'package:shared_expenses/src/ui/account_page/connect_account.dart';
 import 'package:shared_expenses/src/ui/account_page/create_account.dart';
 import 'package:shared_expenses/src/ui/account_page/select_account.dart';
@@ -18,6 +19,7 @@ class SelectAccountPage extends StatelessWidget {
         children: <Widget>[
           Container(height: 10.0,),
           Text('Shared Expenses', style: Style.titleTextStyle,),
+          IconImage30Pct(),
           Container(
             height: 30.0,
           ),
@@ -67,7 +69,7 @@ class EmailAddressWidget extends StatelessWidget {
         InkWell(
           child: Container(
             padding: EdgeInsets.fromLTRB(12.0, 5.0, 12.0, 5.0),
-            decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5.0)), border: Border.all(color: Colors.brown), gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [Colors.redAccent, Colors.orangeAccent])),
+            decoration: Style.editDeleteDecoration,
             child: Text('Logout', style: Style.tinyTextStyle),
           ),
           onTap: () => showDialog(

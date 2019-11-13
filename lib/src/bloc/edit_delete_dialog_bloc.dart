@@ -1,32 +1,50 @@
 import 'dart:async';
 
+import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:shared_expenses/src/bloc/edit_event_bloc.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/event.dart';
 
-class EditDeleteEventBloc implements BlocBase {
+// This class manages the dialog that a user uses to select which bill or payment to edit or delete. 
+// It also has methods to interface with the repository and handle the updating and deleting of bills or expenses
+
+class EditDeleteDialogBloc implements BlocBase {
   final Repository repo = Repository.getRepo;
   final GroupBloc groupBloc;
-  bool deleting = false;
+  bool submitted = false;
+
+  EditEventBloc editEventBloc;
 
   //Stream to handle which dialog page to show
-  StreamController<StatusStreamType> _statusStreamController =
-      StreamController<StatusStreamType>();
+  BehaviorSubject<StatusStreamType> _statusStreamController =
+      BehaviorSubject<StatusStreamType>();
   Stream<StatusStreamType> get statusStream => _statusStreamController.stream;
   void initialized() => _statusStreamController.sink.add(StatusInitialized());
-  void editBill(Bill bill) =>
-      _statusStreamController.sink.add(StatusEditBill(bill));
-  void editPayment(Payment payment) =>
-      _statusStreamController.sink.add(StatusEditPayment(payment));
+
+  void editBill(Bill bill) {
+    editEventBloc.setEvent(bill);
+    return _statusStreamController.sink.add(StatusEditBill(bill));
+  }
+
+  void editPayment(Payment payment) {
+    editEventBloc.setEvent(payment);
+    return _statusStreamController.sink.add(StatusEditPayment(payment));
+  }
+
   void confirmDeleteBill(Bill bill) =>
       _statusStreamController.sink.add(StatusConfirmDeleteBill(bill));
   void confirmDeletePayment(Payment payment) =>
       _statusStreamController.sink.add(StatusConfirmDeletePayment(payment));
+  void confirmUpdateBill(Bill bill) =>
+      _statusStreamController.sink.add(StatusConfirmUpdateBill(bill));
+  void confirmUpdatePayment(Payment payment) =>
+      _statusStreamController.sink.add(StatusConfirmUpdatePayment(payment));
 
   //Stream to handle selecting between bill or payment
-  StreamController<EditOptionSelected> _billOrPaymentSelectedController =
-      StreamController<EditOptionSelected>();
+  BehaviorSubject<EditOptionSelected> _billOrPaymentSelectedController =
+      BehaviorSubject<EditOptionSelected>();
   Stream<EditOptionSelected> get billOrPaymentSelected =>
       _billOrPaymentSelectedController.stream;
   void selectPayment() =>
@@ -38,10 +56,12 @@ class EditDeleteEventBloc implements BlocBase {
   List<Bill> get theBills => _bills;
   List<Payment> get thePayments => _payments;
 
-  EditDeleteEventBloc({this.groupBloc}) {
+  EditDeleteDialogBloc({this.groupBloc}) {
+    assert(groupBloc != null);
     _statusStreamController.sink.add(StatusUninitialized());
     _getBills();
     _getPayments();
+    editEventBloc = EditEventBloc(groupBloc: groupBloc);
   }
 
   Future<void> _getBills() async {
@@ -59,23 +79,24 @@ class EditDeleteEventBloc implements BlocBase {
   }
 
   Future<void> deleteBill(Bill bill) async {
-    if (!deleting) {
-      deleting = true;
+    if (!submitted) {
+      submitted = true;
       await Future.wait([
         repo.deleteBill(groupBloc.accountId, bill.billId),
         repo.createAccountEvent(
             groupBloc.accountId,
             AccountEvent(
                 userId: groupBloc.userId,
-                actionTaken: 'deleted \$${bill.amount.round()} ${bill.type} bill'))
+                actionTaken:
+                    'deleted \$${bill.amount.round()} ${bill.type} bill'))
       ]);
       return repo.tabulateTotals(groupBloc.accountId);
     }
   }
 
   Future<void> deletePayment(Payment payment) async {
-    if (!deleting) {
-      deleting = true;
+    if (!submitted) {
+      submitted = true;
 
       await Future.wait([
         repo.deletePayment(groupBloc.accountId, payment.paymentId),
@@ -85,6 +106,41 @@ class EditDeleteEventBloc implements BlocBase {
                 userId: groupBloc.userId,
                 actionTaken:
                     'deleted \$${payment.amount.round()} payment by ${groupBloc.userName(payment.fromUserId)}'))
+      ]);
+      return repo.tabulateTotals(groupBloc.accountId);
+    }
+  }
+
+  Future<void> updateBill(Bill newBill) async {
+    if (!submitted) {
+      submitted = true;
+
+      await Future.wait([
+        repo.updateBill(groupBloc.accountId, newBill.billId, newBill.toJson()),
+        repo.createAccountEvent(
+            groupBloc.accountId,
+            AccountEvent(
+                userId: groupBloc.userId,
+                actionTaken:
+                    'updated \$${newBill.amount} ${newBill.type} bill'))
+      ]);
+      return repo.tabulateTotals(groupBloc.accountId);
+    }
+  }
+
+  Future<void> updatePayment(Payment newPayment) async {
+    if (!submitted) {
+      submitted = true;
+
+      await Future.wait([
+        repo.updatePayment(
+            groupBloc.accountId, newPayment.paymentId, newPayment.toJson()),
+        repo.createAccountEvent(
+            groupBloc.accountId,
+            AccountEvent(
+                userId: groupBloc.userId,
+                actionTaken:
+                    'updated \$${newPayment.amount} payment from ${groupBloc.userName(newPayment.fromUserId)} to ${groupBloc.userName(newPayment.toUserId)}')),
       ]);
       return repo.tabulateTotals(groupBloc.accountId);
     }
@@ -128,4 +184,14 @@ class StatusConfirmDeletePayment extends StatusStreamType {
 class StatusConfirmDeleteBill extends StatusStreamType {
   final Bill bill;
   StatusConfirmDeleteBill(this.bill);
+}
+
+class StatusConfirmUpdatePayment extends StatusStreamType {
+  final Payment payment;
+  StatusConfirmUpdatePayment(this.payment);
+}
+
+class StatusConfirmUpdateBill extends StatusStreamType {
+  final Bill bill;
+  StatusConfirmUpdateBill(this.bill);
 }

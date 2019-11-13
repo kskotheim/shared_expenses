@@ -50,7 +50,6 @@ String getMonthString(int month) {
 }
 
 class DateIcon extends StatelessWidget {
-
   final int month;
   final int day;
   final Color color;
@@ -77,6 +76,56 @@ class DateIcon extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+Future<DateTime> pickDate(BuildContext context) {
+  return showDatePicker(
+    context: context,
+    initialDate: DateTime.now(),
+    firstDate: DateTime.parse("20000101"),
+    lastDate: DateTime.parse("21001231"),
+  );
+}
+
+class LinearLoadingScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          IconImage30Pct(),
+          LinearProgressIndicator(),
+        ],
+      ),
+    );
+  }
+}
+
+class CircularLoadingScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          IconImage30Pct(),
+          CircularProgressIndicator(),
+        ],
+      ),
+    );
+  }
+}
+
+class IconImage30Pct extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Image(
+      image: AssetImage('assets/icon.png'),
+      height: MediaQuery.of(context).size.height * .3,
+      width: MediaQuery.of(context).size.height * .3,
     );
   }
 }

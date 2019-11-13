@@ -8,6 +8,8 @@ import 'package:shared_expenses/src/res/models/event.dart';
 import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/res/util.dart';
 
+// This class broadcasts the list of events to the events list widget and tracks how the user wants the events to be displayed / sorted
+
 class EventsBloc implements BlocBase {
   GroupBloc groupBloc;
   String _accountId;

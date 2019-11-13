@@ -10,8 +10,15 @@ class PaymentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
+
     return Column(
       children: <Widget>[
+        newEventBloc.groupBloc.isGroupOwner
+            ? FromUserSection(
+                users: users,
+              )
+            : Container(),
         ToUserSection(
           users: users,
         ),
@@ -20,6 +27,59 @@ class PaymentSection extends StatelessWidget {
         SubmitPaymentButton(),
       ],
     );
+  }
+}
+
+class FromUserSection extends StatefulWidget {
+  final List<User> users;
+
+  FromUserSection({this.users});
+
+  @override
+  _FromUserSectionState createState() => _FromUserSectionState();
+}
+
+class _FromUserSectionState extends State<FromUserSection> {
+  bool _showUserSelectionOption = false;
+
+  @override
+  Widget build(BuildContext context) {
+    NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
+
+    Widget usersList = Container(
+      child: StreamBuilder<String>(
+        stream: newEventBloc.adminSelectedUser,
+        builder: (context, snapshot) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text("From:"),
+              GridView.builder(
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: widget.users.length,
+                itemBuilder: (context, i) => FlatButton(
+                  color: snapshot.data == widget.users[i].userId
+                      ? Colors.greenAccent.shade200
+                      : null,
+                  onPressed: () =>
+                      newEventBloc.adminSelectUser(widget.users[i].userId),
+                  child: Text(widget.users[i].userName),
+                ),
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 100.0),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (_showUserSelectionOption) {
+      return usersList;
+    }
+    else {
+      return FlatButton(child: Text('(Payment From You)'), onPressed: () => setState(() => _showUserSelectionOption = true));
+    }
   }
 }
 
@@ -36,18 +96,25 @@ class ToUserSection extends StatelessWidget {
       child: StreamBuilder<String>(
         stream: newEventBloc.selectedUser,
         builder: (context, snapshot) {
-          return GridView.builder(
-            shrinkWrap: true,
-            itemCount: users.length,
-            itemBuilder: (context, i) => FlatButton(
-              color: snapshot.data == users[i].userId
-                  ? Colors.greenAccent.shade200
-                  : null,
-              onPressed: () => newEventBloc.selectUser(users[i].userId),
-              child: Text(users[i].userName),
-            ),
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 100.0),
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text('To:'),
+              GridView.builder(
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: users.length,
+                itemBuilder: (context, i) => FlatButton(
+                  color: snapshot.data == users[i].userId
+                      ? Colors.greenAccent.shade200
+                      : null,
+                  onPressed: () => newEventBloc.selectUser(users[i].userId),
+                  child: Text(users[i].userName),
+                ),
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 100.0),
+              ),
+            ],
           );
         },
       ),

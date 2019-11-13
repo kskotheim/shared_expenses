@@ -13,7 +13,8 @@ class Payment implements AnyEvent {
       this.toUserId,
       this.amount,
       this.createdAt,
-      this.notes}) {
+      this.notes,
+      this.paymentId}) {
     assert(fromUserId != null);
     assert(toUserId != null);
     assert(amount != null);
@@ -111,7 +112,8 @@ class Bill implements AnyEvent {
       this.notes,
       this.createdAt,
       this.toDate,
-      this.fromDate}) {
+      this.fromDate,
+      this.billId}) {
     assert(paidByUserId != null);
     assert(amount != null);
     assert(type != null);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/account_bloc.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
+import 'package:shared_expenses/src/res/util.dart';
 import 'package:shared_expenses/src/ui/account_page/account_page.dart';
 import 'package:shared_expenses/src/ui/group_page/group_page.dart';
 
@@ -27,17 +28,18 @@ class AccountRoot extends StatelessWidget {
             PageToDisplay pageToDisplay = snapshot.data;
 
             if (pageToDisplay is DisplayLoadingPage) {
-              return LinearProgressIndicator();
+              return LinearLoadingScreen();
             }
 
             if (pageToDisplay is DisplayGroupPage) {
-              return GroupPage(groupId: pageToDisplay.groupId);
+              return GroupPageRoot(groupId: pageToDisplay.groupId);
             }
 
             if (pageToDisplay is DisplaySelectAccountPage) {
               DisplaySelectAccountPage thisState = pageToDisplay;
-              if(thisState.error != null){
-                WidgetsBinding.instance.addPostFrameCallback((_) => _showErrorMessage(thisState.error));
+              if (thisState.error != null) {
+                WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => _showErrorMessage(thisState.error));
               }
               return SelectAccountPage();
             }
@@ -46,8 +48,8 @@ class AccountRoot extends StatelessWidget {
   }
 
   void _showErrorMessage(String error) {
-    scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(error),));
+    scaffoldKey.currentState.showSnackBar(SnackBar(
+      content: Text(error),
+    ));
   }
 }
-
-

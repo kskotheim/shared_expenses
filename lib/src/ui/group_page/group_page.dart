@@ -11,11 +11,11 @@ import 'package:shared_expenses/src/ui/group_page/totals.dart';
 
 import 'buttons.dart';
 
-class GroupPage extends StatelessWidget {
+class GroupPageRoot extends StatelessWidget {
   final String groupId;
   EventsBloc _eventsBloc;
 
-  GroupPage({this.groupId}) : assert(groupId != null);
+  GroupPageRoot({this.groupId}) : assert(groupId != null);
 
   @override
   Widget build(BuildContext context) {
@@ -32,27 +32,26 @@ class GroupPage extends StatelessWidget {
       child: BlocProvider(
         bloc: _eventsBloc,
         child: StreamBuilder<GroupPageToShow>(
-            stream: groupBloc.groupPageToShowStream,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return CircularProgressIndicator();
+          stream: groupBloc.groupPageToShowStream,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return CircularProgressIndicator();
 
-              if (snapshot.data is ShowGroupHomePage) {
-                return GroupHomePage();
-              }
-              if (snapshot.data is ShowGroupAdminPage) {
-                return AccountManager();
-              }
-            }),
+            if (snapshot.data is ShowGroupHomePage) {
+              return GroupHomePage();
+            }
+            if (snapshot.data is ShowGroupAdminPage) {
+              return AccountManager();
+            }
+          },
+        ),
       ),
     );
   }
 }
 
 class GroupHomePage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
-
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
     AccountBloc accountBloc = BlocProvider.of<AccountBloc>(context);
 
@@ -68,7 +67,10 @@ class GroupHomePage extends StatelessWidget {
                   children: <Widget>[
                     Text(groupBloc.currentAccount.accountName,
                         style: Style.titleTextStyle),
-                        Text('${accountBloc.currentUser.userName} - ${groupBloc.isGroupOwner ? 'Group Owner' : 'Group Member'}', style: Style.tinyTextStyle,),
+                    Text(
+                      '${accountBloc.currentUser.userName} - ${groupBloc.isGroupOwner ? 'Group Owner' : 'Group Member'}',
+                      style: Style.tinyTextStyle,
+                    ),
                   ],
                 ),
               ),
@@ -112,7 +114,6 @@ class TabulateTotalsButton extends StatelessWidget {
       color: Colors.red,
       icon: Icon(Icons.refresh),
       onPressed: groupBloc.tabulateTotals,
-      
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
-import 'package:shared_expenses/src/bloc/edit_delete_event_bloc.dart';
+import 'package:shared_expenses/src/bloc/edit_delete_dialog_bloc.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/new_ghost_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
@@ -38,17 +38,19 @@ class AccountManager extends StatelessWidget {
                       heroTag: 'edit_delete_event',
                       child: Icon(Icons.edit),
                       backgroundColor: Colors.red,
-                      onPressed: () => showDialog(
-                        builder: (newContext) {
-                          EditDeleteEventBloc editDeleteBloc =
-                              EditDeleteEventBloc(groupBloc: groupBloc);
-                          return EditDeleteEventDialog(
-                            editDeleteEventBloc: editDeleteBloc,
-                            groupBloc: groupBloc,
-                          );
-                        },
-                        context: context,
-                      ),
+                      onPressed: () {
+                        EditDeleteDialogBloc editDeleteBloc =
+                            EditDeleteDialogBloc(groupBloc: groupBloc);
+                        return showDialog(
+                          builder: (newContext) {
+                            return EditDeleteEventDialog(
+                              editDeleteEventBloc: editDeleteBloc,
+                              groupBloc: groupBloc,
+                            );
+                          },
+                          context: context,
+                        );
+                      },
                     ),
                   ),
                   Padding(
@@ -57,13 +59,17 @@ class AccountManager extends StatelessWidget {
                       heroTag: 'ghost_users',
                       child: Icon(Icons.supervised_user_circle),
                       backgroundColor: Colors.blueGrey.shade300,
-                      onPressed: () => showDialog(
-                          context: context,
-                          builder: (newContext) {
-                            NewGhostBloc newGhostBloc = NewGhostBloc(groupBloc: groupBloc);
-                            return GhostUserDialog(
-                                groupBloc: groupBloc, ghostBloc: newGhostBloc);
-                          }),
+                      onPressed: () {
+                        NewGhostBloc newGhostBloc =
+                            NewGhostBloc(groupBloc: groupBloc);
+                        return showDialog(
+                            context: context,
+                            builder: (newContext) {
+                              return GhostUserDialog(
+                                  groupBloc: groupBloc,
+                                  ghostBloc: newGhostBloc);
+                            });
+                      },
                     ),
                   ),
                   Padding(
@@ -84,4 +90,3 @@ class AccountManager extends StatelessWidget {
     );
   }
 }
-

@@ -6,6 +6,10 @@ import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
 
+// This class is used by the account bloc to interface with the auth repository. It logs the user in or out 
+// and manages a stream, authStream, to broadcast that information
+// This stream is listened to by the root widget to determine whether to show the login page
+
 class AuthBloc implements BlocBase {
 
   final Repository repo = Repository.getRepo;
@@ -38,11 +42,12 @@ class AuthBloc implements BlocBase {
   }
 
   //login state
-  bool _creatingNewAccount = true;
+  bool _creatingNewAccount;
   bool get creatingNewAccount => _creatingNewAccount;
   void goToCreateAccount() => _creatingNewAccount = !_creatingNewAccount;
 
   AuthBloc(){
+    _creatingNewAccount = false;
     _authEventSink.add(AppStartEvent());
     _authInputController.stream.listen(_mapEventToState);
   }

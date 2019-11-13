@@ -237,15 +237,6 @@ class SelectDatesSection extends StatelessWidget {
   }
 }
 
-Future<DateTime> pickDate(BuildContext context) {
-  return showDatePicker(
-    context: context,
-    initialDate: DateTime.now(),
-    firstDate: DateTime.parse("20000101"),
-    lastDate: DateTime.parse("21001231"),
-  );
-}
-
 class CategoriesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

@@ -7,6 +7,9 @@ import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/res/models/event.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
+// This class manages account logic like whether the user is logged in and the main account page should be shown
+// It is primarily utilized at the level of the account page
+
 class AccountBloc implements BlocBase {
   final AuthBloc authBloc;
   final Repository repo = Repository.getRepo;
@@ -16,17 +19,13 @@ class AccountBloc implements BlocBase {
   Map<String, String> accountNames;
   List<String> get currentUserGroups => accountNames?.keys?.toList();
 
-  // current user's groups stream
-
   StreamController<PageToDisplay> _accountStateController =StreamController<PageToDisplay>();
   Stream<PageToDisplay> get accountState => _accountStateController.stream;
   StreamSink get _accountStateSink => _accountStateController.sink;
 
-
   // controls which page  display
   StreamController<AccountStateEvent> _accountEventController =StreamController<AccountStateEvent>();
   StreamSink get accountEvent => _accountEventController.sink;
-
 
   AccountBloc({this.authBloc}) {
     assert(authBloc != null);
@@ -144,6 +143,8 @@ class AccountBloc implements BlocBase {
   }
 }
 
+// output types
+
 class PageToDisplay {}
 
 class DisplayLoadingPage extends PageToDisplay {}
@@ -157,6 +158,8 @@ class DisplayGroupPage extends PageToDisplay {
   final String groupId;
   DisplayGroupPage({this.groupId}) : assert(groupId != null);
 }
+
+// input types
 
 class AccountStateEvent {}
 

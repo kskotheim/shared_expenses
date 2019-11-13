@@ -13,6 +13,7 @@ class NewEventBloc implements BlocBase {
 
   BillOrPaymentSection _selectedOption;
   String _selectedUser;
+  String _adminSelectedUser;
   String _paymentNotes;
   String _billNotes;
   double _billAmount;
@@ -23,7 +24,9 @@ class NewEventBloc implements BlocBase {
   bool _submitted = false;
 
   void _resetVals() {
+    print('resetting vals');
     _selectedUser = null;
+    _adminSelectedUser = null;
     _paymentNotes = null;
     _billNotes = null;
     _billAmount = null;
@@ -69,12 +72,29 @@ class NewEventBloc implements BlocBase {
     return user;
   }
 
+  //User payment is from / bill paid by
+  BehaviorSubject<String> _adminSelectedUserController =
+      BehaviorSubject<String>();
+  Stream<String> get adminSelectedUser =>
+      _adminSelectedUserController.stream.map(_saveAdminSelectedUser);
+  Function get adminSelectUser => _adminSelectedUserController.sink.add;
+  String get adminSelectedUserName => groupBloc.usersInAccount
+      .firstWhere((user) => user.userId == _adminSelectedUser)
+      .userName;
+
+  String _saveAdminSelectedUser(String user) {
+    print('saving admin selected user');
+    _adminSelectedUser = user;
+    _checkIfPaymentPageIsValid();
+    return user;
+  }
+
   //Amount
   BehaviorSubject<double> _billAmountController = BehaviorSubject<double>();
   Stream<double> get billAmount =>
       _billAmountController.stream.map(_saveAmount);
   void newBillAmount(String amt) {
-    if(amt == '') return _billAmountController.sink.add(0);
+    if (amt == '') return _billAmountController.sink.add(0);
     _billAmountController.sink.add(double.parse(amt));
   }
 
@@ -147,6 +167,7 @@ class NewEventBloc implements BlocBase {
 
   NewEventBloc({this.groupBloc}) {
     assert(groupBloc != null);
+    adminSelectUser(groupBloc.userId);
   }
 
   // payment and bill page validators
@@ -158,16 +179,20 @@ class NewEventBloc implements BlocBase {
 
   void _checkIfPaymentPageIsValid() {
     if (_selectedUser != null && _billAmount != null && _billAmount > 0)
+    // make sure the user the payment is from and to are different
+    if ((!groupBloc.isGroupOwner &&
+            _selectedUser != groupBloc.userId) ||
+        _adminSelectedUser != _selectedUser)
       return _paymentPageValidator.sink.add(true);
 
     _paymentPageValidator.sink.add(false);
   }
 
   void _checkIfBillPageIsValid() {
-    if (_billType != null &&
-        _billAmount != null &&
-        _billAmount > 0) if ((_fromDate == null ||
-            _toDate == null) ||
+    // check bill amount and type are valid
+    if (_billType != null && _billAmount != null && _billAmount > 0)
+    // check from and to dates are not in wrong order
+    if ((_fromDate == null || _toDate == null) ||
         _fromDate.isBefore(_toDate) ||
         _fromDate.isAtSameMomentAs(_toDate))
       return _billPageValidator.sink.add(true);
@@ -185,7 +210,7 @@ class NewEventBloc implements BlocBase {
                   groupBloc.accountId,
                   Bill(
                       amount: _billAmount,
-                      paidByUserId: groupBloc.userId,
+                      paidByUserId: groupBloc.isGroupOwner ? _adminSelectedUser : groupBloc.userId,
                       type: _billType,
                       notes: _billNotes,
                       createdAt: DateTime.now(),
@@ -200,7 +225,7 @@ class NewEventBloc implements BlocBase {
               .createPayment(
                   groupBloc.accountId,
                   Payment(
-                      fromUserId: groupBloc.userId,
+                      fromUserId: groupBloc.isGroupOwner ? _adminSelectedUser : groupBloc.userId,
                       toUserId: _selectedUser,
                       amount: _billAmount,
                       notes: _paymentNotes,
@@ -233,6 +258,7 @@ class NewEventBloc implements BlocBase {
   @override
   void dispose() {
     _selectedUserController.close();
+    _adminSelectedUserController.close();
     _selectedOptionController.close();
     _billAmountController.close();
     _paymentNotesController.close();

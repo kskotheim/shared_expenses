@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
-import 'package:shared_expenses/src/bloc/edit_delete_event_bloc.dart';
+import 'package:shared_expenses/src/bloc/edit_delete_dialog_bloc.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/res/util.dart';
@@ -14,8 +14,8 @@ class SelectSpecificBillOrPaymentWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    EditDeleteEventBloc editDeleteEventBloc =
-        BlocProvider.of<EditDeleteEventBloc>(context);
+    EditDeleteDialogBloc editDeleteEventBloc =
+        BlocProvider.of<EditDeleteDialogBloc>(context);
     return StreamBuilder<EditOptionSelected>(
       stream: editDeleteEventBloc.billOrPaymentSelected,
       builder: (context, snapshot) {
