@@ -14,7 +14,7 @@ class NewGhostBloc implements BlocBase {
   NewGhostBloc({this.groupBloc}) {
     assert(groupBloc != null);
     repo
-        .userStream(groupBloc.accountId)
+        .userStream(groupBloc.groupId)
         .map((userList) => userList.where((user) => user.ghost).toList())
         .listen(_mapUsersToTiles);
   }
@@ -47,16 +47,16 @@ class NewGhostBloc implements BlocBase {
   Future<void> submitGhost() async {
     if (_usernameOk && !_submitted) {
       _submitted = true;
-      await repo.createGhostUser(groupBloc.accountId, _ghostName);
-      await repo.tabulateTotals(groupBloc.accountId);
+      await repo.createGhostUser(groupBloc.groupId, _ghostName);
+      await repo.tabulateTotals(groupBloc.groupId);
     }
     reset();
     return Future.delayed(Duration(seconds: 0));
   }
 
   Future<void> _deleteGhostUser(String userId) async {
-    await repo.deleteGhostUser(userId, groupBloc.accountBloc.currentUser.userId, groupBloc.accountId);
-    return repo.tabulateTotals(groupBloc.accountId);
+    await repo.deleteGhostUser(userId, groupBloc.accountBloc.currentUser.userId, groupBloc.groupId);
+    return repo.tabulateTotals(groupBloc.groupId);
   }
 
   void reset() {
@@ -73,7 +73,6 @@ class NewGhostBloc implements BlocBase {
                   (user) => user.userName.toLowerCase() == string.toLowerCase())
               .toList()
               .isNotEmpty) {
-            sink.addError('Name in use');
             _usernameOk = false;
           } else {
             _usernameOk = true;

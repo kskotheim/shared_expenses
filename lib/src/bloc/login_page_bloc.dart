@@ -115,6 +115,16 @@ class LoginPageBloc implements BlocBase {
     }
   );
 
+  Future<void> resetPassword(){
+    if(_currentUserNameOk){
+      return authBloc.resetPassword(_currentUserName);
+    } else {
+      authBloc.error('you@example.com');
+      return Future.delayed(Duration(seconds: 0));
+    }
+  }
+
+
   @override
   void dispose() {
     _emailStringController.close();

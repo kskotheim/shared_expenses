@@ -49,6 +49,18 @@ String getMonthString(int month) {
   }
 }
 
+Future<DateTime> pickDate(BuildContext context) {
+  return showDatePicker(
+    context: context,
+    initialDate: DateTime.now(),
+    firstDate: DateTime.parse("20000101"),
+    lastDate: DateTime.parse("21001231"),
+  );
+}
+
+
+// Widgets:
+
 class DateIcon extends StatelessWidget {
   final int month;
   final int day;
@@ -78,15 +90,6 @@ class DateIcon extends StatelessWidget {
       ),
     );
   }
-}
-
-Future<DateTime> pickDate(BuildContext context) {
-  return showDatePicker(
-    context: context,
-    initialDate: DateTime.now(),
-    firstDate: DateTime.parse("20000101"),
-    lastDate: DateTime.parse("21001231"),
-  );
 }
 
 class LinearLoadingScreen extends StatelessWidget {
@@ -126,6 +129,27 @@ class IconImage30Pct extends StatelessWidget {
       image: AssetImage('assets/icon.png'),
       height: MediaQuery.of(context).size.height * .3,
       width: MediaQuery.of(context).size.height * .3,
+    );
+  }
+}
+
+class SEGridView extends StatelessWidget {
+  final int itemCount;
+  final Function itemBuilder;
+
+  SEGridView({this.itemCount, this.itemBuilder})
+      : assert(itemCount != null, itemBuilder != null);
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      itemCount: itemCount,
+      itemBuilder: itemBuilder,
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: MediaQuery.of(context).size.width * .33,
+      ),
     );
   }
 }

@@ -22,6 +22,7 @@ class NewEventDialog extends StatelessWidget {
           child: StreamBuilder<bool>(
             stream: newEventBloc.showConfirmationStream,
             builder: (context, showConfirmSnapshot) {
+              // if there is nothing in the confirmation stream ...
               if (!showConfirmSnapshot.hasData || !showConfirmSnapshot.data) {
                 return StreamBuilder<BillOrPaymentSection>(
                   stream: newEventBloc.selectedOption,
@@ -75,8 +76,9 @@ class NewEventDialog extends StatelessWidget {
                     );
                   },
                 );
-              } else {
-                //return the confirmation dialog
+              } 
+              // otherwise return the confirmation dialog
+              else {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: newEventBloc.selectedEventDetails() +

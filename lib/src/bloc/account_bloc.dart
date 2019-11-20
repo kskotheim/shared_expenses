@@ -2,8 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_expenses/src/bloc/auth_bloc.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
-
+import 'package:collection/collection.dart';
 import 'package:shared_expenses/src/data/repository.dart';
+import 'package:shared_expenses/src/res/models/account.dart';
 import 'package:shared_expenses/src/res/models/event.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
 
@@ -16,8 +17,9 @@ class AccountBloc implements BlocBase {
 
   //User info
   User currentUser;
-  Map<String, String> accountNames;
-  List<String> get currentUserGroups => accountNames?.keys?.toList();
+  List<Account> groups;
+  Account groupById(String id) => groups.singleWhere((group) => group.accountId == id);
+  List<String> get currentUserGroupIds => groups?.map((account) => account.accountId)?.toList();
 
   StreamController<PageToDisplay> _accountStateController =StreamController<PageToDisplay>();
   Stream<PageToDisplay> get accountState => _accountStateController.stream;
@@ -37,7 +39,7 @@ class AccountBloc implements BlocBase {
   Future<void> _setUpAccount() async {
     //get the current user and the groups that user is registered with
     currentUser = await repo.getUserFromDb(authBloc.currentUserId);
-    repo.userGroupsSubscription(authBloc.currentUserId).listen(_setAccountNames);
+    repo.userGroupsSubscription(authBloc.currentUserId).listen(_setAccounts);
     repo.currentUserStream(currentUser.userId).listen(_recieveUserInfo);
   }
 
@@ -48,9 +50,13 @@ class AccountBloc implements BlocBase {
     }
   }
 
-  void _setAccountNames(Map<String, String> names) {
-    if(!listEquals(currentUserGroups, names.keys.toList())){
-      accountNames = names;
+  void _setAccounts(List<Account> accounts) async {
+    Function equals = DeepCollectionEquality.unordered().equals;
+    List<String> newAccountIds = accounts.map((account) =>account.accountId).toList();
+    if(!equals(currentUserGroupIds, newAccountIds)){
+      // wait a few seconds to avoid firestoer permissions errors
+      await Future.delayed(Duration(seconds: 2));
+      groups = accounts;
       _goToAccountsOrSelect();
     }
   }
@@ -101,7 +107,7 @@ class AccountBloc implements BlocBase {
       _accountStateSink.add(DisplayLoadingPage());
       String oldUsername = currentUser.userName;
       repo.updateUserName(currentUser.userId, username);
-      currentUserGroups.forEach((group){
+      currentUserGroupIds.forEach((group){
         //add account event to group of name change
         repo.createAccountEvent(group, AccountEvent(userId: currentUser.userId, actionTaken: 'changed name from $oldUsername to $username'));
       });
@@ -113,7 +119,7 @@ class AccountBloc implements BlocBase {
     dynamic accountIdOrNull = await repo.getGroupByName(accountName);
     
     if(accountIdOrNull != null){
-      bool newAccount = !currentUserGroups.contains(accountIdOrNull);
+      bool newAccount = !currentUserGroupIds.contains(accountIdOrNull);
     
       if(newAccount){
         repo.createAccountConnectionRequest(accountIdOrNull, currentUser.userId);
@@ -126,13 +132,17 @@ class AccountBloc implements BlocBase {
   }
 
   void _goToAccountsOrSelect() {
-    if(accountNames != null && currentUser != null){
-      if(currentUserGroups.length == 1){
-        accountEvent.add(AccountEventGoHome(accountId: currentUserGroups[0]));
+    if(groups != null && currentUser != null){
+      if(currentUserGroupIds.length == 1){
+        accountEvent.add(AccountEventGoHome(accountId: currentUserGroupIds[0]));
       } else {
         accountEvent.add(AccountEventGoToSelect());
       }
     }
+  }
+
+  void deleteGroup(String groupId){
+    repo.deleteGroup(groupId);
   }
 
   @override

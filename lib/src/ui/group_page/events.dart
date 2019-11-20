@@ -17,29 +17,24 @@ class EventsWidget extends StatelessWidget {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  SortButton(
-                    text: 'all',
-                    onPressed: eventsBloc.sortByAll,
-                    onLongPress: eventsBloc.sortByAll,
-                    selected: snapshot.data.sortList[0],
-                  ),
+                  
                   SortButton(
                     text: 'bill',
                     onPressed: eventsBloc.addSortByBill,
                     onLongPress: eventsBloc.sortByBill,
-                    selected: snapshot.data.sortList[1],
+                    selected: snapshot.data.sortList[0],
                   ),
                   SortButton(
                     text: 'payment',
                     onPressed: eventsBloc.addSortByPayment,
                     onLongPress: eventsBloc.sortByPayment,
-                    selected: snapshot.data.sortList[2],
+                    selected: snapshot.data.sortList[1],
                   ),
                   SortButton(
                     text: 'event',
                     onPressed: eventsBloc.addSortByEvent,
                     onLongPress: eventsBloc.sortByAccountEvents,
-                    selected: snapshot.data.sortList[3],
+                    selected: snapshot.data.sortList[2],
                   ),
                 ],
               );
@@ -83,14 +78,16 @@ class SortButton extends StatelessWidget {
       onTap: onPressed,
       onLongPress: onLongPress,
       child: Container(
+        width: MediaQuery.of(context).size.width * .3333,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(4.0)),
-          color: selected ? Colors.grey.shade200 : null,
+          color: !selected ? Colors.grey.shade200 : null,
         ),
         padding: const EdgeInsets.all(16.0),
-        child: Text(
-          text,
-          style: Style.tinyTextStyle,
+        child: Center(
+          child: Text(
+            text,
+            style: selected ? Style.tinyTextStyle : Style.tinyTextStyleFaded,
+          ),
         ),
       ),
     );

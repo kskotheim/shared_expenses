@@ -105,92 +105,74 @@ class EditEventBloc implements BlocBase {
 
   // Stream for amount
   BehaviorSubject<num> _amountController = BehaviorSubject<num>();
-  Stream<num> get amount => _amountController.stream.map(_saveAmount);
-  Function get newAmount => _amountController.sink.add;
-
-  num _saveAmount(num amt) {
-    _newAmount = amt;
+  Stream<num> get amount => _amountController.stream;
+  void newAmount(num amount) {
+    _newAmount = amount;
     _validateUpdate();
-    return amt;
+    _amountController.sink.add(amount);
   }
 
   // Stream for category
   BehaviorSubject<String> _categoryController = BehaviorSubject<String>();
-  Stream<String> get category => _categoryController.stream.map(_saveCategory);
-  Function get updateCategory => _categoryController.sink.add;
-
-  String _saveCategory(String cat) {
-    _newCategory = cat;
+  Stream<String> get category => _categoryController.stream;
+  void updateCategory(String category) {
+    _newCategory = category;
     _validateUpdate();
-    return cat;
+    _categoryController.sink.add(category);
   }
 
   // Stream for notes
   BehaviorSubject<String> _notesController = BehaviorSubject<String>();
-  Stream<String> get notes => _notesController.stream.map(_saveNotes);
-  Function get updateNotes => _notesController.sink.add;
-
-  String _saveNotes(String notes) {
+  Stream<String> get notes => _notesController.stream;
+  void updateNotes(String notes) {
+    _notesController.sink.add(notes);
     _newNotes = notes;
     _validateUpdate();
-    return notes;
   }
 
   // Stream for user who paid the bill
   BehaviorSubject<String> _paidByUserController = BehaviorSubject<String>();
-  Stream<String> get paidByUser =>
-      _paidByUserController.stream.map(_savePaidBy);
-  Function get updatePaidByUser => _paidByUserController.sink.add;
-
-  String _savePaidBy(String user) {
+  Stream<String> get paidByUser => _paidByUserController.stream;
+  void updatePaidByUser(String user) {
     _newPaidByUser = user;
     _validateUpdate();
-    return user;
+    _paidByUserController.sink.add(user);
   }
 
   //Stream for from date
   BehaviorSubject<DateTime> _fromDateController = BehaviorSubject<DateTime>();
-  Stream<DateTime> get fromDate =>
-      _fromDateController.stream.map(_saveFromDate);
-  Function get updateFromDate => _fromDateController.sink.add;
-
-  DateTime _saveFromDate(DateTime date) {
-    _newFromDate = date;
+  Stream<DateTime> get fromDate => _fromDateController.stream;
+  void updateFromDate(DateTime fromDate) {
+    _fromDateController.sink.add(fromDate);
+    _newFromDate = fromDate;
     _validateUpdate();
-    return date;
   }
 
   //Stream for to date
   BehaviorSubject<DateTime> _toDateController = BehaviorSubject<DateTime>();
-  Stream<DateTime> get toDate => _toDateController.stream.map(_savetoDate);
-  Function get updateToDate => _toDateController.sink.add;
-
-  DateTime _savetoDate(DateTime date) {
-    _newToDate = date;
+  Stream<DateTime> get toDate => _toDateController.stream;
+  void updateToDate(DateTime toDate) {
+    _newToDate = toDate;
     _validateUpdate();
-    return date;
+    _toDateController.sink.add(toDate);
   }
 
   //Stream for payment 'from user'
   BehaviorSubject<String> _fromUserController = BehaviorSubject<String>();
-  Stream<String> get fromUser => _fromUserController.stream.map(_saveFrom);
-  Function get updateFromUser => _fromUserController.sink.add;
-
-  String _saveFrom(String user) {
+  Stream<String> get fromUser => _fromUserController.stream;
+  void updateFromUser(String user) {
     _newFromUser = user;
     _validateUpdate();
-    return user;
+    _fromUserController.sink.add(user);
   }
 
   //Stream for payment 'to user'
   BehaviorSubject<String> _toUserController = BehaviorSubject<String>();
-  Stream<String> get toUser => _toUserController.stream.map(_saveTo);
-  Function get updateToUser => _toUserController.sink.add;
-
-  String _saveTo(String user) {
-    _newToUser = user;
+  Stream<String> get toUser => _toUserController.stream;
+  void updateToUser(String toUser) {
+    _newToUser = toUser;
     _validateUpdate();
-    return user;
+    _toUserController.sink.add(toUser);
   }
 
   //Stream for validating the updated values

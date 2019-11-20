@@ -19,7 +19,7 @@ class EditDeleteDialogBloc implements BlocBase {
 
   //Stream to handle which dialog page to show
   BehaviorSubject<StatusStreamType> _statusStreamController =
-      BehaviorSubject<StatusStreamType>();
+      BehaviorSubject<StatusStreamType>.seeded(StatusUninitialized());
   Stream<StatusStreamType> get statusStream => _statusStreamController.stream;
   void initialized() => _statusStreamController.sink.add(StatusInitialized());
 
@@ -43,8 +43,8 @@ class EditDeleteDialogBloc implements BlocBase {
       _statusStreamController.sink.add(StatusConfirmUpdatePayment(payment));
 
   //Stream to handle selecting between bill or payment
-  BehaviorSubject<EditOptionSelected> _billOrPaymentSelectedController =
-      BehaviorSubject<EditOptionSelected>();
+  PublishSubject<EditOptionSelected> _billOrPaymentSelectedController =
+      PublishSubject<EditOptionSelected>();
   Stream<EditOptionSelected> get billOrPaymentSelected =>
       _billOrPaymentSelectedController.stream;
   void selectPayment() =>
@@ -58,19 +58,18 @@ class EditDeleteDialogBloc implements BlocBase {
 
   EditDeleteDialogBloc({this.groupBloc}) {
     assert(groupBloc != null);
-    _statusStreamController.sink.add(StatusUninitialized());
     _getBills();
     _getPayments();
     editEventBloc = EditEventBloc(groupBloc: groupBloc);
   }
 
   Future<void> _getBills() async {
-    _bills = await repo.billStream(groupBloc.accountId).first;
+    _bills = await repo.billStream(groupBloc.groupId).first;
     _checkIfInitialized();
   }
 
   Future<void> _getPayments() async {
-    _payments = await repo.paymentStream(groupBloc.accountId).first;
+    _payments = await repo.paymentStream(groupBloc.groupId).first;
     _checkIfInitialized();
   }
 
@@ -82,15 +81,15 @@ class EditDeleteDialogBloc implements BlocBase {
     if (!submitted) {
       submitted = true;
       await Future.wait([
-        repo.deleteBill(groupBloc.accountId, bill.billId),
+        repo.deleteBill(groupBloc.groupId, bill.billId),
         repo.createAccountEvent(
-            groupBloc.accountId,
+            groupBloc.groupId,
             AccountEvent(
                 userId: groupBloc.userId,
                 actionTaken:
                     'deleted \$${bill.amount.round()} ${bill.type} bill'))
       ]);
-      return repo.tabulateTotals(groupBloc.accountId);
+      return repo.tabulateTotals(groupBloc.groupId);
     }
   }
 
@@ -99,15 +98,15 @@ class EditDeleteDialogBloc implements BlocBase {
       submitted = true;
 
       await Future.wait([
-        repo.deletePayment(groupBloc.accountId, payment.paymentId),
+        repo.deletePayment(groupBloc.groupId, payment.paymentId),
         repo.createAccountEvent(
-            groupBloc.accountId,
+            groupBloc.groupId,
             AccountEvent(
                 userId: groupBloc.userId,
                 actionTaken:
                     'deleted \$${payment.amount.round()} payment by ${groupBloc.userName(payment.fromUserId)}'))
       ]);
-      return repo.tabulateTotals(groupBloc.accountId);
+      return repo.tabulateTotals(groupBloc.groupId);
     }
   }
 
@@ -116,15 +115,15 @@ class EditDeleteDialogBloc implements BlocBase {
       submitted = true;
 
       await Future.wait([
-        repo.updateBill(groupBloc.accountId, newBill.billId, newBill.toJson()),
+        repo.updateBill(groupBloc.groupId, newBill.billId, newBill.toJson()),
         repo.createAccountEvent(
-            groupBloc.accountId,
+            groupBloc.groupId,
             AccountEvent(
                 userId: groupBloc.userId,
                 actionTaken:
                     'updated \$${newBill.amount} ${newBill.type} bill'))
       ]);
-      return repo.tabulateTotals(groupBloc.accountId);
+      return repo.tabulateTotals(groupBloc.groupId);
     }
   }
 
@@ -134,15 +133,15 @@ class EditDeleteDialogBloc implements BlocBase {
 
       await Future.wait([
         repo.updatePayment(
-            groupBloc.accountId, newPayment.paymentId, newPayment.toJson()),
+            groupBloc.groupId, newPayment.paymentId, newPayment.toJson()),
         repo.createAccountEvent(
-            groupBloc.accountId,
+            groupBloc.groupId,
             AccountEvent(
                 userId: groupBloc.userId,
                 actionTaken:
                     'updated \$${newPayment.amount} payment from ${groupBloc.userName(newPayment.fromUserId)} to ${groupBloc.userName(newPayment.toUserId)}')),
       ]);
-      return repo.tabulateTotals(groupBloc.accountId);
+      return repo.tabulateTotals(groupBloc.groupId);
     }
   }
 

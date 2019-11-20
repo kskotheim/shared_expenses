@@ -20,7 +20,7 @@ class UserModifierList extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text(
-              'User Modifiers for ${groupBloc.currentAccount.accountName}',
+              'User Modifiers for ${groupBloc.currentGroup.accountName}',
               style: Style.subTitleTextStyle,
             ),
             StreamBuilder<List<UserModifier>>(

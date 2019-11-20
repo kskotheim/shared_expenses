@@ -73,37 +73,31 @@ class NewUserModifierBloc implements BlocBase {
 
   // Number of shares
   BehaviorSubject<String> _sharesController = BehaviorSubject<String>();
-  Stream<String> get shares => _sharesController.stream.map(_saveShares);
-  Function get setShares => _sharesController.sink.add;
-
-  String _saveShares(String shares) {
-    if (shares.length > 0)
+  Stream<String> get shares => _sharesController.stream;
+  void setShares(String shares) {
+    if (shares.length > 0) {
       _shares = double.parse(shares);
-    else
+    } else {
       _shares = null;
+    }
     _validateModifier();
-    return shares;
+    _sharesController.sink.add(shares);
   }
 
   // Modifier from date
   BehaviorSubject<DateTime> _fromDateController = BehaviorSubject<DateTime>();
-  Stream<DateTime> get fromDate =>
-      _fromDateController.stream.map(_saveFromDate);
-  Function get newFromDate => _fromDateController.sink.add;
-
-  DateTime _saveFromDate(DateTime date) {
-    _fromDate = date;
-    return date;
+  Stream<DateTime> get fromDate => _fromDateController.stream;
+  void newFromDate(DateTime fromDate) {
+    _fromDate = fromDate;
+    _fromDateController.sink.add(fromDate);
   }
 
   // Modifier to date
   BehaviorSubject<DateTime> _toDateControlelr = BehaviorSubject<DateTime>();
-  Stream<DateTime> get toDate => _toDateControlelr.stream.map(_saveToDate);
-  Function get newToDate => _toDateControlelr.sink.add;
-
-  DateTime _saveToDate(DateTime date) {
-    _toDate = date;
-    return date;
+  Stream<DateTime> get toDate => _toDateControlelr.stream;
+  void newToDate(DateTime toDate) {
+    _toDate = toDate;
+    _toDateControlelr.sink.add(toDate);
   }
 
   // selected categories input stream
@@ -158,7 +152,7 @@ class NewUserModifierBloc implements BlocBase {
 
       if (test1 && test2 && test4) {
         await _repo.createUserModifier(
-          groupBloc.accountId,
+          groupBloc.groupId,
           UserModifier(
               userId: _selectedUser,
               shares: _shares,
@@ -170,7 +164,7 @@ class NewUserModifierBloc implements BlocBase {
               description:
                   '${groupBloc.userName(_selectedUser)} $_shares shares ${selectedCategories.isNotEmpty ? selectedCategories.join(', ') : ''} ${_fromDate != null ? parseDateTime(_fromDate) : 'Beginning'} to ${_toDate != null ? parseDateTime(_toDate) : 'End'}'),
         );
-        await _repo.tabulateTotals(groupBloc.accountId);
+        await _repo.tabulateTotals(groupBloc.groupId);
       }
     }
     return Future.delayed(Duration(seconds: 0));

@@ -5,13 +5,11 @@ import 'package:rxdart/rxdart.dart';
 import 'package:shared_expenses/src/data/repository.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 
-
-// This class is used by the account bloc to interface with the auth repository. It logs the user in or out 
+// This class is used by the account bloc to interface with the auth repository. It logs the user in or out
 // and manages a stream, authStream, to broadcast that information
 // This stream is listened to by the root widget to determine whether to show the login page
 
 class AuthBloc implements BlocBase {
-
   final Repository repo = Repository.getRepo;
 
   //Auth state
@@ -19,25 +17,30 @@ class AuthBloc implements BlocBase {
   String get currentUserId => _currentUserId;
 
   //bloc output
-  BehaviorSubject<AuthState> _authController =BehaviorSubject<AuthState>.seeded(AuthStateLoading());
+  BehaviorSubject<AuthState> _authController =
+      BehaviorSubject<AuthState>.seeded(AuthStateLoading());
   Stream<AuthState> get authStream => _authController.stream;
   StreamSink get _authStateSink => _authController.sink;
 
   //bloc input
-  StreamController<AuthEvent> _authInputController =StreamController<AuthEvent>(); 
-  StreamSink get _authEventSink =>_authInputController.sink;
+  StreamController<AuthEvent> _authInputController =
+      StreamController<AuthEvent>();
+  StreamSink get _authEventSink => _authInputController.sink;
 
   //public methods:
-  void login(String username, String password){
+  void login(String username, String password) {
     _authEventSink.add(LoginEvent(username: username, password: password));
   }
-  void logout(){
+
+  void logout() {
     _authEventSink.add(LogoutEvent());
   }
-  void createAcct(String username, String password){
+
+  void createAcct(String username, String password) {
     _authEventSink.add(CreateUserEvent(username: username, password: password));
   }
-  void error(String error){
+
+  void error(String error) {
     _errorLoggingIn(error);
   }
 
@@ -46,42 +49,48 @@ class AuthBloc implements BlocBase {
   bool get creatingNewAccount => _creatingNewAccount;
   void goToCreateAccount() => _creatingNewAccount = !_creatingNewAccount;
 
-  AuthBloc(){
+  AuthBloc() {
     _creatingNewAccount = false;
     _authEventSink.add(AppStartEvent());
     _authInputController.stream.listen(_mapEventToState);
   }
 
-  void _mapEventToState(AuthEvent event) async { 
-    if(event is AppStartEvent){
+  void _mapEventToState(AuthEvent event) async {
+    if (event is AppStartEvent) {
       _start();
     }
-    if(event is LoginEvent){
+    if (event is LoginEvent) {
       _login(event);
     }
-    if(event is LogoutEvent){
+    if (event is LogoutEvent) {
       _logout();
     }
-    if(event is CreateUserEvent){
+    if (event is CreateUserEvent) {
       _createUser(event);
     }
   }
 
   void _start() async {
     _currentUserId = await repo.currentUserId();
-    if(_currentUserId == null) _errorLoggingIn('Please Create an Account or Log in');
-    else _logInUser();
+    if (_currentUserId == null)
+      _errorLoggingIn('Please Create an Account or Log in');
+    else
+      _logInUser();
   }
 
   void _login(LoginEvent event) async {
     _authStateSink.add(AuthStateLoading());
     String error;
-    _currentUserId = await repo.signInWithEmailAndPassword(event.username, event.password)
-    .catchError((e) { error = _catchError(e);});
-    
-    if(error != null){
+    _currentUserId = await repo
+        .signInWithEmailAndPassword(event.username, event.password)
+        .catchError((e) {
+      error = _catchError(e);
+    });
+
+    if (error != null) {
       _errorLoggingIn(error);
-    } else _logInUser();
+    } else
+      _logInUser();
   }
 
   void _logout() {
@@ -89,14 +98,23 @@ class AuthBloc implements BlocBase {
     repo.signOut();
     _authStateSink.add(AuthStateNotLoggedIn());
   }
-  
+
+  Future<void> resetPassword(String email) {
+    return repo.resetPassword(email).catchError((error) {
+      print(error);
+    });
+  }
+
   void _createUser(CreateUserEvent event) async {
     _authStateSink.add(AuthStateLoading());
     String error;
-    _currentUserId = await repo.createUserWithEmailAndPassword(event.username, event.password)
-    .catchError((e) { error = _catchError(e);});
-    
-    if(error != null){
+    _currentUserId = await repo
+        .createUserWithEmailAndPassword(event.username, event.password)
+        .catchError((e) {
+      error = _catchError(e);
+    });
+
+    if (error != null) {
       _errorLoggingIn(error);
     } else {
       await repo.createUser(_currentUserId, event.username);
@@ -113,9 +131,10 @@ class AuthBloc implements BlocBase {
   }
 
   String _catchError(e) {
-    if(e is PlatformException){
+    if (e is PlatformException) {
       return e.message;
-    } else return e.toString();
+    } else
+      return e.toString();
   }
 
   @override
@@ -126,34 +145,36 @@ class AuthBloc implements BlocBase {
 }
 
 //Authorization State - Bloc output
-class AuthState{}
+class AuthState {}
 
-class AuthStateNotLoggedIn extends AuthState{
+class AuthStateNotLoggedIn extends AuthState {
   final String error;
   AuthStateNotLoggedIn({this.error});
 }
 
 class AuthStateLoading extends AuthState {}
 
-class AuthStateLoggedIn extends AuthState{}
+class AuthStateLoggedIn extends AuthState {}
 
 //Authorization Event - Bloc Input
 class AuthEvent {}
 
 class AppStartEvent extends AuthEvent {}
 
-class LoginEvent extends AuthEvent{
+class LoginEvent extends AuthEvent {
   final String username;
   final String password;
 
-  LoginEvent({this.username, this.password}) : assert(username != null, password != null);
+  LoginEvent({this.username, this.password})
+      : assert(username != null, password != null);
 }
 
-class CreateUserEvent extends AuthEvent{
+class CreateUserEvent extends AuthEvent {
   final String username;
   final String password;
 
-  CreateUserEvent({this.username, this.password}) : assert(username != null, password != null);
+  CreateUserEvent({this.username, this.password})
+      : assert(username != null, password != null);
 }
 
-class LogoutEvent extends AuthEvent{}
+class LogoutEvent extends AuthEvent {}

@@ -40,7 +40,7 @@ class TotalsBloc implements BlocBase {
     _usersSubscription = groupBloc.usersInAccountStream.listen(_addUsers);
 
     _totalsSubscription =
-        repo.totalsStream(groupBloc.accountId).listen(_addTotals);
+        repo.totalsStream(groupBloc.groupId).listen(_addTotals);
   }
 
   void _addUsers(List<User> users) {
@@ -67,7 +67,7 @@ class TotalsBloc implements BlocBase {
           String username = theUser[0].userName ?? 'unnamed user';
           _totalsExporter.addTotal(username, total);
         } else {
-          print('couldnt find user $id in account ${groupBloc.accountId}');
+          print('couldnt find user $id in account ${groupBloc.groupId}');
         }
       });
 
@@ -147,7 +147,7 @@ class TotalsExporter {
                   height: 30.0,
                   child: negative
                       ? Text(
-                          '\$${entry.value.toStringAsFixed(2)}',
+                          '\$${entry.value.round()}',
                           textAlign: TextAlign.end,
                           style: Style.regularTextStyle,
                         )
@@ -159,7 +159,7 @@ class TotalsExporter {
                   height: 30.0,
                   child: !negative
                       ? Text(
-                          '\$${entry.value.toStringAsFixed(2)}',
+                          '\$${entry.value.round()}',
                           style: Style.regularTextStyle,
                         )
                       : null,

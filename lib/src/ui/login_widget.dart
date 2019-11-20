@@ -84,6 +84,10 @@ class LoginWidget extends StatelessWidget {
                             .add(SwitchToCreateAccountButtonPressed());
                       },
                     ),
+                    Container(
+                      height: 40.0,
+                    ),
+                    ResetPasswordButton()
                   ],
                 ),
               ),
@@ -119,5 +123,34 @@ class LoginField extends StatelessWidget {
             ),
           );
         });
+  }
+}
+
+class ResetPasswordButton extends StatefulWidget {
+  @override
+  _ResetPasswordButtonState createState() => _ResetPasswordButtonState();
+}
+
+class _ResetPasswordButtonState extends State<ResetPasswordButton> {
+  bool sending = false;
+
+  @override
+  Widget build(BuildContext context) {
+    LoginPageBloc loginPageBloc = BlocProvider.of<LoginPageBloc>(context);
+
+    if (sending) {
+      return FlatButton(
+        onPressed: null,
+        child: Text('Sending ...'),
+      );
+    }
+    return FlatButton(
+      child: Text('Reset Password'),
+      onPressed: () async {
+        setState(() => sending = true);
+        await loginPageBloc.resetPassword();
+        setState(() => sending = false);
+      },
+    );
   }
 }

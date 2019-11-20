@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/new_event_bloc.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
+import 'package:shared_expenses/src/res/style.dart';
 import 'package:shared_expenses/src/res/util.dart';
 
 class BillSection extends StatelessWidget {
@@ -28,60 +29,59 @@ class BillSection extends StatelessWidget {
         AmountSection(),
         BillNotesSection(),
         DatesSection(),
+        Container(
+          height: 30.0,
+        ),
         SubmitBillButton(),
+        Container(
+          height: 30.0,
+        ),
       ],
     );
   }
 }
 
-class AdminSelectUserSection extends StatefulWidget {
+class AdminSelectUserSection extends StatelessWidget {
   final List<User> users;
   AdminSelectUserSection({this.users});
-
-  @override
-  _AdminSelectUserSectionState createState() => _AdminSelectUserSectionState();
-}
-
-class _AdminSelectUserSectionState extends State<AdminSelectUserSection> {
-  bool showUserSelectionOption = false;
-
   @override
   Widget build(BuildContext context) {
     NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
 
-    Widget usersList = Container(
-      child: StreamBuilder<String>(
-        stream: newEventBloc.adminSelectedUser,
-        builder: (context, snapshot) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text('Paid By:'),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: widget.users.length,
-                itemBuilder: (context, i) => FlatButton(
-                  color: snapshot.data == widget.users[i].userId
-                      ? Colors.greenAccent.shade200
-                      : null,
-                  onPressed: () =>
-                      newEventBloc.adminSelectUser(widget.users[i].userId),
-                  child: Text(widget.users[i].userName),
-                ),
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 100.0),
-              ),
-            ],
-          );
-        },
-      ),
+    return StreamBuilder<bool>(
+      stream: newEventBloc.adminModifyingFromUser,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return FlatButton(
+              child: Text('(Paid By You)'),
+              onPressed: newEventBloc.modifyFromUser);
+        }
+        return Container(
+          child: StreamBuilder<String>(
+            stream: newEventBloc.adminSelectedUser,
+            builder: (context, snapshot) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text('Paid By:'),
+                  SEGridView(
+                    itemCount: users.length,
+                    itemBuilder: (context, i) => FlatButton(
+                      color: snapshot.data == users[i].userId
+                          ? Colors.greenAccent.shade200
+                          : null,
+                      onPressed: () =>
+                          newEventBloc.adminSelectUser(users[i].userId),
+                      child: Text(users[i].userName),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
-    if (showUserSelectionOption) {
-      return usersList;
-    } else {
-      return FlatButton(child: Text('(Paid By You)'), onPressed: () => setState(() =>showUserSelectionOption = true));
-    }
   }
 }
 
@@ -102,10 +102,8 @@ class SelectCategorySection extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text('Category:'),
-              GridView.builder(
-                shrinkWrap: true,
+              SEGridView(
                 itemCount: categories.length,
-                physics: NeverScrollableScrollPhysics(),
                 itemBuilder: (context, i) => FlatButton(
                   color: snapshot.data == categories[i]
                       ? Colors.blueGrey.shade200
@@ -113,8 +111,6 @@ class SelectCategorySection extends StatelessWidget {
                   onPressed: () => newEventBloc.selectType(categories[i]),
                   child: Text(categories[i]),
                 ),
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 100.0),
               ),
             ],
           );
@@ -136,15 +132,17 @@ class AmountSection extends StatelessWidget {
       children: <Widget>[
         Text('Amount: '),
         StreamBuilder<double>(
-            stream: newEventBloc.billAmount,
-            builder: (context, snapshot) {
-              return Container(
-                  width: 100.0,
-                  child: TextField(
-                    onChanged: newEventBloc.newBillAmount,
-                    keyboardType: TextInputType.number,
-                  ));
-            }),
+          stream: newEventBloc.billAmount,
+          builder: (context, snapshot) {
+            return Container(
+              width: 100.0,
+              child: TextField(
+                onChanged: newEventBloc.newBillAmount,
+                keyboardType: TextInputType.number,
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -224,14 +222,18 @@ class SubmitBillButton extends StatelessWidget {
   Widget build(BuildContext context) {
     NewEventBloc newEventBloc = BlocProvider.of<NewEventBloc>(context);
     return StreamBuilder<bool>(
-        stream: newEventBloc.billPageValidated,
-        builder: (context, snapshot) {
-          return FlatButton(
-            child: Text('Submit'),
-            onPressed: (snapshot.hasData && snapshot.data)
-                ? newEventBloc.showConfirmation
-                : null,
-          );
-        });
+      stream: newEventBloc.billPageValidated,
+      builder: (context, snapshot) {
+        return RaisedButton(
+          color: Style.lightGreen,
+          disabledColor: Colors.grey.shade200,
+          shape: Style.roundedButtonBorder,
+          child: Text('Submit'),
+          onPressed: (snapshot.hasData && snapshot.data)
+              ? newEventBloc.showConfirmation
+              : null,
+        );
+      },
+    );
   }
 }

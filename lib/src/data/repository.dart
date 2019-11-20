@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_expenses/src/data/auth_provider.dart';
 import 'package:shared_expenses/src/data/db_provider.dart';
+import 'package:shared_expenses/src/res/models/account.dart';
 
 import 'package:shared_expenses/src/res/models/event.dart';
 import 'package:shared_expenses/src/res/models/user.dart';
@@ -13,6 +14,7 @@ abstract class RepoInterface {
   Future<String> signInWithEmailAndPassword(String email, String password);
   Future<String> createUserWithEmailAndPassword(String email, String password);
   Future<void> signOut();
+  Future<void> resetPassword(String email);
 
   Future<void> createGroup(String accountName, User user);
   Future<dynamic> getGroupByName(String name);
@@ -20,7 +22,8 @@ abstract class RepoInterface {
   Future<Map<String, String>> getGroupNames(List<String> accountIds);
   Future<List<String>> getGroupNamesList(List<String> accountIds);
   Future<bool> isGroupOwner(String userId, String groupId);
-  Stream<Map<String, String>> userGroupsSubscription(String userId);
+  Stream<List<Account>> userGroupsSubscription(String userId);
+  Future<void> deleteGroup(String goupId);
 
   Future<void> setTotals(String accountId, Map<String, double> totals);
   Stream<Map<String, num>> totalsStream(String accountId);
@@ -94,6 +97,10 @@ class Repository implements RepoInterface {
 
   Future<void> signOut() => _auth.signOut();
 
+  Future<void> resetPassword(String email){
+    return _auth.resetPassword(email);
+  }
+
   Future<String> createGroup(String groupName, User user) async {
     // create group, make yourself admin
 
@@ -130,14 +137,18 @@ class Repository implements RepoInterface {
     return groupSnap.data[OWNER] == userId;
   }
 
-  Stream<Map<String, String>> userGroupsSubscription(String userId) {
+  Stream<List<Account>> userGroupsSubscription(String userId) {
     return _db.userGroupsStream(userId).map((query) {
-      Map<String, String> groupIdToNameMap = Map<String, String>();
+      List<Account> theAccounts = <Account>[];
       query.documents.forEach((document) {
-        groupIdToNameMap[document.documentID] = document.data[NAME];
+        theAccounts.add(Account(accountId: document.documentID, accountName: document.data[NAME], owner: document.data[OWNER]));
       });
-      return groupIdToNameMap;
+      return theAccounts;
     });
+  }
+
+  Future<void> deleteGroup(String groupId){
+    return _db.deleteGroup(groupId);
   }
 
   Future<void> updateGroupName(String accountId, String name) =>

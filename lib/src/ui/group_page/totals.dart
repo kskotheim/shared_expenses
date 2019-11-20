@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_expenses/src/bloc/bloc_provider.dart';
 import 'package:shared_expenses/src/bloc/group_bloc.dart';
 import 'package:shared_expenses/src/bloc/totals_bloc.dart';
+import 'package:shared_expenses/src/res/style.dart';
 
 class TotalsWidget extends StatelessWidget {
   TotalsBloc _totalsBloc;
@@ -20,6 +21,7 @@ class TotalsWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               SelectTotalsToShow(),
+              Container(height: 5.0),
               (!totalsFormSnapshot.hasData ||
                       totalsFormSnapshot.data is TotalsListSelected)
                   ? TotalsList()
@@ -42,9 +44,8 @@ class TotalsList extends StatelessWidget {
       builder: (context, totalsListTileSnapshot) {
         if (totalsListTileSnapshot.data == null) return Text('no totals data');
         return Expanded(
-          child: ListView(
-            shrinkWrap: true,
-            children: totalsListTileSnapshot.data,
+          child: SingleChildScrollView(
+            child: Column(children: totalsListTileSnapshot.data),
           ),
         );
       },
@@ -61,7 +62,7 @@ class TotalsGraph extends StatelessWidget {
       builder: (context, totalsBarGraphSnapshot) {
         if (totalsBarGraphSnapshot.data == null) return Text('no totals data');
         return Expanded(
-          child: totalsBarGraphSnapshot.data,
+          child: SingleChildScrollView(child: totalsBarGraphSnapshot.data),
         );
       },
     );
@@ -79,15 +80,35 @@ class SelectTotalsToShow extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            FlatButton(
-              onPressed: totalsBloc.showTotalsList,
-              color: snapshot.data is TotalsListSelected ? Colors.white : null,
-              child: Text('List'),
+            InkWell(
+              onTap: totalsBloc.showTotalsList,
+              child: Container(
+                width: MediaQuery.of(context).size.width * .5,
+                height: 30.0,
+                child: Center(
+                    child: Text(
+                  'List',
+                  style: snapshot.data is TotalsListSelected ? Style.regularTextStyle : Style.regularTextStyleFaded,
+                )),
+                color: !(snapshot.data is TotalsListSelected)
+                    ? Colors.white70
+                    : null,
+              ),
             ),
-            FlatButton(
-              onPressed: totalsBloc.showTotalsGraph,
-              color: snapshot.data is TotalsGraphSelected ? Colors.white : null,
-              child: Text('Graph'),
+            InkWell(
+              onTap: totalsBloc.showTotalsGraph,
+              child: Container(
+                color: !(snapshot.data is TotalsGraphSelected)
+                    ? Colors.white70
+                    : null,
+                width: MediaQuery.of(context).size.width * .5,
+                height: 30.0,
+                child: Center(
+                    child: Text(
+                  'Graph',
+                  style: snapshot.data is TotalsGraphSelected ? Style.regularTextStyle : Style.regularTextStyleFaded,
+                )),
+              ),
             ),
           ],
         );

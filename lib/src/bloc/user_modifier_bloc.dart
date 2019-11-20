@@ -21,7 +21,7 @@ class UserModifierBloc implements BlocBase {
 
   UserModifierBloc({this.groupBloc}){
     assert(groupBloc != null);
-    repo.userModifierStream(groupBloc.accountId).listen(_userModifierListController.sink.add);
+    repo.userModifierStream(groupBloc.groupId).listen(_userModifierListController.sink.add);
     
 
   }

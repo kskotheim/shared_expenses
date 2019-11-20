@@ -23,7 +23,7 @@ class AccountRoot extends StatelessWidget {
       child: StreamBuilder<PageToDisplay>(
           stream: _accountBloc.accountState,
           builder: (context, snapshot) {
-            if (snapshot.data == null) return Container();
+            if (!snapshot.hasData) return CircularLoadingScreen();
 
             PageToDisplay pageToDisplay = snapshot.data;
 

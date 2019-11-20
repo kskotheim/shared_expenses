@@ -27,7 +27,7 @@ class ConnectionRequestsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     GroupBloc groupBloc = BlocProvider.of<GroupBloc>(context);
     if (groupBloc.isGroupOwner) {
-      RequestsBloc requestsBloc = RequestsBloc(accountId: groupBloc.accountId);
+      RequestsBloc requestsBloc = RequestsBloc(accountId: groupBloc.groupId);
 
       return StreamBuilder(
         stream: requestsBloc.requests,

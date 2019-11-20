@@ -39,7 +39,7 @@ class NewCategoryBloc implements BlocBase {
   NewCategoryBloc({this.groupBloc}){
     assert(groupBloc != null);
     _categoryEventController.stream.listen(_mapEventToState);
-    _categoriesSubscription = repo.billTypeStream(groupBloc.accountId).listen(_addToCIGCSink);
+    _categoriesSubscription = repo.billTypeStream(groupBloc.groupId).listen(_addToCIGCSink);
   }
 
   void _addToCIGCSink(List<String> categories){
@@ -63,11 +63,11 @@ class NewCategoryBloc implements BlocBase {
   );
 
   Future<void> _submitNewCategory() async {
-    List<String> billTypes = await repo.getBillTypes(groupBloc.accountId);
+    List<String> billTypes = await repo.getBillTypes(groupBloc.groupId);
     showNewCategoryButton();
 
     if(!billTypes.contains(_newCategoryText)){   
-      await repo.addBillType(groupBloc.accountId, _newCategoryText);
+      await repo.addBillType(groupBloc.groupId, _newCategoryText);
       return groupBloc.getCategories();
     } 
     else return null;

@@ -19,7 +19,7 @@ class BillCategoryList extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text(
-              'Bill Categories for ${groupBloc.currentAccount.accountName}',
+              'Bill Categories for ${groupBloc.currentGroup.accountName}',
               style: Style.subTitleTextStyle,
             ),
             StreamBuilder<List<String>>(

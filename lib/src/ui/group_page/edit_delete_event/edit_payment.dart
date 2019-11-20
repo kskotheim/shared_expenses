@@ -45,8 +45,7 @@ class EditPayment extends StatelessWidget {
             StreamBuilder<String>(
               stream: _editEventBloc.fromUser,
               builder: (context, snapshot) {
-                return GridView.builder(
-                  shrinkWrap: true,
+                return SEGridView(
                   itemCount: _groupBloc.usersInAccount.length,
                   itemBuilder: (context, i) => FlatButton(
                     color: snapshot.data == _groupBloc.usersInAccount[i].userId
@@ -56,8 +55,6 @@ class EditPayment extends StatelessWidget {
                         .updateFromUser(_groupBloc.usersInAccount[i].userId),
                     child: Text(_groupBloc.usersInAccount[i].userName),
                   ),
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 100.0),
                 );
               },
             ),
@@ -71,8 +68,7 @@ class EditPayment extends StatelessWidget {
             StreamBuilder<String>(
               stream: _editEventBloc.toUser,
               builder: (context, snapshot) {
-                return GridView.builder(
-                  shrinkWrap: true,
+                return SEGridView(
                   itemCount: _groupBloc.usersInAccount.length,
                   itemBuilder: (context, i) => FlatButton(
                     color: snapshot.data == _groupBloc.usersInAccount[i].userId
@@ -82,8 +78,6 @@ class EditPayment extends StatelessWidget {
                         .updateToUser(_groupBloc.usersInAccount[i].userId),
                     child: Text(_groupBloc.usersInAccount[i].userName),
                   ),
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 100.0),
                 );
               },
             ),

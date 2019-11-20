@@ -23,7 +23,9 @@ class GroupPageRoot extends StatelessWidget {
     GroupBloc groupBloc = GroupBloc(
         accountBloc: accountBloc,
         userId: accountBloc.currentUser.userId,
-        accountId: groupId);
+        currentGroup: accountBloc.groupById(groupId),
+        context: context,
+    );
 
     _eventsBloc = EventsBloc(groupBloc: groupBloc);
 
@@ -65,7 +67,7 @@ class GroupHomePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Text(groupBloc.currentAccount.accountName,
+                    Text(groupBloc.currentGroup.accountName,
                         style: Style.titleTextStyle),
                     Text(
                       '${accountBloc.currentUser.userName} - ${groupBloc.isGroupOwner ? 'Group Owner' : 'Group Member'}',

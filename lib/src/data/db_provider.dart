@@ -8,6 +8,7 @@ abstract class DB {
   Future<List<String>> getGroupNames(List<String> accountIds);
   Future<List<DocumentSnapshot>> getGroupsWhere(String field, val);
   Stream<QuerySnapshot> userGroupsStream(String userId);
+  Future<void> deleteGroup(String goupId);
 
   Stream<DocumentSnapshot> totalsStream(String accountId);
   Future<void> updateTotals(String accountId, Map<String, num> totals);
@@ -121,6 +122,10 @@ class DatabaseManager implements DB {
 
   Stream<QuerySnapshot> userGroupsStream(String userId) {
     return _accountCollection.where(USERS, arrayContains: userId).snapshots();
+  }
+
+  Future<void> deleteGroup(String groupId){
+    return _account(groupId).delete();
   }
 
   Stream<DocumentSnapshot> totalsStream(String accountId) {

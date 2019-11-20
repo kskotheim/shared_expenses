@@ -22,12 +22,17 @@ class NewModifierDialog extends StatelessWidget {
           stream: userModifierBloc.modifierDialogPageToShow,
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data is ModifierDialogMain) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
+              return ListView(
+                // mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Text(
-                    'New User Modifier',
-                    style: Style.subTitleTextStyle,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        'New User Modifier',
+                        style: Style.subTitleTextStyle,
+                      ),
+                    ],
                   ),
                   SelectUserSection(
                     users: groupBloc.usersInAccount,
@@ -68,8 +73,7 @@ class SelectUserSection extends StatelessWidget {
       child: StreamBuilder<String>(
         stream: newModifierBloc.selectedUser,
         builder: (context, snapshot) {
-          return GridView.builder(
-            shrinkWrap: true,
+          return SEGridView(
             itemCount: users.length,
             itemBuilder: (context, i) => FlatButton(
               color: snapshot.data == users[i].userId
@@ -78,8 +82,6 @@ class SelectUserSection extends StatelessWidget {
               onPressed: () => newModifierBloc.selectUser(users[i].userId),
               child: Text(users[i].userName),
             ),
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 100.0),
           );
         },
       ),
@@ -97,7 +99,7 @@ class ShareAmountSection extends StatelessWidget {
     NewUserModifierBloc newModifierBloc =
         BlocProvider.of<NewUserModifierBloc>(context);
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Text('Shares: '),
         Container(
@@ -105,7 +107,10 @@ class ShareAmountSection extends StatelessWidget {
           child: StreamBuilder<String>(
             stream: newModifierBloc.shares,
             builder: (context, snapshot) {
-              _sharesController.value = _sharesController.value.copyWith(text: snapshot.data.toString());
+              if (snapshot.hasData) {
+                _sharesController.value = _sharesController.value
+                    .copyWith(text: snapshot.data.toString());
+              }
               return TextField(
                 keyboardType: TextInputType.number,
                 onChanged: newModifierBloc.setShares,
@@ -270,18 +275,17 @@ class CancelOrSubmitButton extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         StreamBuilder<bool>(
-          stream: userModifierBloc.modifierValidated,
-          builder: (context, snapshot) {
-            return FlatButton(
-              child: Text('submit'),
-              onPressed: (snapshot.hasData && snapshot.data)
-                  ? () => userModifierBloc
-                      .submitModifier()
-                      .then((_) => Navigator.pop(context))
-                  : null,
-            );
-          }
-        ),
+            stream: userModifierBloc.modifierValidated,
+            builder: (context, snapshot) {
+              return FlatButton(
+                child: Text('submit'),
+                onPressed: (snapshot.hasData && snapshot.data)
+                    ? () => userModifierBloc
+                        .submitModifier()
+                        .then((_) => Navigator.pop(context))
+                    : null,
+              );
+            }),
       ],
     );
   }

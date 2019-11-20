@@ -34,7 +34,7 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
         child: Column(
           children: <Widget>[
             Icon(Icons.add),
-            Text('Create Account', style: Style.regularTextStyle,),
+            Text('Create Group', style: Style.regularTextStyle,),
           ],
         ),
       ),
@@ -46,7 +46,7 @@ class _CreateAccountSectionState extends State<CreateAccountSection> {
 
     return Column(
       children: <Widget>[
-        Text("New Account Name:", style: Style.regularTextStyle),
+        Text("New Group Name:", style: Style.regularTextStyle),
         Container(
           width: 200.0,
           child: TextField(

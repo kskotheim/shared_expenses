@@ -29,44 +29,40 @@ class EventsBloc implements BlocBase {
       _eventSortMethodController.stream;
   void sortByAll() => _eventSortMethodController.sink.add(EventSortMethod());
   void sortByBill() => _eventSortMethodController.sink
-      .add(EventSortMethod(sortList: [false, true, false, false]));
+      .add(EventSortMethod(sortList: [true, false, false]));
   void sortByPayment() => _eventSortMethodController.sink
-      .add(EventSortMethod(sortList: [false, false, true, false]));
+      .add(EventSortMethod(sortList: [false, true, false]));
   void sortByAccountEvents() => _eventSortMethodController.sink
-      .add(EventSortMethod(sortList: [false, false, false, true]));
-  
+      .add(EventSortMethod(sortList: [false, false, true]));
+
   void addSortByBill() {
-    if (_theSortMethod[0]) {
-      sortByBill();
-    } else if((_theSortMethod[2] && _theSortMethod[3]) || (_theSortMethod[1] && !(_theSortMethod[2] || _theSortMethod[3]))){
+    if (_theSortMethod.indexIsOnlyTrue(0)) {
+      sortByAll();
+    } else {
+      _theSortMethod[0] = !_theSortMethod[0];
+      _eventSortMethodController.sink.add(_theSortMethod);
+    }
+  }
+
+  void addSortByPayment() {
+    if (_theSortMethod.indexIsOnlyTrue(1)) {
       sortByAll();
     } else {
       _theSortMethod[1] = !_theSortMethod[1];
       _eventSortMethodController.sink.add(_theSortMethod);
     }
   }
-  void addSortByPayment(){
-    if (_theSortMethod[0]) {
-      sortByPayment();
-    } else if((_theSortMethod[1] && _theSortMethod[3]) || (_theSortMethod[2] && !(_theSortMethod[1] || _theSortMethod[3]))){
+
+  void addSortByEvent() {
+    if (_theSortMethod.indexIsOnlyTrue(2)) {
       sortByAll();
     } else {
       _theSortMethod[2] = !_theSortMethod[2];
       _eventSortMethodController.sink.add(_theSortMethod);
     }
   }
-  void addSortByEvent(){
-    if (_theSortMethod[0]) {
-      sortByAccountEvents();
-    } else if((_theSortMethod[1] && _theSortMethod[2]) || (_theSortMethod[3] && !(_theSortMethod[1] || _theSortMethod[2]))){
-      sortByAll();
-    } else{
-      _theSortMethod[3] = !_theSortMethod[3];
-      _eventSortMethodController.sink.add(_theSortMethod);
-    }
-  }
-  void removeSortByBill(){
-  }
+
+  void removeSortByBill() {}
 
   EventSortMethod _theSortMethod;
 
@@ -77,7 +73,7 @@ class EventsBloc implements BlocBase {
 
   EventsBloc({this.groupBloc}) {
     assert(groupBloc != null);
-    _accountId = groupBloc.accountId;
+    _accountId = groupBloc.groupId;
     _paymentsSubscription =
         repo.paymentStream(_accountId).listen(_mapPaymentsToEvents);
     _billsSubscription = repo.billStream(_accountId).listen(_mapBillsToEvents);
@@ -111,17 +107,12 @@ class EventsBloc implements BlocBase {
     List<AnyEvent> _allEvents = <AnyEvent>[];
 
     if (_theSortMethod.sortList[0]) {
-      _allEvents += _clarifyEventList(_theBills) +
-          _clarifyEventList(_thePayments) +
-          _clarifyEventList(_theAccountEvents);
-    }
-    if (_theSortMethod.sortList[1]) {
       _allEvents += _clarifyEventList(_theBills);
     }
-    if (_theSortMethod.sortList[2]) {
+    if (_theSortMethod.sortList[1]) {
       _allEvents += _clarifyEventList(_thePayments);
     }
-    if (_theSortMethod.sortList[3]) {
+    if (_theSortMethod.sortList[2]) {
       _allEvents += _clarifyEventList(_theAccountEvents);
     }
 
@@ -131,7 +122,8 @@ class EventsBloc implements BlocBase {
       String primaryString;
       String secondaryString;
       TextStyle textStyle;
-      Widget leadingWidget = DateIcon(event.createdAt.month, event.createdAt.day, Colors.grey.shade200, null);
+      Widget leadingWidget = DateIcon(event.createdAt.month,
+          event.createdAt.day, Colors.grey.shade200, null);
 
       if (event is Payment) {
         primaryString =
@@ -192,17 +184,34 @@ class EventsBloc implements BlocBase {
 
 class EventSortMethod {
   List<bool> sortList;
-  EventSortMethod({this.sortList}){
-    if(sortList == null) sortList = <bool>[true, false, false, false];
+  EventSortMethod({this.sortList}) {
+    if (sortList == null) sortList = <bool>[true, true, true];
+  }
+
+  bool indexIsOnlyTrue(int index) {
+    bool returnVal = true;
+    for (int i = 0; i < 3; i++) {
+      if (i != index && sortList[i]) {
+        returnVal = false;
+      }
+    }
+    if (!sortList[index]) {
+      returnVal = false;
+    }
+    return returnVal;
   }
 
   operator [](int index) {
-    if (index >= 0 && index <= 3) return sortList[index];
-    else throw RangeError('range must be 0 to 3');
+    if (index >= 0 && index <= 2)
+      return sortList[index];
+    else
+      throw RangeError('range must be 0 to 2');
   }
 
   operator []=(int index, bool val) {
-    if(index >=0 && index <=3) sortList[index] = val;
-    else throw RangeError('range must be 0 to 3');
+    if (index >= 0 && index <= 2)
+      sortList[index] = val;
+    else
+      throw RangeError('range must be 0 to 2');
   }
 }

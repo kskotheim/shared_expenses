@@ -34,7 +34,7 @@ class _ConnectAccountSectionState extends State<ConnectAccountSection> {
         child: Column(
           children: <Widget>[
             Icon(Icons.transit_enterexit),
-            Text('Connect To Account', style: Style.regularTextStyle),
+            Text('Connect To Group', style: Style.regularTextStyle),
           ],
         ),
       ),
